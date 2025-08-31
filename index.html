@@ -1,0 +1,2801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma"        content="no-cache">
+  <meta http-equiv="Expires"       content="0">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+
+  <title>Animatey</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+
+    #leftSidebar, #rightSidebar {
+      min-width: 350px;
+      padding: 10px;
+      box-sizing: border-box;
+      background: #f9f9f9;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    #rightSidebar {
+      border-right: none;
+      border-left: 1px solid #ccc;
+    }
+
+    #fileTools {
+      text-align: right;
+    }
+
+    #mainContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    canvas {
+      border: 1px solid #000;
+      background: #f0f0f0;
+      margin-top: 10px;
+      cursor: pointer;
+      isolation: isolate;
+    }
+
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .leftSidebarPanel {
+      margin-top: 10px;
+      max-height: 100%;
+      overflow-y: auto;
+      border: 1px solid #aaa;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #shapeList {
+      margin-top: 10px;
+      max-height: 100%;
+      overflow-y: auto;
+      border: 1px solid #aaa;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .shape-item, .keyframe-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      padding: 3px;
+      padding-left: 8px;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+
+    .shape-item.selected, .keyframe-item.selected {
+      background-color: #cce5ff;
+      padding-left: 4px;
+      border-left: 4px solid #007bff;
+    }
+
+    .shape-name {
+      cursor: pointer;
+      flex-grow: 1;
+    }
+
+    .keyframe-name {
+      flex-grow: 1;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 10px;
+      max-height: 100%;
+      overflow-y: auto;
+      border: 1px solid #aaa;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-left: 5px;
+    }
+    .aim-btn, .lock-btn {
+      margin: unset;
+      background: none;
+      border: none;
+    }
+    
+    .keyframe-item.drag-over {
+      border: 2px dashed #007bff;
+    }
+
+    .keyframe-controls button {
+      margin-left: 4px;
+      padding: 2px 5px;
+      cursor: pointer;
+    }
+
+    .keyframe-item.playing {
+      background-color: #28a745 !important;
+      color: white;
+    }
+
+    #playAnimation.playing,
+    #loopAnimation.playing,
+    #bounceAnimation.playing {
+      background-color: #28a745;
+      color: white;
+    }
+
+    input[type="color"] {
+      border: none;
+      padding: 0;
+      margin-right: 6px;
+      width: 32px;
+      height: 24px;
+      background: none;
+      isolation: isolate;
+    }
+
+    .mode-btn, .action-btn {
+      margin-right: 4px;
+      padding: 2px 6px;
+    }
+
+    .drag-over {
+      border: 2px dashed #007bff;
+    }
+        /* Hint in the corner */
+    #shortcut-hint {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      z-index: 1000;
+    }
+    #shortcut-hint kbd {
+      background: #444;
+      color: #fff;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 0.9em;
+      font-family: monospace;
+    }
+
+    /* Modal overlay */
+    #shortcut-modal {
+      display: none; /* hidden by default */
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+    }
+
+    /* Modal content box */
+    .modal-content {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    #close-modal {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+    .modal-body ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-body li {
+      margin: 8px 0;
+      font-size: 1rem;
+    }
+    .modal-body kbd {
+      background: #f7f7f7;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+      box-shadow: inset 0 -1px 0 #bbb;
+    }
+
+    /* drag handle */
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  cursor: grab;
+  user-select: none;
+  opacity: 0.7;
+  font-size: 14px;     /* ⠿ looks right at ~14–16px */
+  line-height: 1;
+}
+.drag-handle:active { cursor: grabbing; opacity: 1; }
+.shape-item .drag-handle { color: #666; }
+.keyframe-item .drag-handle { color: #666; }
+.shape-item.selected .drag-handle,
+.keyframe-item.selected .drag-handle { color: #333; }
+
+    
+    /* Sidebar container */
+    #sidebar {
+      background: #f9f9f9;
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Tab headers */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ccc;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background: #eee;
+      border-right: 1px solid #ccc;
+      user-select: none;
+    }
+    .tab:last-child { border-right: none; }
+    .tab.active {
+      background: #fff;
+      font-weight: bold;
+    }
+    /* Tab content areas */
+    .tab-content {
+      flex: 1;
+      padding: 10px;
+      display: none;
+      overflow-y: auto;
+    }
+    .tab-content.active { display: block; }
+
+    #sidebar label { display: block; margin: 8px 0; }
+    #sidebar input[type="text"], #sidebar input[type="number"], #sidebar select {
+      padding: 4px;
+      box-sizing: border-box;
+    }
+   /* Pixasearch */
+    #searchBox {
+      width: 250px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #results {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .result-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .result-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      display: block;
+    }
+    .result-card img:hover {
+      transform: scale(1.1);
+    }
+    .add-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 14px;
+      line-height: 22px;
+      text-align: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    #pagination {
+      margin-top: 15px;
+      display: none; /* hidden by default */
+      justify-content: center;
+      gap: 20px;
+      align-items: center;
+    }
+    .chevron {
+      cursor: pointer;
+      font-size: 24px;
+      user-select: none;
+      color: #333;
+    }
+    .chevron.disabled {
+      color: #aaa;
+      cursor: default;
+    }
+        /* ⬇️ NEW: lightweight card + actions bar */
+    .result-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .result-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .result-actions button {
+      padding: 4px 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .result-actions a {
+      font-size: 12px;
+      color: #0366d6;
+      text-decoration: none;
+    }
+    .result-actions a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="leftSidebar">
+    <div class="leftSidebarPanel">
+        <label><strong>Background:</strong>
+          <input type="color" id="bgColorInput" value="#f0f0f0" title="Set background color">
+          <button id="bgInputBtn" onmousedown="event.preventDefault();">Load Image</button>
+          <input type="file" id="bgInput" style="display:none;" accept="image/*">
+          <button id="clearBackground" onmousedown="event.preventDefault();">Clear</button>
+      </label>
+    </div>
+
+    <div class="leftSidebarPanel">
+      <label><strong>Add Object:</strong>
+
+    <div id="sidebar">
+    <div class="tabs">
+      <div class="tab active" data-target="textTab">Text 🔡</div>
+      <div class="tab" data-target="imageTab">Images 🖼️</div>
+      <div class="tab" data-target="shapesTab">Shapes ⬜</div>
+    </div>
+
+    <!-- Text section -->
+    <div id="textTab" class="tab-content active">
+      <label>
+        Enter Text:
+        <input type="text" id="textContent" placeholder=""><button id="emojiButton">😀</button>
+      </label>
+       
+      <div id="emoji-hint"></div>
+
+      <script>
+        const input = document.getElementById("textContent");
+        const button = document.getElementById("emojiButton");
+        const emojiHint = document.getElementById("emoji-hint");
+
+        button.addEventListener("click", () => {
+          input.focus();
+
+          // Show shortcut hint depending on platform
+          const ua = navigator.userAgent.toLowerCase();
+          if (ua.includes("win")) {
+            emojiHint.textContent = "Press Win + . to open the emoji picker.";
+          } else if (ua.includes("mac")) {
+            emojiHint.textContent = "Press Cmd + Ctrl + Space to open the emoji picker.";
+          } else {
+            emojiHint.textContent = "Use your device's emoji keyboard.";
+          }
+          emojiHint.style.display = "block";
+        });
+      </script>
+
+      <button id="addTextBtn">Add Text</button>
+    </div>
+
+    <!-- Images section -->
+    <div id="imageTab" class="tab-content">
+      
+      <input type="file" id="imageInput" style="display:none;" accept="image/*">
+        <label>Select Image:
+      <button id="addImageBtn">Add Image</button></label>
+
+    Image Search
+<input type="text" id="searchBox" placeholder="Search images..." />
+
+<div id="pagination">
+    <span id="prevBtn" class="chevron">«</span>
+    <span id="pageInfo">Page 1</span>
+    <span id="nextBtn" class="chevron">»</span>
+</div>
+<div id="results"></div>
+
+
+
+    <script>
+  const API_KEY = "21438573-416fcdaef6b6d40e4e93ab6c6";
+  const searchBox = document.getElementById("searchBox");
+  const resultsDiv = document.getElementById("results");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const pageInfo = document.getElementById("pageInfo");
+
+  let currentPage = 1;
+  let currentQuery = "";
+  const perPage = 12;
+  let totalPages = 1;
+
+  async function searchPixabay(query, page = 1) {
+    if (!query) {
+      resultsDiv.innerHTML = "";
+      pageInfo.textContent = "Page 0";
+      prevBtn.classList.add("disabled");
+      nextBtn.classList.add("disabled");
+      return;
+    }
+
+    const url = `https://pixabay.com/api/?key=${API_KEY}&q=${encodeURIComponent(query)}&image_type=photo&per_page=${perPage}&page=${page}`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      resultsDiv.innerHTML = "";
+      if (data.hits && data.hits.length > 0) {
+        document.getElementById("pagination").style.display = "flex";
+
+        data.hits.forEach(img => {
+          // Card container
+          const card = document.createElement("div");
+          card.className = "result-card";
+
+          // Thumbnail
+          const imageEl = document.createElement("img");
+          imageEl.src = img.previewURL;
+          imageEl.alt = img.tags;
+          imageEl.title = img.tags;
+          imageEl.onclick = () => window.open(img.largeImageURL || img.webformatURL, "_blank");
+
+          // Corner ➕ button
+          const addBtn = document.createElement("button");
+          addBtn.className = "add-btn";
+          addBtn.textContent = "+";
+          addBtn.title = "Add to canvas";
+          addBtn.onclick = (e) => {
+            e.stopPropagation();
+            const src = img.webformatURL || img.largeImageURL || img.previewURL;
+            addImageShapeFromURL(src);
+          };
+
+          card.appendChild(imageEl);
+          card.appendChild(addBtn);
+          resultsDiv.appendChild(card);
+        });
+
+        totalPages = Math.ceil(data.totalHits / perPage);
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+        prevBtn.classList.toggle("disabled", currentPage === 1);
+        nextBtn.classList.toggle("disabled", currentPage >= totalPages);
+
+      } else {
+        document.getElementById("pagination").style.display = "none";
+
+        resultsDiv.innerHTML = "<p>No results found.</p>";
+        pageInfo.textContent = "Page 0";
+        prevBtn.classList.add("disabled");
+        nextBtn.classList.add("disabled");
+      }
+    } catch (err) {
+      console.error("Pixabay fetch error:", err);
+      resultsDiv.innerHTML = "<p>Error fetching images.</p>";
+    }
+  }
+
+  searchBox.addEventListener("input", () => {
+    currentQuery = searchBox.value.trim();
+    currentPage = 1;
+    searchPixabay(currentQuery, currentPage);
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1 && !prevBtn.classList.contains("disabled")) {
+      currentPage--;
+      searchPixabay(currentQuery, currentPage);
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < totalPages && !nextBtn.classList.contains("disabled")) {
+      currentPage++;
+      searchPixabay(currentQuery, currentPage);
+    }
+  });
+
+  function addImageShapeFromURL(src) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const maxW = 200, maxH = 200;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, maxW / w, maxH / h);
+      w = Math.max(1, Math.round(w * scale));
+      h = Math.max(1, Math.round(h * scale));
+
+      const s = {
+        id: shapeIdCounter++,
+        type: 'image',
+        x: 100 + Math.random() * 400,
+        y: 100 + Math.random() * 250,
+        w, h,
+        angle: 0,
+        z: shapes.length,
+        locked: true,
+        mode: 0,
+        src: src,
+        _img: img
+      };
+
+      shapes.push(s);
+
+      if (currentKeyframeIndex != null) {
+        for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+          animation.keyframes[i].shapes.push(cloneShape(s));
+        }
+      }
+
+      updateShapeList();
+      drawAllShapes();
+    };
+    img.onerror = () => {
+      alert("Failed to load image from Pixabay URL.");
+    };
+    img.src = src;
+  }
+</script>
+
+    </div>
+
+    <!-- Shapes section -->
+    <div id="shapesTab" class="tab-content">
+      <label><input type="radio" name="shapeType" value="rectangle" checked> Rectangle</label>
+      <label><input type="radio" name="shapeType" value="square"> Square</label>
+      <label><input type="radio" name="shapeType" value="circle"> Circle</label>
+      <label><input type="radio" name="shapeType" value="triangle"> Triangle</label>
+      <button id="addShapeBtn">Add Shape</button>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.target).classList.add('active');
+      });
+    });
+
+    document.getElementById('addTextBtn').onclick = () => {
+      //alert(`Add Text: "${document.getElementById('textContent').value}" size ${document.getElementById('fontSize').value}px`);
+      addObject('text');
+
+    };
+    document.getElementById('addImageBtn').onclick = () => {
+      addObject('image');
+    };
+    document.getElementById('addShapeBtn').onclick = () => {
+      const type = document.querySelector('input[name="shapeType"]:checked').value;
+      addObject(type);
+      
+    };
+  </script>
+
+    </div>
+
+    <div id="shapeList"></div>
+  </div>
+
+  <div id="mainContent">
+    <img src="logo_beta.png" width="150">
+    <div id="canvasViewport">
+      <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+    <div id="controls">
+      <button id="playAnimation" onmousedown="event.preventDefault();">▶ Play</button>
+      <button id="loopAnimation" onmousedown="event.preventDefault();">↻ Loop</button>
+      <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
+      <button id="stopAnimation" onmousedown="event.preventDefault();">⏹ Stop</button>
+      <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <div id="rightSidebar">
+    <div id="fileTools">
+      <button id="importBtn" onmousedown="event.preventDefault();">Import</button>
+      <input type="file" id="importFile" style="display:none;" accept=".json">
+      <button id="exportBtn" onmousedown="event.preventDefault();">Export</button>
+      <button id="demoBtn">Load Demo</button>
+    </div>
+
+    <hr>
+
+    <button id="cloneKeyframe">Clone Keyframe</button>
+    <button id="addKeyframe">Blank Keyframe</button>
+    <div id="timeline"></div>
+  </div>
+
+  <div id="mobile-blocker" aria-modal="true" role="dialog" aria-label="Mobile not supported"
+       style="position: fixed; inset: 0; z-index: 10002 !important; display: none; align-items: center; justify-content: center; background: #111; color: #fff;">
+
+    <div class="box" style="background: #465985; padding: 16px 20px; border-radius: 8px; width: 100%; text-align: center; line-height: 1.4;">
+     <img src="logo_beta.png" width="150">
+      <h2 style="margin:0 0 8px;">Not supported on mobile :(</h2>
+      <p style="margin:0 0 8px;">Please open Animatey on a desktop or laptop.</p>
+    </div>
+  </div>
+<script>
+(function(){
+  function isMobileish(){
+    const touch   = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const coarse  = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    const noHover = window.matchMedia && matchMedia('(hover: none)').matches;
+    const narrow  = Math.min(window.innerWidth, (screen && screen.width) || window.innerWidth) <= 820;
+    const ua      = navigator.userAgent || '';
+    const mobileUA= /Android|iPhone|iPad|iPod|Mobile|IEMobile|Windows Phone/i.test(ua);
+    return (coarse && noHover) || (touch && (narrow || mobileUA));
+  }
+
+function showBlocker(){
+  const el = document.getElementById('mobile-blocker');
+  if (!el) return;
+  el.style.display = 'flex';
+  // ensure it's a direct child of <body>, then remove everything else
+  if (el.parentNode !== document.body) document.body.appendChild(el);
+  document.body.replaceChildren(el);
+  // lock scrolling completely
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style.height = '100%';
+  document.body.style.overflow = 'hidden';
+  document.body.style.height = '100%';
+}
+  if (isMobileish()) showBlocker();
+
+})();
+</script>
+
+<script src="tutorial.js"></script>
+<script src="default_animation.js"></script>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  (function setupHiDPI(){
+    const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const cssW = canvas.width, cssH = canvas.height;
+    canvas.style.width  = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width  = cssW * ratio;
+    canvas.height = cssH * ratio;
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+  })();
+
+  
+  const leftSidebar = document.getElementById('leftSidebar');
+  const rightSidebar = document.getElementById('rightSidebar');
+
+  const addShapeBtn = document.getElementById('addShapeBtn');
+  const shapeListDiv = document.getElementById('shapeList');
+
+  const addKeyframeBtn = document.getElementById('addKeyframe');
+  const cloneKeyframeBtn = document.getElementById('cloneKeyframe');
+
+  const playBtn = document.getElementById('playAnimation');
+  const loopBtn = document.getElementById('loopAnimation');
+  const bounceBtn = document.getElementById('bounceAnimation');
+  const stopBtn = document.getElementById('stopAnimation');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const bgColorInput = document.getElementById('bgColorInput');
+  const bgInputBtn = document.getElementById('bgInputBtn');
+  const bgInput       = document.getElementById('bgInput');
+  const clearBgBtn    = document.getElementById('clearBackground');
+
+  const demoBtn = document.getElementById('demoBtn');
+
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+
+  const timelineDiv = document.getElementById('timeline');
+
+  let shapes = [];
+  let animation = {
+    title: "Untitled",
+    author: "Anonymous",
+    version: 1,
+    canvas: { width: 800, height: 600, background: "#f0f0f0" },
+    settings: { frameRate: 30, loop: false },
+    keyframes: []
+  };
+  let backgroundImage = null;
+  let currentKeyframeIndex = null;
+  let draggingId = null;
+  let dragOffsets = new Map();
+  let offsetX = 0;
+  let offsetY = 0;
+  let shapeIdCounter = 1;
+  let selectedShapeId = null;
+  let multiSelectedShapeIds = new Set();
+  let shapeSelectionSource = 'list'; // 'list' or 'canvas'
+
+  let isPlaying = false;
+  let isLooping = false;
+  let isBouncing = false;
+  let animationFrameId = null;
+  let playbackStartKeyframe = null;
+
+  // Shared angle-aim state that persists across updateShapeList() rebuilds
+  const angleAim = {
+    isAiming: false,
+    aimingShapeId: null,
+    aimCenter: { x: 0, y: 0 }
+  };
+
+  //guards
+  let angleAimEventGuard = false;
+
+  const EASERS = {
+    smoothstep:        smoothstep,
+    easeInQuad:        easeInQuad,
+    easeOutQuad:       easeOutQuad,
+    easeInOutQuad:     easeInOutQuad,
+    easeInCubic:       easeInCubic,
+    easeOutCubic:      easeOutCubic,
+    easeInOutCubic:    easeInOutCubic,
+    easeInQuart:       easeInQuart,
+    easeOutQuart:      easeOutQuart,
+    easeInOutQuart:    easeInOutQuart,
+    easeInQuint:       easeInQuint,
+    easeOutQuint:      easeOutQuint,
+    easeInOutQuint:    easeInOutQuint,
+    easeInSine:        easeInSine,
+    easeOutSine:       easeOutSine,
+    easeInOutSine:     easeInOutSine,
+    easeInExpo:        easeInExpo,
+    easeOutExpo:       easeOutExpo,
+    easeInOutExpo:     easeInOutExpo,
+    easeInElastic:     easeInElastic,
+    easeOutElastic:    easeOutElastic,
+    easeInOutElastic:  easeInOutElastic,
+    easeInBounce:      easeInBounce,
+    easeOutBounce:     easeOutBounce,
+    easeInOutBounce:   easeInOutBounce,
+    parabola:          easeParabola
+};
+
+function createShape(type, x, y) {
+  const size = 50;
+  let w = size, h = size;
+  if (type === 'rectangle') { w = 80; h = 40; }
+  if (type === 'text') {
+        const defaultText = 'Text';
+        // temporarily set font so we can measure
+        ctx.font = '16px sans-serif';
+        const metrics = ctx.measureText(defaultText);
+        w = metrics.width;
+        h = 16 * 1.2;
+  }
+  const id = shapeIdCounter++;
+  return {
+    id,
+    name: `${type} #${id}`,
+    type,
+    x,
+    y,
+    w,
+    h,
+    color: getRandomColor(),
+    mode: 0,
+    z: shapes.length,
+    locked: true,
+    angle: 0,
+    text: type === 'text' ? 'Text' : undefined
+  };
+}
+
+function getRandomColor() {
+  const c = ['#e74c3c','#2ecc71','#3498db','#e67e22','#9b59b6','#f1c40f'];
+  return c[Math.floor(Math.random() * c.length)];
+}
+
+function drawShape(s, outline = false) {
+  const cx = s.x + s.w / 2;
+  const cy = s.y + s.h / 2;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((s.angle || 0) * Math.PI / 180);
+  ctx.translate(-cx, -cy);
+
+  ctx.fillStyle = s.color;
+
+  if (s.type === 'image') {
+    // Ensure image object exists / loads when needed
+    if (!(s._img instanceof HTMLImageElement) && s.src) {
+      const img = new Image();
+      img.onload = () => { s._img = img; drawAllShapes(); };
+      img.src = s.src;
+      s._img = img; // store immediately so future checks pass instanceof
+    }
+
+    if (s._img instanceof HTMLImageElement && s._img.complete && s._img.naturalWidth > 0) {
+      ctx.drawImage(s._img, s.x, s.y, s.w, s.h);
+      if (outline) {
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(s.x, s.y, s.w, s.h);
+      }
+    }
+    // Always restore/return for image shapes (even if not yet loaded)
+    ctx.restore();
+    return;
+  }
+
+  if (s.type !== 'text') {
+
+    switch (s.type) {
+      case 'rectangle':
+      case 'square':
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        if (outline) {
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(s.x, s.y, s.w, s.h);
+        }
+        break;
+      case 'circle':
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, Math.abs(s.w / 2), Math.abs(s.h / 2), 0, 0, Math.PI * 2);
+        ctx.fill();
+        if (outline) {
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        break;
+      case 'triangle':
+        ctx.beginPath();
+        ctx.moveTo(s.x + s.w/2, s.y);
+        ctx.lineTo(s.x + s.w, s.y + s.h);
+        ctx.lineTo(s.x, s.y + s.h);
+        ctx.closePath();
+        ctx.fill();
+        if (outline) {
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        break;
+    }
+
+  }
+  else {
+    ctx.font = `${s.h}px sans-serif`;
+    ctx.textBaseline = 'top';
+    ctx.fillText(s.text||'', s.x, s.y);
+    if (outline) {
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 1;
+      ctx.strokeText(s.text||'', s.x, s.y);
+    }
+  }
+  ctx.restore();
+}
+
+
+function drawAllShapes(state = shapes) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Fill the canvas with the background color from our animation object.
+        ctx.fillStyle = animation.canvas.background || '#f0f0f0'; // Fallback to white
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (backgroundImage) {
+        // draw full‐canvas background
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+      }
+
+  const ordered = [...state].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
+  // Only highlight shapes when they're selected from the shapes list, not from canvas
+  ordered.forEach(s => drawShape(s, shapeSelectionSource === 'list' && multiSelectedShapeIds.has(s.id)));
+}
+
+function updateShapeList() {
+
+  //shapes = normalizeZOrder();
+  shapeListDiv.innerHTML = '<strong>Layers:</strong>';
+
+  const shapesForDisplay = [...shapes].sort((a, b) => b.z - a.z);
+
+  shapesForDisplay.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'shape-item' + (multiSelectedShapeIds.has(s.id) ? ' selected' : '');
+    div.draggable = true;
+    div.dataset.id = s.id;
+
+    // ⬇️ ADDED: ⠿ drag handle at the start
+    div.innerHTML = `
+          <span class="drag-handle" title="Drag to reorder" draggable="true" aria-label="Drag shape">⠿</span>
+          <span class="shape-name" data-id="${s.id}">${s.name||s.type+' #'+s.id}</span>
+          ${s.type !== 'image'
+            ? `<input type="color" data-id="${s.id}" value="${s.color}">`
+            : ''
+          }
+          <!-- ───── Text input for text shapes ───── -->
+          ${s.type==='text' 
+            ? `<input type="text" class="text-input" data-id="${s.id}" value="${s.text||''}" style="width:80px; margin-left:8px;">`
+            : ''}
+          [<i>w&nbsp;</i><input type="number" id="w-input_${s.id}" class="w-input" data-id="${s.id}" value="${s.w}" min="1" max="9999">
+          &nbsp;<i>h&nbsp;</i><input type="number" id="h-input_${s.id}" class="h-input" data-id="${s.id}" value="${s.h}" min="1" max="9999">
+          <button type="button" class="lock-btn" data-id="${s.id}">${s.locked?'🔒':'🔓'}</button>]
+          <div style="display:flex; align-items:center;">
+            &nbsp; [°<input type="number" id="angle-input_${s.id}" class="angle-input" data-id="${s.id}" value="${s.angle||0}" min="-360" max="9999">
+            <button type="button" class="aim-btn" data-id="${s.id}" draggable="false" style="cursor: crosshair;">🔘</button>]
+          </div>
+          <button type="button" class="delete-btn" data-id="${s.id}">🗑️</button>
+        `;
+    shapeListDiv.appendChild(div);
+  });
+
+    // angle aiming overlay (only one globally)
+  if (!document.getElementById('angleLine')) {
+    const line = document.createElement('div');
+    line.id = 'angleLine';
+    line.style.position = 'absolute';
+    line.style.height = '2px';
+    line.style.background = 'red';
+    line.style.pointerEvents = 'none';
+    line.style.transformOrigin = 'left center';
+    line.style.display = 'none';
+    line.style.zIndex = '9999';
+    document.body.appendChild(line);
+  }
+
+  const angleLine = document.getElementById('angleLine');
+
+  // keep local vars (as in your original code), but mirror from shared state
+  let isAiming = angleAim.isAiming;
+  let aimingShapeId = angleAim.aimingShapeId;
+  let aimCenter = { x: angleAim.aimCenter.x, y: angleAim.aimCenter.y };
+
+  // wire up aim buttons
+  document.querySelectorAll('.aim-btn').forEach(btn => {
+    btn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      aimingShapeId = parseInt(btn.dataset.id);
+      isAiming = true;
+
+      // sync to shared state (used by the guarded global listeners)
+      angleAim.aimingShapeId = aimingShapeId;
+      angleAim.isAiming = isAiming;
+
+      const rect = btn.getBoundingClientRect();
+      aimCenter = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+      angleAim.aimCenter = { x: aimCenter.x, y: aimCenter.y };
+
+      angleLine.style.display = 'block';
+      angleLine.style.left = aimCenter.x + 'px';
+      angleLine.style.top = aimCenter.y + 'px';
+      angleLine.style.width = '0px';
+      angleLine.style.transform = 'rotate(0deg)';
+    });
+  });
+
+  if (!angleAimEventGuard) {
+    window.addEventListener('mousemove', e => {
+      // read from shared state (NOT the old locals)
+      if (!angleAim.isAiming || angleAim.aimingShapeId == null) return;
+
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      const dx = mouseX - angleAim.aimCenter.x;
+      const dy = mouseY - angleAim.aimCenter.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (angle < 0) angle += 360;
+      angle = Math.round(angle);
+
+      // update the overlay
+      angleLine.style.width = distance + 'px';
+      angleLine.style.transform = `rotate(${angle}deg)`;
+
+      // update the shape + current keyframe
+      const s = shapes.find(o => o.id === angleAim.aimingShapeId);
+      if (s) {
+        s.angle = angle;
+        const input = document.querySelector(`.angle-input[data-id="${angleAim.aimingShapeId}"]`);
+        if (input) input.value = angle;
+
+        if (currentKeyframeIndex != null) {
+          const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === s.id);
+          if (kf) kf.angle = angle;
+        }
+
+        drawAllShapes();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (angleAim.isAiming) {
+        angleAim.isAiming = false;
+        angleAim.aimingShapeId = null;
+        angleLine.style.display = 'none';
+      }
+    });
+
+    angleAimEventGuard = true;
+  }
+
+  // shape drag/drop behavior
+  document.querySelectorAll('.shape-item').forEach(item => {
+    // ⬇️ CHANGED: only start drag when the ⠿ handle is the drag source
+    item.ondragstart = e => {
+      if (!e.target.classList.contains('drag-handle')) { e.preventDefault(); return; }
+      e.dataTransfer.setData('text/plain', item.dataset.id);
+      //use the full row as the ghost image
+      const rect = item.getBoundingClientRect();
+      const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+      if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(item, offX, offY);
+    };
+    item.ondragover = e => { e.preventDefault(); item.classList.add('drag-over'); };
+    item.ondragleave = () => item.classList.remove('drag-over');
+    item.ondrop = e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+      const targetId = parseInt(item.dataset.id);
+      const draggedIdx = shapes.findIndex(s => s.id === draggedId);
+      const targetIdx = shapes.findIndex(s => s.id === targetId);
+      const [moved] = shapes.splice(draggedIdx, 1);
+      shapes.splice(targetIdx, 0, moved);
+      shapes.forEach((s, i) => s.z = i);
+      if (currentKeyframeIndex == null) return;
+      const option = prompt('Apply z-index change to:\n1 = current keyframe only\n2 = all keyframes\n3 = current and all future keyframes', '1');
+      const affectedIndices = (() => {
+        if (option === '2') return [...animation.keyframes.keys()];
+        if (option === '3') return Array.from({length: animation.keyframes.length - currentKeyframeIndex}, (_, i) => i + currentKeyframeIndex);
+        return [currentKeyframeIndex];
+      })();
+      affectedIndices.forEach(i => {
+        const frame = animation.keyframes[i].shapes;
+        shapes.forEach(s => {
+          const match = frame.find(k => k.id === s.id);
+          if (match) match.z = s.z;
+        });
+      });
+      updateShapeList();
+      drawAllShapes();
+    };
+
+    // ⬇️ ADDED: make the handle itself draggable & stop row click side-effects
+    const h = item.querySelector('.drag-handle');
+    if (h) {
+      h.addEventListener('mousedown', ev => ev.stopPropagation());
+      h.addEventListener('dragstart', e => {
+        e.stopPropagation();
+        e.dataTransfer.setData('text/plain', item.dataset.id);
+        item.classList.add('drag-over');
+        //use the full row as the ghost image
+        const rect = item.getBoundingClientRect();
+        const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+        if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(item, offX, offY);
+      });
+      h.addEventListener('dragend', () => item.classList.remove('drag-over'));
+    }
+  });
+
+  document.querySelectorAll('.shape-name').forEach(el => {
+    el.onclick = (e) => {
+      const id = parseInt(el.dataset.id);
+      shapeSelectionSource = 'list';
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl+click: toggle selection of this shape
+        if (multiSelectedShapeIds.has(id)) {
+          multiSelectedShapeIds.delete(id);
+          // If we removed the selectedShapeId, pick another one or set to null
+          if (selectedShapeId === id) {
+            selectedShapeId = multiSelectedShapeIds.size > 0 ? [...multiSelectedShapeIds][0] : null;
+          }
+        } else {
+          multiSelectedShapeIds.add(id);
+          selectedShapeId = id;
+        }
+      } else {
+        // Regular click: select only this shape
+        multiSelectedShapeIds.clear();
+        multiSelectedShapeIds.add(id);
+        selectedShapeId = id;
+      }
+      updateShapeList();
+      drawAllShapes();
+    };
+
+    // ADD THIS NEW EVENT LISTENER for renaming
+    el.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      const id = parseInt(el.dataset.id);
+      const shape = shapes.find(s => s.id === id);
+      if (!shape) return;
+
+      const newName = prompt("Rename shape:", shape.name);
+      if (newName && newName.trim()) {
+        shape.name = newName.trim();
+
+        // Update the name across ALL keyframes
+        animation.keyframes.forEach(kf => {
+          const shapeInKeyframe = kf.shapes.find(s => s.id === id);
+          if (shapeInKeyframe) {
+            shapeInKeyframe.name = shape.name;
+        }
+        });
+        updateShapeList(); // Redraw the list to show the new name
+      }
+    });
+  });
+
+  document.querySelectorAll('input[type="color"]').forEach(inp => {
+    inp.oninput = () => {
+      const id = parseInt(inp.dataset.id), c = inp.value;
+      const s = shapes.find(o => o.id === id);
+      if (!s || s.type === 'image') return; // <-- ignore images
+      s.color = c;
+      if (currentKeyframeIndex != null) {
+        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+        if (kf) kf.color = c;
+      }
+      drawAllShapes();
+    };
+  });
+
+  bgColorInput.oninput = () => {
+    animation.canvas.background = bgColorInput.value;
+    drawAllShapes();
+  };
+
+
+  document.querySelectorAll('.w-input').forEach(inp => {
+    inp.oninput = () => {
+      const id = parseInt(inp.dataset.id);
+      const s = shapes.find(o => o.id === id);
+      const newW = parseFloat(inp.value);
+      if (!s || isNaN(newW)) return;
+
+      const oldW = s.w;
+      s.w = newW;
+
+      if (s.locked && oldW !== 0) {
+        const aspect = s.h / oldW;
+        const newH = newW * aspect;
+        s.h = newH;
+        const hInput = document.querySelector(`.h-input[data-id="${id}"]`);
+        hInput.value = Math.round(newH);
+      }
+
+      if (currentKeyframeIndex != null) {
+        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+        if (kf) { kf.w = s.w; kf.h = s.h; }
+      }
+
+      drawAllShapes();
+    };
+  });
+
+  document.querySelectorAll('.h-input').forEach(inp => {
+    inp.oninput = () => {
+      const id = parseInt(inp.dataset.id);
+      const s = shapes.find(o => o.id === id);
+      const newH = parseFloat(inp.value);
+      if (!s || isNaN(newH)) return;
+
+      const oldH = s.h;
+      s.h = newH;
+
+      if (s.locked && oldH !== 0) {
+        const aspect = s.w / oldH;
+        const newW = newH * aspect;
+        s.w = newW;
+        const wInput = document.querySelector(`.w-input[data-id="${id}"]`);
+        wInput.value = Math.round(newW);
+      }
+
+      if (currentKeyframeIndex != null) {
+        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+        if (kf) { kf.w = s.w; kf.h = s.h; }
+      }
+
+      drawAllShapes();
+    };
+  });
+
+  document.querySelectorAll('.angle-input').forEach(inp => {
+    inp.oninput = () => {
+      const id = parseInt(inp.dataset.id);
+      const s = shapes.find(o => o.id === id);
+      const newAngle = parseFloat(inp.value);
+      if (!s || isNaN(newAngle)) return;
+      s.angle = newAngle;
+      if (currentKeyframeIndex != null) {
+        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+        if (kf) kf.angle = newAngle;
+      }
+      drawAllShapes();
+    };
+  });
+
+  document.querySelectorAll('.lock-btn').forEach(btn => {
+    btn.onclick = () => {
+      const id = parseInt(btn.dataset.id);
+      const s = shapes.find(o => o.id === id);
+      s.locked = !s.locked;
+      btn.textContent = s.locked ? '🔒' : '🔓';
+    };
+  });
+
+  document.querySelectorAll('#shapeList .delete-btn').forEach(btn => {
+      btn.onclick = () => {
+      const id = parseInt(btn.dataset.id);
+
+      // --- Safety checks ---
+      const onlyOneKeyframe = animation.keyframes.length <= 1;
+      const shapeInOtherKeyframes = animation.keyframes.some((kf, i) =>
+        i !== currentKeyframeIndex && kf.shapes.some(o => o.id === id)
+      );
+
+      let scope = "1"; // default = current only
+
+      // Only ask if there is more than 1 keyframe AND shape exists in other keyframes
+      if (!onlyOneKeyframe && shapeInOtherKeyframes) {
+        scope = prompt(
+          "Delete shape from:\n" +
+          "1 = Current keyframe only (default)\n" +
+          "2 = This and forward keyframes\n" +
+          "3 = All keyframes"
+        );
+
+        if (scope === null) {
+          // User pressed Cancel → abort deletion
+          return;
+        }
+      }
+
+      // Always delete from global shapes
+      shapes = normalizeZOrder(shapes.filter(o => o.id !== id));
+
+      // Handle keyframes
+      if (currentKeyframeIndex != null) {
+        if (scope === "2") {
+          // This + forward
+          for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+            animation.keyframes[i].shapes =
+              normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
+          }
+
+        } else if (scope === "3") {
+          // All keyframes
+          for (let i = 0; i < animation.keyframes.length; i++) {
+            animation.keyframes[i].shapes =
+              normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
+          }
+
+        } else {
+          // "1" or auto-skip case → current keyframe only
+          animation.keyframes[currentKeyframeIndex].shapes =
+            normalizeZOrder(animation.keyframes[currentKeyframeIndex].shapes.filter(o => o.id !== id));
+        }
+      }
+
+      // Update UI
+      updateShapeList();
+      drawAllShapes();
+    };
+
+  });
+
+  document.querySelectorAll('.text-input').forEach(inp => {
+    inp.oninput = e => {
+      const id = parseInt(inp.dataset.id, 10);
+      const s = shapes.find(o => o.id === id);
+      if (!s) return;
+      s.text = inp.value;
+      if (currentKeyframeIndex != null) {
+        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+        if (kf) kf.text = inp.value;
+      }
+      drawAllShapes();
+    };
+  });
+}
+
+function cloneShape(o) {
+  return {
+    id: o.id,
+    type: o.type,
+    name: o.name,
+    x: o.x, y: o.y,
+    w: o.w, h: o.h,
+    color: o.color,
+    angle: o.angle||0,
+    mode: o.mode||0,
+    z: o.z||0,
+    locked: o.locked??true,
+    text: o.text,
+    // image fields (serialize src; _img is runtime)
+    src: o.src,
+    _img: o._img
+  };
+}
+    
+function cloneShapes(arr) { return arr.map(cloneShape); }
+
+// ─── EASING ALGOS ────────────────────────────────────────────────────────
+function smoothstep(t) { return t * t * (3 - 2 * t);}
+// Quadratic
+function easeInQuad(t) { return t * t;}
+function easeOutQuad(t) { return t * (2 - t);}
+function easeInOutQuad(t) {
+  return t < 0.5
+    ? 2 * t * t
+    : -1 + (4 - 2 * t) * t;
+}
+// Cubic
+function easeInCubic(t) { return t * t * t;}
+function easeOutCubic(t) {return (--t) * t * t + 1;}
+function easeInOutCubic(t) {
+  return t < 0.5
+    ? 4 * t * t * t
+    : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+}
+// Quartic
+function easeInQuart(t) { return t * t * t * t;}
+function easeOutQuart(t) { return 1 - (--t) * t * t * t;}
+function easeInOutQuart(t) {
+  return t < 0.5
+    ? 8 * t * t * t * t
+    : 1 - 8 * (--t) * t * t * t;
+}
+// Quintic
+function easeInQuint(t) { return t * t * t * t * t;}
+function easeOutQuint(t) { return 1 + (--t) * t * t * t * t;}
+function easeInOutQuint(t) {
+  return t < 0.5
+    ? 16 * t * t * t * t * t
+    : 1 + 16 * (--t) * t * t * t * t;
+}
+// Sinusoidal
+function easeInSine(t) { return 1 - Math.cos((t * Math.PI) / 2);}
+function easeOutSine(t) { return Math.sin((t * Math.PI) / 2);}
+function easeInOutSine(t) { return 0.5 * (1 - Math.cos(Math.PI * t));}
+
+// Exponential
+function easeInExpo(t) { return t === 0 ? 0 : Math.pow(2, 10 * (t - 1));}
+function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);}
+function easeInOutExpo(t) {
+  if (t === 0) return 0;
+  if (t === 1) return 1;
+  if (t < 0.5) return Math.pow(2, 20 * t - 10) / 2;
+  return (2 - Math.pow(2, -20 * t + 10)) / 2;
+}
+// Elastic
+function easeInElastic(t) {
+  const c4 = (2 * Math.PI) / 3;
+  return t === 0
+    ? 0
+    : t === 1
+    ? 1
+    : -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * c4);
+}
+function easeOutElastic(t) {
+  const c4 = (2 * Math.PI) / 3;
+  return t === 0
+    ? 0
+    : t === 1
+    ? 1
+    : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+}
+function easeInOutElastic(t) {
+  const c5 = (2 * Math.PI) / 4.5;
+  if (t === 0) return 0;
+  if (t === 1) return 1;
+  if (t < 0.5)
+    return (
+      -Math.pow(2, 20 * t - 10) * Math.sin((20 * t - 11.125) * c5)
+    ) / 2;
+  return (
+    Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * c5)
+  ) / 2 + 1;
+}
+// Bounce
+function easeOutBounce(t) {
+  const n1 = 7.5625,
+        d1 = 2.75;
+  if (t < 1 / d1) {
+    return n1 * t * t;
+  } else if (t < 2 / d1) {
+    t -= 1.5 / d1;
+    return n1 * t * t + 0.75;
+  } else if (t < 2.5 / d1) {
+    t -= 2.25 / d1;
+    return n1 * t * t + 0.9375;
+  } else {
+    t -= 2.625 / d1;
+    return n1 * t * t + 0.984375;
+  }
+}
+function easeInBounce(t) { return 1 - easeOutBounce(1 - t);}
+function easeInOutBounce(t) {
+  if (t < 0.5) {
+    return (1 - easeOutBounce(1 - 2 * t)) / 2;
+  }
+  return (1 + easeOutBounce(2 * t - 1)) / 2;
+}
+function easeParabola(t) { return 4 * t * (1 - t);}
+
+function renderTimeline(active = null, playing = null) {
+  timelineDiv.innerHTML = '<strong>Keyframes:</strong>';
+
+  animation.keyframes.forEach((kf, i) => {
+    if (!kf.name) kf.name = `KF ${i}`;
+    // ensure duration & easing defaults
+    kf.frames  ??= 30;
+    kf.easing  ??= 'linear';
+
+    const div = document.createElement('div');
+    div.className   = 'keyframe-item';
+    if (i === active)  div.classList.add('selected');
+    if (i === playing) div.classList.add('playing');
+    div.dataset.index = i;
+    div.draggable     = true;
+
+    // ⬇️ ADDED: ⠿ drag handle at the start
+    div.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder" draggable="true" aria-label="Drag keyframe">⠿</span>
+      <span class="keyframe-name">${kf.name}</span>
+
+      <label style="margin-left:8px;">
+        <i>f&nbsp;</i><input type="number"
+               id="frame-input_${i}"
+               class="frame-input"
+               data-index="${i}"
+               value="${kf.frames}"
+               min="1"
+               style="width:40px;">
+      </label>
+
+<label style="margin-left:8px;">
+  <select id="easing-select_${i}" class="easing-select" data-index="${i}">
+
+    <optgroup label="Linear Interpolations">
+      <option value="linear"${kf.easing === 'linear'        ? ' selected' : ''}>Linear</option>
+
+      <option value="smoothstep"${kf.easing === 'smoothstep'  ? ' selected' : ''}>Smoothstep</option>
+
+      <option value="easeInOutQuad"${kf.easing === 'easeInOutQuad'? ' selected' : ''}>Quad In-Out</option>
+      <option value="easeInQuad"${kf.easing === 'easeInQuad'   ? ' selected' : ''}>QuadIn</option>
+      <option value="easeOutQuad"${kf.easing === 'easeOutQuad'  ? ' selected' : ''}>Quad Out</option>
+
+      <option value="easeInOutCubic"${kf.easing === 'easeInOutCubic'? ' selected' : ''}>Cubic In-Out</option>
+      <option value="easeInCubic"${kf.easing === 'easeInCubic'  ? ' selected' : ''}>Cubic In</option>
+      <option value="easeOutCubic"${kf.easing === 'easeOutCubic' ? ' selected' : ''}>Cubic Out</option>
+
+      <option value="easeInOutQuart"${kf.easing === 'easeInOutQuart'? ' selected' : ''}>Quart In-Out</option>
+      <option value="easeInQuart"${kf.easing === 'easeInQuart'  ? ' selected' : ''}>Quart In</option>
+      <option value="easeOutQuart"${kf.easing === 'easeOutQuart' ? ' selected' : ''}>Quart Out</option>
+
+      <option value="easeInOutQuint"${kf.easing === 'easeInOutQuint'? ' selected' : ''}>Quint In-Out</option>
+      <option value="easeInQuint"${kf.easing === 'easeInQuint'  ? ' selected' : ''}>Quint In</option>
+      <option value="easeOutQuint"${kf.easing === 'easeOutQuint' ? ' selected' : ''}>Quint Out</option>
+
+      <option value="easeInOutSine"${kf.easing === 'easeInOutSine'? ' selected' : ''}>Sine In-Out</option>
+      <option value="easeInSine"${kf.easing === 'easeInSine'   ? ' selected' : ''}>Sine In</option>
+      <option value="easeOutSine"${kf.easing === 'easeOutSine'  ? ' selected' : ''}>Sine Out</option>
+
+      <option value="easeInOutExpo"${kf.easing === 'easeInOutExpo'? ' selected' : ''}>Expo In-Out</option>
+      <option value="easeInExpo"${kf.easing === 'easeInExpo'   ? ' selected' : ''}>Expo In</option>
+      <option value="easeOutExpo"${kf.easing === 'easeOutExpo'  ? ' selected' : ''}>Expo Out</option>
+    </optgroup>
+
+    <optgroup label="Dynamic Interpolations">
+      <option value="parabola"${kf.easing === 'parabola'  ? ' selected' : ''}>Parabola</option>
+
+      <option value="easeInOutBounce"${kf.easing === 'easeInOutBounce'? ' selected' : ''}>Bounce In-Out</option>
+      <option value="easeInBounce"${kf.easing === 'easeInBounce'   ? ' selected' : ''}>Bounce In</option>
+      <option value="easeOutBounce"${kf.easing === 'easeOutBounce'  ? ' selected' : ''}>Bounce Out</option>
+
+      <option value="easeInOutElastic"${kf.easing === 'easeInOutElastic'? ' selected' : ''}>Elastic In-Out</option>
+      <option value="easeInElastic"${kf.easing === 'easeInElastic'   ? ' selected' : ''}>Elastic In</option>
+      <option value="easeOutElastic"${kf.easing === 'easeOutElastic'  ? ' selected' : ''}>Elastic Out</option>
+    </optgroup>
+
+    <optgroup label="Effects">
+      <option value="spiral"${kf.easing === 'spiral'          ? ' selected' : ''}>Spiral In</option>
+      <option value="wavy"${kf.easing === 'wavy'          ? ' selected' : ''}>Wavy In</option>
+    </optgroup>
+  </select>
+</label>
+
+      <span class="keyframe-controls">
+        <button class="play-btn"   data-index="${i}">▶</button>
+        <button class="delete-btn" data-index="${i}">🗑️</button>
+      </span>
+    `;
+
+    // wire up the frames input
+    const frameInput = div.querySelector('.frame-input');
+    frameInput.addEventListener('input', e => {
+      const val = parseInt(e.target.value, 10);
+      if (!isNaN(val) && val > 0) {
+        animation.keyframes[i].frames = val;
+      }
+    });
+
+    // wire up the easing dropdown
+    const easingSelect = div.querySelector('.easing-select');
+    easingSelect.addEventListener('change', e => {
+      animation.keyframes[i].easing = e.target.value;
+    });
+
+    // ⬇️ CHANGED: only allow drag if the ⠿ handle started it
+    div.ondragstart = e => {
+      if (!e.target.classList.contains('drag-handle')) { e.preventDefault(); return; }
+      e.dataTransfer.setData('text/plain', i);
+      div.classList.add('drag-over');
+      //use the full keyframe row as the ghost image
+      const rect = div.getBoundingClientRect();
+      const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+      if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(div, offX, offY);
+    };
+
+    div.ondragover = e => {
+      e.preventDefault();
+      div.classList.add('drag-over');
+    };
+
+    div.ondragleave = () => div.classList.remove('drag-over');
+
+    div.ondrop = e => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const toIndex = parseInt(div.dataset.index, 10);
+      if (fromIndex === toIndex) return;
+
+      const [moved] = animation.keyframes.splice(fromIndex, 1);
+      animation.keyframes.splice(toIndex, 0, moved);
+
+      // Adjust currentKeyframeIndex if necessary
+      if (currentKeyframeIndex === fromIndex) {
+        currentKeyframeIndex = toIndex;
+      } else if (
+        currentKeyframeIndex > fromIndex &&
+        currentKeyframeIndex <= toIndex
+      ) {
+        currentKeyframeIndex--;
+      } else if (
+        currentKeyframeIndex < fromIndex &&
+        currentKeyframeIndex >= toIndex
+      ) {
+        currentKeyframeIndex++;
+      }
+
+      shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
+      updateShapeList();
+      drawAllShapes();
+      renderTimeline(currentKeyframeIndex, null);
+    };
+
+    // ⬇️ ADDED: make the handle itself draggable & quiet clicks
+    const h = div.querySelector('.drag-handle');
+    if (h) {
+      h.addEventListener('mousedown', ev => ev.stopPropagation());
+      h.addEventListener('dragstart', e => {
+        e.stopPropagation();
+        e.dataTransfer.setData('text/plain', i);
+        div.classList.add('drag-over');
+        //use the full keyframe row as the ghost image
+        const rect = div.getBoundingClientRect();
+        const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+        if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(div, offX, offY);
+      });
+      h.addEventListener('dragend', () => div.classList.remove('drag-over'));
+    }
+
+    // 👇 single-click: select keyframe
+    div.addEventListener('click', e => {
+      if (isPlaying) return;
+      // ← ignore clicks on play/delete buttons…
+      //…or on the frames input itself (or its label), so typing works
+      if (e.target.closest('.keyframe-controls')
+       || e.target.closest('label')) return;
+
+      currentKeyframeIndex = i;
+      shapes = cloneShapes(animation.keyframes[i].shapes);
+      selectedShapeId = null;
+      updateShapeList();
+      drawAllShapes();
+      renderTimeline(currentKeyframeIndex, null);
+    });
+
+    // 👇 double-click on label: rename keyframe
+    div.querySelector('.keyframe-name').addEventListener('dblclick', e => {
+      e.stopPropagation();
+      const newName = prompt("Rename keyframe:", kf.name);
+      if (newName && newName.trim()) {
+        kf.name = newName.trim();
+        renderTimeline(active, playing);
+      }
+    });
+
+    div.querySelector('.play-btn').onclick = e => {
+      e.stopPropagation();
+      currentKeyframeIndex = i;
+      playAnimation('once');
+    };
+    
+    div.querySelector('.delete-btn').onclick = e => {
+      e.stopPropagation();
+      if (animation.keyframes.length <= 1) return;
+      animation.keyframes.splice(i, 1);
+      currentKeyframeIndex = Math.max(0, currentKeyframeIndex - (i <= currentKeyframeIndex ? 1 : 0));
+      shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
+      updateShapeList();
+      drawAllShapes();
+      renderTimeline(currentKeyframeIndex, null);
+    };
+
+    timelineDiv.appendChild(div);
+  });
+}
+
+function interpolateShapes(a, b, t) {
+  return a.shapes.map(sa => {
+    const sb = b.shapes.find(o => o.id === sa.id);
+    if (!sb) return sa;
+
+    const out = { ...sa };            // carry all fields (incl. src/_img)
+    out.x     = sa.x + (sb.x - sa.x) * t;
+    out.y     = sa.y + (sb.y - sa.y) * t;
+    out.w     = sa.w + (sb.w - sa.w) * t;
+    out.h     = sa.h + (sb.h - sa.h) * t;
+    out.angle = interpolateAngle(sa.angle || 0, sb.angle || 0, t);
+    out.z     = sa.z ?? 0;            // keep Z from source frame
+
+    return out;
+  });
+}
+
+
+function interpolateShapesSpiral(a, b, t) {
+  const rotations = 1;
+  return a.shapes.map(sa => {
+    const sb = b.shapes.find(o => o.id === sa.id);
+    if (!sb) return sa;
+
+    const dx = sb.x - sa.x, dy = sb.y - sa.y;
+    const dist = Math.hypot(dx, dy);
+    const baseAng = Math.atan2(dy, dx);
+    const ang = baseAng + rotations * 2 * Math.PI * t;
+    const r   = dist * (1 - t);
+    const x   = sb.x - r * Math.cos(ang);
+    const y   = sb.y - r * Math.sin(ang);
+
+    const out = { ...sa };
+    out.x     = x;
+    out.y     = y;
+    out.w     = sa.w + (sb.w - sa.w) * t;
+    out.h     = sa.h + (sb.h - sa.h) * t;
+    out.angle = interpolateAngle(sa.angle || 0, sb.angle || 0, t);
+    out.z     = sa.z ?? 0;
+
+    return out;
+  });
+}
+
+function interpolateShapesWavy(a, b, t) {
+  return a.shapes.map(sa => {
+    const sb = b.shapes.find(o => o.id === sa.id);
+    if (!sb) return sa;
+
+    // 1) linear baseline
+    const x0 = sa.x, y0 = sa.y;
+    const x1 = sb.x, y1 = sb.y;
+    const xLin = x0 + (x1 - x0) * t;
+    const yLin = y0 + (y1 - y0) * t;
+
+    // 2) perpendicular unit vector
+    let dx = x1 - x0, dy = y1 - y0;
+    let nx = -dy, ny = dx;
+    const L = Math.hypot(nx, ny) || 1;
+    nx /= L; ny /= L;
+
+    // 3) wave offset (frequency and envelope)
+    const amplitude = 50;      // px
+    const frequency = 3;       // waves per segment
+    const offset = Math.sin(2 * Math.PI * frequency * t) * amplitude * Math.sin(Math.PI * t);
+
+    // 4) final position
+    const out = { ...sa };
+    out.x     = xLin + nx * offset;
+    out.y     = yLin + ny * offset;
+    out.w     = sa.w + (sb.w - sa.w) * t;
+    out.h     = sa.h + (sb.h - sa.h) * t;
+    out.angle = interpolateAngle(sa.angle || 0, sb.angle || 0, t);
+    out.z     = sa.z ?? 0;
+
+    return out;
+  });
+}
+
+function interpolateAngle(a1, a2, t) {
+  //we intentionally do not take the short path between a1->a2, given we want to support shapes having mutliple rotations between 2 keyframes
+  return a1 + (a2 - a1) * t;
+}
+
+// ─── 3) UPDATED playAnimation TO RESPECT EASING ─────────────────────────────
+function playAnimation(mode = 'once') {
+  if (animation.keyframes.length < 2 || isPlaying) return;
+  isPlaying  = true;
+  isLooping  = (mode === 'loop');
+  isBouncing = (mode === 'bounce');
+
+  playBtn.classList.remove('playing');
+  loopBtn.classList.remove('playing');
+  bounceBtn.classList.remove('playing');
+  if (mode === 'once')   playBtn.classList.add('playing');
+  if (mode === 'loop')   loopBtn.classList.add('playing');
+  if (mode === 'bounce') bounceBtn.classList.add('playing');
+
+  let segments = [];
+  if (mode === 'bounce') {
+    for (let i = 0; i < animation.keyframes.length - 1; i++) segments.push([i, i+1]);
+    for (let i = animation.keyframes.length - 1; i > 0;    i--) segments.push([i, i-1]);
+  } else {
+    for (let i = 0; i < animation.keyframes.length - 1; i++) segments.push([i, i+1]);
+    if (mode === 'loop' && animation.keyframes.length > 2)
+      segments.push([animation.keyframes.length - 1, 0]);
+  }
+
+  playbackStartKeyframe = Math.max(0, currentKeyframeIndex||0);
+  let segmentIndex = playbackStartKeyframe;
+
+  selectedShapeId       = null;
+  currentKeyframeIndex  = null;
+  renderTimeline(null, null);
+
+  let t = 0;
+  function step() {
+    if (!isPlaying || segmentIndex >= segments.length) {
+      stopAnimation();
+      return;
+    }
+
+    const [fromIdx, toIdx] = segments[segmentIndex];
+    const a = animation.keyframes[fromIdx];
+    const b = animation.keyframes[toIdx];
+
+    // ← use per-keyframe frames & easing
+    const steps  = a.frames || 30;
+    const rawT = t / steps;
+
+    const easer  = EASERS[a.easing] || (x => x);
+    const easedT = easer(rawT);
+
+    renderTimeline(null, fromIdx);
+    let interp;
+    if (a.easing === 'spiral') {
+      interp = interpolateShapesSpiral(a, b, easedT);
+    } else if (a.easing === 'wavy') {
+      interp = interpolateShapesWavy(a, b, easedT);
+    } else {
+      interp = interpolateShapes(a, b, easedT);
+    }
+    drawAllShapes(interp);
+
+    t++;
+    if (t < steps) {           // was: t <= steps
+      animationFrameId = requestAnimationFrame(step);
+    } else {
+      t = 0;
+      segmentIndex++;
+      if (segmentIndex >= segments.length) {
+        if (isLooping || isBouncing) {
+          segmentIndex = 0;
+          animationFrameId = requestAnimationFrame(step);
+        } else {
+
+          // NEW: render the very final keyframe once before stopping
+          const lastPair = segments[segments.length - 1];
+          if (lastPair) {
+            const lastToIdx = lastPair[1];
+            drawAllShapes(animation.keyframes[lastToIdx].shapes);
+          }
+          
+          stopAnimation();
+        }
+      } else {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    }
+  }
+
+  selectedShapeId      = null;
+  currentKeyframeIndex = null;
+  step();
+}
+
+function stopAnimation() {
+  isPlaying = false;
+  isLooping = false;
+  isBouncing = false;
+  playBtn.classList.remove('playing');
+  loopBtn.classList.remove('playing');
+  bounceBtn.classList.remove('playing');
+  cancelAnimationFrame(animationFrameId);
+  renderTimeline(currentKeyframeIndex, null);
+  drawAllShapes();
+  
+  if (playbackStartKeyframe != null) {
+    currentKeyframeIndex = playbackStartKeyframe;
+    shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
+    renderTimeline(currentKeyframeIndex, null);
+    updateShapeList();
+    playbackStartKeyframe = null; // Reset for future runs
+  }
+}
+
+playBtn.onclick = () => playAnimation('once');
+loopBtn.onclick = () => playAnimation('loop');
+bounceBtn.onclick = () => playAnimation('bounce');
+stopBtn.onclick = stopAnimation;
+
+fullscreenBtn.onclick = () => {
+  if (!document.fullscreenElement) {
+    canvas.requestFullscreen().catch(err => {
+      alert(`Error attempting to enable fullscreen: ${err.message}`);
+    });
+  } else {
+    document.exitFullscreen();
+  }
+};
+
+demoBtn.onclick = () => {
+  //demo is defined in the default_animation script at the start
+  if (typeof demo === 'undefined') { alert('Demo not available.'); return; }
+  loadKeyframesFromJSON(JSON.stringify(demo, null, 2));
+};
+
+
+    bgInput.onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        backgroundImage = img;
+        URL.revokeObjectURL(url);
+        drawAllShapes();
+      };
+      img.src = url;
+    };
+
+    clearBgBtn.onclick = () => {
+      animation.canvas.background = '#f0f0f0';
+      bgColorInput.value = '#f0f0f0';
+      backgroundImage = null;
+      if (animation.canvas) delete animation.canvas.backgroundImageSrc;
+      document.getElementById('bgInput').value = "";
+      drawAllShapes();
+    };
+
+const imageInput = document.getElementById('imageInput');
+
+function addObject(type){
+  if (type !== 'image') {
+    const s = createShape(type, 100 + Math.random() * 500, 100 + Math.random() * 300);
+
+    if (type === 'text') {
+      s.text = document.getElementById('textContent').value;
+    }
+
+    shapes.push(s);
+    if (currentKeyframeIndex != null) {
+      for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+        animation.keyframes[i].shapes.push(cloneShape(s));
+      }
+    }
+
+    // Automatically select the new shape.
+    multiSelectedShapeIds.clear();
+    multiSelectedShapeIds.add(s.id);
+    selectedShapeId = s.id;
+    shapeSelectionSource = 'list'; // Ensure selection outline appears.
+
+    updateShapeList();
+    drawAllShapes();
+    return;
+  }
+
+  // image path
+  imageInput.value = '';
+  imageInput.click();
+}
+
+imageInput.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const dataUrl = evt.target.result; // base64
+    const img = new Image();
+    img.onload = () => {
+      // initial size (fit-ish)
+      const maxW = 200, maxH = 200;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, maxW / w, maxH / h);
+      w = Math.max(1, Math.round(w * scale));
+      h = Math.max(1, Math.round(h * scale));
+
+      const s = {
+        id: shapeIdCounter++,
+        type: 'image',
+        x: 100 + Math.random() * 400,
+        y: 100 + Math.random() * 250,
+        w, h,
+        angle: 0,
+        z: shapes.length,
+        locked: true,
+        mode: 0,
+        // image-specific
+        src: dataUrl,     // serialized in JSON
+        _img: img         // runtime cache (not serialized)
+      };
+
+      shapes.push(s);
+      if (currentKeyframeIndex != null) {
+        for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+          animation.keyframes[i].shapes.push(cloneShape(s));
+        }
+      }
+
+      updateShapeList();
+      drawAllShapes();
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+};
+
+addKeyframeBtn.onclick = () => {
+  shapes = [];
+  const newKeyframe = {
+    name: `KF ${animation.keyframes.length}`,
+    shapes: [],
+    frames: 30
+ };
+  animation.keyframes.push(newKeyframe);
+  currentKeyframeIndex = animation.keyframes.length - 1;
+  updateShapeList();
+  drawAllShapes();
+  renderTimeline(currentKeyframeIndex, null);
+};
+
+cloneKeyframeBtn.onclick = () => {
+  // clone shapes from the current keyframe (or from the live canvas)
+  const from = currentKeyframeIndex != null
+    ? cloneShapes(animation.keyframes[currentKeyframeIndex].shapes)
+    : cloneShapes(shapes);
+
+  // inherit the current keyframe’s frames & easing (or default if none)
+  const inheritedName = currentKeyframeIndex != null
+    ? animation.keyframes[currentKeyframeIndex].name
+    : `KF ${animation.keyframes.length}`;
+
+  const inheritedFrames = currentKeyframeIndex != null
+    ? animation.keyframes[currentKeyframeIndex].frames
+    : 30;
+  const inheritedEasing = currentKeyframeIndex != null
+    ? animation.keyframes[currentKeyframeIndex].easing
+    : 'linear';
+
+  const newKeyframe = {
+    name: inheritedName,
+    shapes: from,
+    frames: inheritedFrames,
+    easing: inheritedEasing
+  };
+  animation.keyframes.push(newKeyframe);
+  currentKeyframeIndex = animation.keyframes.length - 1;
+  shapes = cloneShapes(from);
+
+  updateShapeList();
+  drawAllShapes();
+  renderTimeline(currentKeyframeIndex, null);
+};
+
+let mouseDownPos = null;
+let mouseDownOnShapeId = null;     // NEW: which shape (if any) we pressed on
+
+function normalizeZOrder(list = shapes) {
+  // Sort the shapes by their current z (lowest → highest)
+  list.sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
+
+  // Reassign compact z values 0..N-1 in sorted order
+  list.forEach((s, i) => s.z = i);
+
+  return list;
+}
+
+canvas.addEventListener('mousedown', e => {
+  dragOffsets.clear();
+  const rect = canvas.getBoundingClientRect();
+  const m = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+  
+  // Store mouse down position to detect if user moved mouse
+  mouseDownPos = { x: m.x, y: m.y };
+  mouseDownOnShapeId  = null;                // NEW
+
+  let clickedShapeId = null;
+  
+  // Find topmost shape under mouse
+  // ← NEW: use z-sorted copy for hit-test so the highest z (drawn last) is checked first
+  const hitOrder = [...shapes].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
+  for (let i = hitOrder.length - 1; i >= 0; i--) {
+    const s = hitOrder[i];
+    const inside = s.type === 'circle'
+      ? ((m.x - (s.x + s.w / 2)) ** 2 / (s.w / 2) ** 2 + (m.y - (s.y + s.h / 2)) ** 2 / (s.h / 2) ** 2 <= 1)
+      : (m.x >= s.x && m.x <= s.x + s.w && m.y >= s.y && m.y <= s.y + s.h);
+
+    if (inside) {
+      clickedShapeId = s.id;
+      break;
+    }
+  }
+
+  mouseDownOnShapeId = clickedShapeId;       // NEW
+
+  if (clickedShapeId) {
+    //canvas.style.cursor = 'grabbing';
+    // User clicked on a shape
+    shapeSelectionSource = 'canvas';
+
+    const isSelected = multiSelectedShapeIds.has(clickedShapeId);
+
+    if (e.ctrlKey || e.metaKey) {
+      // NEW: Defer toggle to mouseup unless it’s just a click.
+      // If the clicked shape is already selected, prep drag for the whole selection now.
+      if (isSelected) {
+        for (const s of shapes.filter(shape => multiSelectedShapeIds.has(shape.id))) {
+          dragOffsets.set(s.id, { dx: m.x - s.x, dy: m.y - s.y });
+        }
+      }
+      // If it isn’t selected, don’t change selection yet and don’t set dragOffsets.
+      // A small move will be treated as a click+toggle on mouseup; a real drag won’t toggle.
+    } else {
+      // No modifier: if clicking inside an already-selected shape, keep the whole selection.
+      if (isSelected) {
+        for (const s of shapes.filter(shape => multiSelectedShapeIds.has(shape.id))) {
+          dragOffsets.set(s.id, { dx: m.x - s.x, dy: m.y - s.y });
+        }
+      } else {
+        // Regular click on an unselected shape: select only it immediately (matches left panel),
+        // and prep drag for just that shape.
+        multiSelectedShapeIds.clear();
+        multiSelectedShapeIds.add(clickedShapeId);
+        selectedShapeId = clickedShapeId;
+
+        const s = shapes.find(sh => sh.id === clickedShapeId);
+        if (s) dragOffsets.set(s.id, { dx: m.x - s.x, dy: m.y - s.y });
+      }
+    }
+  } else {
+    // User clicked on empty space
+    if (multiSelectedShapeIds.size > 0) {
+      // If shapes are selected, set up drag for them (allows dragging from empty space)
+      for (const s of shapes.filter(shape => multiSelectedShapeIds.has(shape.id))) {
+        dragOffsets.set(s.id, { dx: m.x - s.x, dy: m.y - s.y });
+      }
+    }
+  }
+
+  updateShapeList();
+  drawAllShapes();
+});
+
+
+
+canvas.addEventListener('mousemove', e => {
+  if (dragOffsets.size > 0) {
+    const rect = canvas.getBoundingClientRect();
+    const m = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+
+    let changed = false;
+
+    for (const [id, { dx, dy }] of dragOffsets.entries()) {
+      const s = shapes.find(o => o.id === id);
+      if (!s) continue;
+
+      const newX = m.x - dx;
+      const newY = m.y - dy;
+      if (s.x !== newX || s.y !== newY) {
+        s.x = newX;
+        s.y = newY;
+        changed = true;
+      }
+
+      if (currentKeyframeIndex != null) {
+        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+        if (kf) {
+          kf.x = s.x;
+          kf.y = s.y;
+        }
+      }
+    }
+
+    if (changed) {
+      drawAllShapes();
+    }
+  }
+});
+
+
+canvas.addEventListener('mouseup', e => {
+  const rect = canvas.getBoundingClientRect();
+  const m = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+  
+  const mouseMoved = mouseDownPos &&
+    (m.x !== mouseDownPos.x || m.y !== mouseDownPos.y);   // NEW
+
+  // If it was effectively a click, apply selection logic now.
+  if (mouseDownPos && !mouseMoved) {
+    let clickedOnShape = false;
+
+    if (mouseDownOnShapeId != null) {
+      clickedOnShape = true;
+
+      if (e.ctrlKey || e.metaKey) {
+        // Toggle membership now (deferred from mousedown)
+        const id = mouseDownOnShapeId;
+        if (multiSelectedShapeIds.has(id)) {
+          multiSelectedShapeIds.delete(id);
+          if (selectedShapeId === id) {
+            selectedShapeId = multiSelectedShapeIds.size > 0 ? [...multiSelectedShapeIds][0] : null;
+          }
+        } else {
+          multiSelectedShapeIds.add(id);
+          selectedShapeId = id;
+        }
+      } else {
+        // Plain click: select only this shape (matches left panel)
+        multiSelectedShapeIds.clear();
+        multiSelectedShapeIds.add(mouseDownOnShapeId);
+        selectedShapeId = mouseDownOnShapeId;
+      }
+    }
+
+    if (!clickedOnShape) {
+      //canvas.style.cursor = 'pointer';
+      // Clear selection only if NOT holding Ctrl/Cmd (matches left panel expectations)
+      if (!e.ctrlKey && !e.metaKey) {
+        //shapeSelectionSource = 'canvas';
+        multiSelectedShapeIds.clear();
+        selectedShapeId = null;
+      }
+    }
+
+    updateShapeList();
+    drawAllShapes();
+  }
+
+  dragOffsets.clear();
+  mouseDownPos = null;
+  mouseDownOnShapeId = null;      // NEW
+});
+
+
+exportBtn.onclick = () => {
+
+  // Check if a background image exists and is fully loaded.
+  if (backgroundImage && backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+    // To get the Base64 data, we draw the image to a temporary canvas.
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = backgroundImage.naturalWidth;
+    tempCanvas.height = backgroundImage.naturalHeight;
+    tempCtx.drawImage(backgroundImage, 0, 0);
+    
+    // Store the Base64 Data URL in the animation object before export.
+    animation.canvas.backgroundImageSrc = tempCanvas.toDataURL();
+  } else {
+    // If there's no background, ensure we remove any old data.
+    delete animation.canvas.backgroundImageSrc;
+  }
+  const exportData = JSON.stringify(
+    animation,
+    (key, value) => (key === '_img' ? undefined : value),
+    2
+  );
+  const blob = new Blob([exportData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'animation.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+bgInputBtn.onclick = () => {
+  bgInput.value = ''; // <-- Reset the file input so same file can be re-imported
+  bgInput.click();
+};
+
+importBtn.onclick = () => {
+  importFile.value = ''; // <-- Reset the file input so same file can be re-imported
+  importFile.click();
+};
+
+importFile.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    loadKeyframesFromJSON(evt.target.result);
+    importFile.value = ''; // <-- Reset the file input so same file can be re-imported
+  };
+  reader.readAsText(file);
+};
+
+shapes = [
+  { id: shapeIdCounter++, type: 'circle',    name: 'head', x: 375, y:  80, w: 50, h: 50,  color: '#e74c3c', mode: 0, z: 5, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'torso', x: 350, y: 140, w: 100, h: 100, color: '#2ecc71', mode: 0, z: 2, locked: true},
+  { id: shapeIdCounter++, type: 'rectangle', name: 'left arm', x: 300, y: 140, w: 40,  h: 100, color: '#3498db', mode: 0, z: 4, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'right arm', x: 460, y: 140, w: 40,  h: 100, color: '#e67e22', mode: 0, z: 3, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'left leg', x: 350, y: 240, w: 40,  h: 100, color: '#9b59b6', mode: 0, z: 1, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'right leg', x: 410, y: 240, w: 40,  h: 100, color: '#f1c40f', mode: 0, z: 0, locked: true }
+];
+
+shapes = normalizeZOrder();
+
+// include default frames for the very first keyframe
+animation.keyframes.push({
+  name: "KF 0",
+  shapes: cloneShapes(shapes),
+  frames: 30
+});
+currentKeyframeIndex = 0;
+updateShapeList();
+drawAllShapes();
+// pass null for playing param to match other calls
+renderTimeline(currentKeyframeIndex, null);
+
+function loadKeyframesFromJSON(json) {
+  try {
+    const parsed = JSON.parse(json);
+
+    if (!parsed || !Array.isArray(parsed.keyframes)) {
+      throw new Error("Invalid animation format: missing keyframes.");
+    }
+    animation = parsed;
+
+    // Fill in defaults if not present
+    animation.title    ??= "Untitled Animation";
+    animation.author   ??= "Unknown";
+    animation.version  ??= 1;
+    animation.canvas   ??= { width: 800, height: 600, background: "#f0f0f0" };
+    bgColorInput.value = animation.canvas.background || '#f0f0f0';
+    animation.settings ??= { frameRate: 30, loop: false };
+    animation.keyframes.forEach(kf => { kf.frames ??= 30; });
+
+    // 🔹 Normalize z-order for every keyframe on import
+    animation.keyframes.forEach(kf => {
+      kf.shapes = normalizeZOrder(kf.shapes || []);
+    });
+
+    // Bump shapeIdCounter past imported IDs
+    const allIds = animation.keyframes.flatMap(kf => kf.shapes.map(s => s.id));
+    const maxId  = allIds.length ? Math.max(...allIds) : 0;
+    shapeIdCounter = maxId + 1;
+
+    // Recreate Image() objects for image shapes (ignore any _img from JSON)
+    let imagesToLoad = 0;
+    let imagesLoaded = 0;
+
+    const onAllImagesReady = () => {
+      // This runs only when every single image (bg and shapes) is loaded.
+      currentKeyframeIndex = 0;
+      // 🔹 Clone and normalize shapes for the live array
+      shapes = cloneShapes(normalizeZOrder(animation.keyframes[0].shapes));
+      updateShapeList();
+      drawAllShapes();
+      renderTimeline(currentKeyframeIndex, null);
+    };
+
+    // 1. Check for and load the background image.
+    if (animation.canvas && animation.canvas.backgroundImageSrc) {
+      imagesToLoad++;
+      const bgImg = new Image();
+      bgImg.onload = () => {
+        backgroundImage = bgImg; // Set the global background image
+        imagesLoaded++;
+        if (imagesLoaded === imagesToLoad) onAllImagesReady();
+      };
+      bgImg.onerror = () => { // Handle potential load errors
+        console.error("Failed to load background image from JSON.");
+        imagesLoaded++;
+        if (imagesLoaded === imagesToLoad) onAllImagesReady();
+      };
+      bgImg.src = animation.canvas.backgroundImageSrc;
+    } else {
+        backgroundImage = null; // Ensure bg is cleared if not in JSON
+    }
+    // 2. Loop through all keyframes to find and load shape images.
+    animation.keyframes.forEach(kf => {
+      kf.shapes.forEach(s => {
+        if (s.type === 'image' && s.src) {
+          imagesToLoad++;
+          const img = new Image();
+          img.onload = () => {
+            s._img = img;
+            imagesLoaded++;
+            if (imagesLoaded === imagesToLoad) {
+              // All images loaded → update shapes and UI
+              currentKeyframeIndex = 0;
+              shapes = cloneShapes(normalizeZOrder(animation.keyframes[0].shapes));
+              updateShapeList();
+              drawAllShapes();
+              renderTimeline(currentKeyframeIndex, null);
+            }
+          };
+          img.src = s.src;
+          s._img = img; // placeholder until load finishes
+        }
+      });
+    });
+
+    // If there are no images, we can proceed immediately
+    if (imagesToLoad === 0) {
+      currentKeyframeIndex = 0;
+      shapes = cloneShapes(normalizeZOrder(animation.keyframes[0].shapes));
+      updateShapeList();
+      drawAllShapes();
+      renderTimeline(currentKeyframeIndex, null);
+    }
+
+  } catch (e) {
+    console.error("Failed to parse animation JSON:", e);
+    alert("Import failed: invalid animation file.");
+  }
+}
+  </script>
+  
+  <!-- Hint to the user -->
+  <div id="shortcut-hint">
+    Press <kbd>?</kbd> to view keyboard shortcuts
+  </div>
+
+  <!-- Full‐screen modal for shortcuts map -->
+  <div id="shortcut-modal" role="dialog" aria-modal="true" aria-labelledby="shortcut-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="shortcut-title">Keyboard Shortcut Map</h2>
+        <button id="close-modal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ul>
+        <b>Global:</b>
+          <li><kbd>Space</kbd> : Play/Stop (from selected Keyframe)</li>
+          <li><kbd>h</kbd> : Hide/Toggle Sidebar Menus</li>
+        </ul>
+
+        <ul>
+        <b>With Shapes Selected:</b>
+          <li><kbd>w</kbd><kbd>a</kbd><kbd>s</kbd><kbd>d</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> : Move Shape/s</li>
+          <li><kbd>q</kbd> / <kbd>e</kbd> : Rotate Shape/s left/right</li>
+          <li><kbd>Ctrl</kbd> + <kbd>D</kbd> : Duplicate Shape/s</li>
+          <li><kbd>Ctrl</kbd> + <kbd>C</kbd> : Copy Shape/s</li>
+          <li><kbd>Ctrl</kbd> + <kbd>V</kbd> : Paste Shape/s</li>
+          <li><kbd>Tab</kbd> : Cycle Shapes or Keyframes</li>
+          <li><kbd>Shift</kbd> + <kbd>Tab</kbd> : Reverse-cycle Shapes or Keyframes</li>
+          <li><kbd>Ctrl</kbd> + <kbd>Left Mouse Click</kbd> : Select Multiple Shapes</li>
+        </ul>
+
+        <ul>
+        <b>With Keyframes Selected:</b>
+          <li><kbd>k</kbd> : Clone Current Keyframe</li>
+          <li><kbd>Tab</kbd> : Cycle Keyframes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+<script>
+//KEYBOARD SHORTCUTS
+let lastInteractionArea = null;
+
+/* Guard: ignore global shortcuts while typing in editable controls */
+function _isEditableTarget(e){
+  const el = e.target;
+  if (!el) return false;
+  return !!el.closest('input, textarea, select, [contenteditable], [role="textbox"]');
+}
+
+// whenever the user clicks or focuses in one of these regions, record it:
+canvas.addEventListener('mousedown',        () => { lastInteractionArea = 'canvas'; });
+leftSidebar.addEventListener('mousedown',   () => { lastInteractionArea = 'leftSidebar'; });
+rightSidebar.addEventListener('mousedown',  () => { lastInteractionArea = 'rightSidebar'; });
+
+// Also track focus so keyboard navigation counts
+leftSidebar.addEventListener('focusin',   () => { lastInteractionArea = 'leftSidebar'; });
+rightSidebar.addEventListener('focusin',  () => { lastInteractionArea = 'rightSidebar'; });
+canvas.addEventListener('focusin',        () => { lastInteractionArea = 'canvas'; });
+
+const hint = document.getElementById('shortcut-hint');
+const modal = document.getElementById('shortcut-modal');
+const closeBtn = document.getElementById('close-modal');
+
+// Function to toggle modal visibility
+function toggleModal(show) {
+  if (show) {
+    modal.style.display = 'block';
+  } else {
+    modal.style.display = 'none';
+  }
+}
+
+// Listen for keydown globally
+document.addEventListener('keydown', (e) => {
+  if (_isEditableTarget(e)) return;
+  
+  // If user presses '?' (Shift + '/')
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    toggleModal(modal.style.display !== 'block');
+  }
+  if (e.code === 'Space') {
+    e.preventDefault(); // stop browser from scrolling
+    (isPlaying) ? stopBtn.click() : playBtn.click();
+  }
+  if (e.key === 'k') { cloneKeyframeBtn.click();}
+  if (e.key === 'Escape') { toggleModal(false);}
+  if (e.key === 'h') {
+    const next = leftSidebar.style.display !== 'none' ? 'none' : '';
+    leftSidebar.style.display = next;
+    rightSidebar.style.display = next;
+  }
+});
+
+// Close button click
+closeBtn.addEventListener('click', () => toggleModal(false));
+
+// Clicking outside the content closes modal
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    toggleModal(false);
+  }
+});
+
+// ─── Tab / Shift+Tab to cycle shapes or keyframes ─────────────────────────
+document.addEventListener('keydown', e => {
+  if (_isEditableTarget(e)) return;
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const backward = e.shiftKey;
+
+  if (lastInteractionArea === 'canvas' || lastInteractionArea === 'leftSidebar') {
+    if (shapes.length === 0) return;
+    // cycle through shapes
+    const ids = shapes.map(s => s.id);
+    // pick a starting point
+    let current = selectedShapeId != null
+                ? selectedShapeId
+                : ids[0];
+    let idx = ids.indexOf(current);
+    // advance or rewind
+    if (idx === -1) idx = 0; // extra safety
+    let nextIdx = (idx + (backward ? 1 : -1) + ids.length) % ids.length;
+    let nextId  = ids[nextIdx];
+    // select it
+    multiSelectedShapeIds.clear();
+    multiSelectedShapeIds.add(nextId);
+    selectedShapeId = nextId;
+    updateShapeList();
+    drawAllShapes();
+
+  } else if (lastInteractionArea === 'rightSidebar') {
+    // cycle through keyframes
+    const total = animation.keyframes.length;
+    let idx = currentKeyframeIndex != null
+            ? currentKeyframeIndex
+            : 0;
+    let nextIdx = (idx + (backward ? -1 : 1) + total) % total;
+    currentKeyframeIndex = nextIdx;
+    // load that keyframe
+    shapes = cloneShapes(animation.keyframes[nextIdx].shapes);
+    updateShapeList();
+    drawAllShapes();
+    renderTimeline(currentKeyframeIndex, null);
+  }
+});
+
+// ─── Arrow/WASD nudges & Q/E rotation for selected shapes (with acceleration) ───
+let _nudgeInt = null, _nudgeSpd = 1;
+document.addEventListener('keydown', e => {
+  if (_isEditableTarget(e)) return;
+
+  // don’t nudge or rotate if Ctrl or Cmd is held
+  if (e.ctrlKey || e.metaKey) return;
+  const step = 1, rotStep = 1, max = 20, accel = 1;
+  let dx = 0, dy = 0, dAngle = 0;
+  const key = e.key.toLowerCase();
+
+  if (key === 'arrowup'    || key === 'w') dy = -step;
+  else if (key === 'arrowdown'|| key === 's') dy =  step;
+  else if (key === 'arrowleft'|| key === 'a') dx = -step;
+  else if (key === 'arrowright'|| key === 'd') dx =  step;
+  else if (key === 'q') dAngle = -rotStep;
+  else if (key === 'e') dAngle =  rotStep;
+  else return;
+
+  e.preventDefault();
+  if (_nudgeInt) return;
+  _nudgeSpd = 1;
+
+  _nudgeInt = setInterval(() => {
+    multiSelectedShapeIds.forEach(id => {
+      const s = shapes.find(o => o.id === id);
+      if (!s) return;
+      s.x     += dx     * _nudgeSpd;
+      s.y     += dy     * _nudgeSpd;
+      s.angle = (s.angle || 0) + dAngle * _nudgeSpd;
+      if (currentKeyframeIndex != null) {
+        const k = animation.keyframes[currentKeyframeIndex]
+                          .shapes.find(o => o.id === id);
+        if (k) {
+          k.x     = s.x;
+          k.y     = s.y;
+          k.angle = s.angle;
+        }
+      }
+    });
+    updateShapeList();
+    drawAllShapes();
+    _nudgeSpd = Math.min(max, _nudgeSpd + accel);
+  }, 50);
+});
+
+document.addEventListener('keyup', e => {
+  const key = e.key.toLowerCase();
+  if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e'].includes(key)) {
+    e.preventDefault();
+    clearInterval(_nudgeInt);
+    _nudgeInt = null;
+  }
+});
+// ─── Ctrl+D to clone selected shapes ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (_isEditableTarget(e)) return;
+
+  // Detect Ctrl+D (or Cmd+D on Mac)
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+    e.preventDefault();
+
+    const newIds = [];
+    // For each selected shape, clone it
+    multiSelectedShapeIds.forEach(id => {
+      const original = shapes.find(s => s.id === id);
+      if (!original) return;
+
+      // Create a copy and assign a fresh ID
+      const copy = cloneShape(original);
+      copy.id = shapeIdCounter++;
+      shapes.push(copy);
+
+      // Also clone into all keyframes from the current one onward
+      if (currentKeyframeIndex != null) {
+        for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+          const kfCopy = cloneShape(copy);
+          animation.keyframes[i].shapes.push(kfCopy);
+        }
+      }
+
+      newIds.push(copy.id);
+    });
+
+    // Update the selection to the newly cloned shapes
+    multiSelectedShapeIds.clear();
+    newIds.forEach(id => multiSelectedShapeIds.add(id));
+
+    updateShapeList();
+    drawAllShapes();
+  }
+});
+
+/// ─── Clipboard for shapes copy/paste with ID preservation when crossing keyframes ─────────────────
+let shapeClipboard = { shapes: [], sourceKeyframeIndex: null };
+
+document.addEventListener('keydown', e => {
+  if (_isEditableTarget(e)) return;
+
+  const key = e.key.toLowerCase();
+
+  // Ctrl+C: Copy selected shapes
+  if ((e.ctrlKey || e.metaKey) && key === 'c') {
+    e.preventDefault();
+    if (!multiSelectedShapeIds.size) return;
+    // Deep-clone each selected shape (preserving its original id)
+    shapeClipboard.shapes = [...multiSelectedShapeIds]
+      .map(id => {
+        const s = shapes.find(o => o.id === id);
+        return s ? cloneShape(s) : null;
+      })
+      .filter(Boolean);
+    shapeClipboard.sourceKeyframeIndex = currentKeyframeIndex;
+  }
+
+  // Ctrl+V: Paste shapes into current keyframe
+  if ((e.ctrlKey || e.metaKey) && key === 'v') {
+    if (_isEditableTarget(e)) return;
+    e.preventDefault();
+    if (!shapeClipboard.shapes.length) return;
+    if (currentKeyframeIndex == null) return;
+
+    const sameFrame = shapeClipboard.sourceKeyframeIndex === currentKeyframeIndex;
+    const newIds = [];
+
+    // Build live sets so we can guarantee uniqueness even when pasting many shapes
+    const frameIds = new Set(animation.keyframes[currentKeyframeIndex].shapes.map(s => s.id));
+    const liveIds  = new Set(shapes.map(s => s.id));
+    const idExists = (id) => frameIds.has(id) || liveIds.has(id);
+
+    shapeClipboard.shapes.forEach(orig => {
+      // Clone the shape data
+      const copy = cloneShape(orig);
+
+      // If pasting back into the same frame OR the id already exists in this frame,
+      // assign a fresh unique id. Otherwise preserve the original id.
+      if (sameFrame || idExists(copy.id)) {
+        let newId = shapeIdCounter++;
+        while (idExists(newId)) newId = shapeIdCounter++;  // just in case
+        copy.id = newId;
+      }
+
+      // Add to the live shapes array
+      shapes.push(copy);
+      newIds.push(copy.id);
+      liveIds.add(copy.id);   // keep sets in sync as we paste
+
+      // Also insert into the current keyframe’s shapes
+      const kfCopy = cloneShape(copy);
+      animation.keyframes[currentKeyframeIndex].shapes.push(kfCopy);
+      frameIds.add(copy.id);  // track in frame set too
+    });
+
+    // Select the newly pasted shapes
+    multiSelectedShapeIds.clear();
+    newIds.forEach(id => multiSelectedShapeIds.add(id));
+    selectedShapeId = newIds.length === 1 ? newIds[0] : null;
+
+    updateShapeList();
+    drawAllShapes();
+  }
+});
+
+// ─── Delete / Backspace to remove selected shapes from CURRENT keyframe only ──
+document.addEventListener('keydown', e => {
+  if (_isEditableTarget(e)) return;  // keep typing safe
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  if (lastInteractionArea !== 'canvas' && lastInteractionArea !== 'leftSidebar') return;
+  if (!multiSelectedShapeIds.size) return;
+  if (currentKeyframeIndex == null) return; // only act when a keyframe is selected
+
+  e.preventDefault();
+
+  const idsToDelete = new Set(multiSelectedShapeIds);
+
+  // 1) Remove from the live shapes array (what you see on canvas)
+  shapes = normalizeZOrder(shapes.filter(s => !idsToDelete.has(s.id)));
+
+  // 2) Remove ONLY from the current keyframe
+  animation.keyframes[currentKeyframeIndex].shapes =
+    normalizeZOrder(animation.keyframes[currentKeyframeIndex].shapes.filter(s => !idsToDelete.has(s.id)));
+
+  // 3) Clean up selection
+  if (idsToDelete.has(selectedShapeId)) selectedShapeId = null;
+  multiSelectedShapeIds.clear();
+
+  updateShapeList();
+  drawAllShapes();
+});
+
+
+</script>
+
+</body>
+</html>
