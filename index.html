@@ -53,7 +53,7 @@
       justify-content: center;
     }
 
-    #shapeList, #objectList {
+    #shapeList, #objectList, #canvasList {
       margin-top: 10px;
       max-height: 100%;
       overflow-y: auto;
@@ -110,11 +110,6 @@
     }
         /* Hint in the corner */
     #shortcut-hint {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: #fff;
       padding: 8px 12px;
       border-radius: 4px;
       font-size: 0.9rem;
@@ -324,6 +319,7 @@
      /* Containers */
     #shapeList.shape-list--pro,
     #objectList.object-list--pro,
+    #canvasList.object-list--pro,
     #timeline.kf-list--pro {
       border: 1px solid #ccc;
       background: #fff;
@@ -335,6 +331,7 @@
     /* Headers (shared) */
     #shapeList.shape-list--pro .pro-header,
     #objectList.object-list--pro .pro-header,
+    #canvasList.object-list--pro .pro-header,
     #timeline.kf-list--pro .pro-header {
       position: sticky; top: -8px;
       background: linear-gradient(#fafafa, #f5f5f5);
@@ -407,7 +404,7 @@
 <body>
   <div id="leftSidebar">
 
-    <div id="objectList" class="object-list--pro">
+    <div id="canvasList" class="object-list--pro">
         <div class="pro-header"><span>Background</span></div>
 
         <input type="color" id="bgColorInput" value="#f0f0f0" title="Set background color">
@@ -513,6 +510,10 @@
       <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
       <button id="stopAnimation" onmousedown="event.preventDefault();">⏹ Stop</button>
       <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
+        <!-- Hint to the user -->
+      <div id="shortcut-hint">
+        Press <kbd>?</kbd> to view keyboard shortcuts
+      </div>
     </div>
   </div>
 
@@ -2737,11 +2738,6 @@ function loadKeyframesFromJSON(json) {
   }
 }
   </script>
-  
-  <!-- Hint to the user -->
-  <div id="shortcut-hint">
-    Press <kbd>?</kbd> to view keyboard shortcuts
-  </div>
 
   <!-- Full‐screen modal for shortcuts map -->
   <div id="shortcut-modal" role="dialog" aria-modal="true" aria-labelledby="shortcut-title">
