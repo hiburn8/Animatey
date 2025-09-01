@@ -20,41 +20,46 @@
 window.tutorialSteps = [
   {
     element: '#canvas',
-    text: '[1/9] Here’s your drawing area. You can drag shapes around directly on the canvas to reposition them. Clicking off a shape unselects it.'
+    text: '[1/8] Here’s your canvas area. You can drag objects around to reposition them, or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotate shapes.<p><kbd>O</kbd> to toggle highlighting.',
+    placement: 'left-top'
   },
   {
     element: '#cloneKeyframe',
-    text: '[2/9] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
-    fn: () => {
-    }
+    text: '[2/8] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
+    placement: 'left'
   },
   {
     element: '#timeline',
-    text: '[3/9] Your animation storyboard is based on creating keyframes, and transitioning between them. You can control their duration, order, and animation style.'
+    text: '[3/8] Your animation is based on creating keyframes, and transitioning between them. You can control the number of frames used to interpolate between specific keyframes, and choose an animation style.',
+    placement: 'left',
+    fn: () => {
+      document.getElementById('cloneKeyframe').click();
+    },
   },
   {
     element: '#shapeList',
-    text: '[4/9] Each keyframe holds objects for that scene. This panel lists all your objects. You can select, reorder, resize, recolor, rotate, or delete them here. <kbd>Ctrl-Click</kbd> to select multiple objects.'
+    text: '[4/8] Each keyframe holds objects for that scene. This panel lists all your objects. You can reorder, resize, recolor, rotate, or delete them here. <kbd>Ctrl-Click</kbd> to select multiple objects.',
+    placement: 'right-top'
+  },
+    {
+    element: '#objectList',
+    text: '[5/8] Add new objects to the scene here.',
+    placement: 'right-top'
   },
   {
     element: '#shapeType',
-    text: '[5/9] Use this dropdown to select the kind of shape you want to add (rectangle, circle, triangle, square, or text), then press Add.'
+    text: '[6/8] Use this dropdown to select the kind of shape you want to add (rectangle, circle, triangle, square, or text), then press Add.',
+    placement: 'top-center'
   },
   {
     element: '#playAnimation',
-    text: '[6/9] ▶ Play (or <kbd>Space</kbd>) runs your animation once from the currently selected keyframe.'
+    text: '[7/8] ▶ Play (or <kbd>Spacebar</kbd>) runs your animation once from the currently selected keyframe.',
+    placement: 'bottom-right'
   },
   {
-    element: '#loopAnimation',
-    text: '[7/9] ↻ Loop will continuously replay the animation in a loop.'
-  },
-  {
-    element: '#bounceAnimation',
-    text: '[8/9] ↔ Bounce plays forward then in reverse for a back-and-forth effect.'
-  },
-  {
-    element: '#exportBtn',
-    text: '[9/9] Export your animation to keep it safe, or share it. That\'s it! Have fun!'
+    element: '#demoBtn',
+    text: '[8/8] Try loading this demo animation and experimenting. Have fun!',
+    placement: 'left'
   }
 ];
 
@@ -112,6 +117,79 @@ window.tutorialSteps = [
     localStorage.setItem(STORAGE_KEY, 'true');
   }
 
+  // ── NEW: placement helper (non-breaking) ────────────────────────
+  function positionTooltip(el, tooltip, placementStr) {
+    const margin = 8;
+    const rect   = el.getBoundingClientRect();
+    const ttRect = tooltip.getBoundingClientRect();
+    const sx = window.scrollX, sy = window.scrollY;
+    // parse "primary-secondary" (e.g., "bottom-right"); defaults
+    let primary = 'bottom', secondary = 'left';
+    if (typeof placementStr === 'string' && placementStr.trim()) {
+      const parts = placementStr.toLowerCase().split(/[\s\-_:]+/);
+      if (parts[0]) primary   = parts[0];
+      if (parts[1]) secondary = parts[1];
+    }
+
+    // compute base top/left
+    let top, left;
+
+    if (primary === 'top') {
+      top = sy + rect.top - ttRect.height - margin;
+      // horizontal alignment when above
+      if (secondary === 'right') {
+        left = sx + rect.right - ttRect.width;
+      } else if (secondary === 'center' || secondary === 'middle') {
+        left = sx + rect.left + (rect.width - ttRect.width) / 2;
+      } else {
+        left = sx + rect.left; // left
+      }
+    } else if (primary === 'bottom') {
+      top = sy + rect.bottom + margin;
+      if (secondary === 'right') {
+        left = sx + rect.right - ttRect.width;
+      } else if (secondary === 'center' || secondary === 'middle') {
+        left = sx + rect.left + (rect.width - ttRect.width) / 2;
+      } else {
+        left = sx + rect.left; // left
+      }
+    } else if (primary === 'left') {
+      left = sx + rect.left - ttRect.width - margin;
+      // vertical alignment when left
+      if (secondary === 'bottom') {
+        top = sy + rect.bottom - ttRect.height;
+      } else if (secondary === 'center' || secondary === 'middle') {
+        top = sy + rect.top + (rect.height - ttRect.height) / 2;
+      } else {
+        top = sy + rect.top; // top
+      }
+    } else if (primary === 'right') {
+      left = sx + rect.right + margin;
+      if (secondary === 'bottom') {
+        top = sy + rect.bottom - ttRect.height;
+      } else if (secondary === 'center' || secondary === 'middle') {
+        top = sy + rect.top + (rect.height - ttRect.height) / 2;
+      } else {
+        top = sy + rect.top; // top
+      }
+    } else {
+      // fallback to original default: bottom-left
+      top  = sy + rect.bottom + margin;
+      left = sx + rect.left;
+    }
+
+    // clamp into viewport (so it never disappears off-screen)
+    const minLeft = sx + 8;
+    const maxLeft = sx + window.innerWidth - ttRect.width - 8;
+    const minTop  = sy + 8;
+    const maxTop  = sy + window.innerHeight - ttRect.height - 8;
+    left = Math.max(minLeft, Math.min(left, maxLeft));
+    top  = Math.max(minTop,  Math.min(top,  maxTop));
+
+    tooltip.style.top  = `${top}px`;
+    tooltip.style.left = `${left}px`;
+  }
+
   function showStep(i) {
     // clean up previous
     if (currentEl) {
@@ -162,6 +240,19 @@ window.tutorialSteps = [
     }
     tooltip.style.top  = `${top}px`;
     tooltip.style.left = `${left}px`;
+
+    // ── NEW: if a placement is provided, override default positioning ───────────
+    // supports forms like: "bottom-right", "top-left", "left", "right", "top-center"
+    // remains fully backward compatible if you omit placement.
+    try {
+      const placement = steps[i].placement || steps[i].position || steps[i].place;
+      if (placement) {
+        positionTooltip(el, tooltip, placement);
+      }
+    } catch (e) {
+      // if anything goes wrong, we gracefully keep the default placement
+      console.error(e);
+    }
 
     // ── new: run optional fn for step ─────────────────────────────
     if (typeof fn === 'function') {
