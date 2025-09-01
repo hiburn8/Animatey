@@ -30,10 +30,6 @@
       border-left: 1px solid #ccc;
     }
 
-    #fileTools {
-      text-align: right;
-    }
-
     #mainContent {
       flex: 1;
       display: flex;
@@ -57,7 +53,7 @@
       justify-content: center;
     }
 
-    .leftSidebarPanel {
+    #shapeList, #objectList {
       margin-top: 10px;
       max-height: 100%;
       overflow-y: auto;
@@ -65,46 +61,10 @@
       padding: 10px;
       width: 100%;
       box-sizing: border-box;
-    }
-
-    #shapeList {
-      margin-top: 10px;
-      max-height: 100%;
-      overflow-y: auto;
-      border: 1px solid #aaa;
-      padding: 10px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .shape-item, .keyframe-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 5px;
-      padding: 3px;
-      padding-left: 8px;
-      border-radius: 4px;
-      background-color: #fff;
-    }
-
-    .shape-item.selected, .keyframe-item.selected {
-      background-color: #cce5ff;
-      padding-left: 4px;
-      border-left: 4px solid #007bff;
-    }
-
-    .shape-name {
-      cursor: pointer;
-      flex-grow: 1;
-    }
-
-    .keyframe-name {
-      flex-grow: 1;
-      cursor: pointer;
-      font-weight: bold;
     }
 
     #timeline {
+      scroll-behavior: smooth;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -120,32 +80,19 @@
     button {
       margin-left: 5px;
     }
+
     .aim-btn, .lock-btn {
       margin: unset;
       background: none;
       border: none;
     }
     
-    .keyframe-item.drag-over {
-      border: 2px dashed #007bff;
-    }
-
-    .keyframe-controls button {
-      margin-left: 4px;
-      padding: 2px 5px;
-      cursor: pointer;
-    }
-
-    .keyframe-item.playing {
-      background-color: #28a745 !important;
-      color: white;
-    }
-
     #playAnimation.playing,
     #loopAnimation.playing,
     #bounceAnimation.playing {
-      background-color: #28a745;
+      background-color: #2ecc71;
       color: white;
+      border: none;
     }
 
     input[type="color"] {
@@ -156,11 +103,6 @@
       height: 24px;
       background: none;
       isolation: isolate;
-    }
-
-    .mode-btn, .action-btn {
-      margin-right: 4px;
-      padding: 2px 6px;
     }
 
     .drag-over {
@@ -251,25 +193,6 @@
       box-shadow: inset 0 -1px 0 #bbb;
     }
 
-    /* drag handle */
-.drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-  cursor: grab;
-  user-select: none;
-  opacity: 0.7;
-  font-size: 14px;     /* ⠿ looks right at ~14–16px */
-  line-height: 1;
-}
-.drag-handle:active { cursor: grabbing; opacity: 1; }
-.shape-item .drag-handle { color: #666; }
-.keyframe-item .drag-handle { color: #666; }
-.shape-item.selected .drag-handle,
-.keyframe-item.selected .drag-handle { color: #333; }
 
     
     /* Sidebar container */
@@ -398,82 +321,258 @@
       text-decoration: underline;
     }
 
-  </style>
+     /* Containers */
+    #shapeList.shape-list--pro,
+    #objectList.object-list--pro,
+    #timeline.kf-list--pro {
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
+
+    /* Headers (shared) */
+    #shapeList.shape-list--pro .pro-header,
+    #objectList.object-list--pro .pro-header,
+    #timeline.kf-list--pro .pro-header {
+      position: sticky; top: -8px;
+      background: linear-gradient(#fafafa, #f5f5f5);
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display:flex; align-items:center; gap:10px;
+      z-index: 1;
+    }
+
+    /* Rows: share all “shape-row” rules with “kf-row” */
+    .shape-row, .kf-row {
+      display:grid;
+      grid-template-columns: 22px 1fr auto;
+      grid-template-areas:
+        "drag name actions"
+        ".    meta meta";
+      gap:6px 10px;
+      padding:8px;
+      border: 1px solid #eee;
+      border-radius:8px;
+      margin-bottom:6px;
+      background:#fff;
+      align-items:center;
+    }
+    .shape-row:hover, .kf-row:hover { background:#f9fbff; border-color:#dbe7ff; }
+    .shape-row.selected, .kf-row.selected { outline: 2px solid #2684ff33; background:#eef5ff; }
+    .shape-row.drag-over, .kf-row.drag-over { border-style: dashed; border-color:#2684ff; background:#f5f9ff; }
+
+    .shape-row .drag, .kf-row .drag { grid-area: drag; color:#777; cursor: grab; user-select:none; font-size:16px; text-align:center; }
+    .shape-row .drag:active, .kf-row .drag:active { cursor: grabbing; }
+
+    .shape-row .name, .kf-row .name { grid-area: name; display:flex; align-items:center; gap:8px; min-width:0; }
+    .shape-row .swatch, .kf-row .swatch { width:18px; height:18px; border-radius:4px; border:1px solid #0001; box-shadow: inset 0 0 0 1px #0000000f; }
+    .shape-row .title, .kf-row .title { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+
+    .shape-row .meta, .kf-row .meta { grid-area: meta; display:flex; flex-wrap:wrap; gap:8px; padding-left:22px; font-size:12px; color:#333; }
+    .shape-row .mini, .kf-row .mini { display:inline-flex; align-items:center; gap:4px; }
+    .shape-row .mini input[type="number"], .kf-row .mini input[type="number"] { width:56px; padding:2px 4px; font-size:12px; }
+    .shape-row .mini .lock, .kf-row .mini .lock { background:none; border:1px solid #ccc; border-radius:6px; padding:2px 6px; cursor:pointer; }
+    .shape-row .mini .icon, .kf-row .mini .icon { opacity:.75; }
+
+    .shape-row .actions, .kf-row .actions { grid-area: actions; display:flex; align-items:center; gap:6px; }
+    .shape-row .actions .btn, .kf-row .actions .btn,
+    .kf-row .actions button { border:1px solid #ccc; background:#fff; padding:2px 6px; border-radius:6px; cursor:pointer; }
+    .shape-row .delete-btn-pro { color:#b00020; border-color:#e5b3b8; }
+    .kf-row .delete-btn { color:#b00020; border-color:#e5b3b8; }
+    .kf-row .play-btn { color:#075a0b; border-color:#bde5c2; }
+
+     .kf-row.playing {
+      background: linear-gradient(90deg, #28a745 0%, #34ce57 100%);
+      color: #fff;
+      border-left: 4px solid #1e7e34;
+      box-shadow: 0 0 6px rgba(40,167,69,0.4);
+      font-weight: 600;
+      transform: translateX(2px);
+      transition: all 0.2s ease;
+    }
+
+    .kf-row.playing .title {
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+
+</style>
 </head>
 <body>
   <div id="leftSidebar">
-    <div class="leftSidebarPanel">
-        <label><strong>Background:</strong>
-          <input type="color" id="bgColorInput" value="#f0f0f0" title="Set background color">
+
+    <div id="objectList" class="object-list--pro">
+        <div class="pro-header"><span>Background</span></div>
+
+        <input type="color" id="bgColorInput" value="#f0f0f0" title="Set background color">
           <button id="bgInputBtn" onmousedown="event.preventDefault();">Load Image</button>
           <input type="file" id="bgInput" style="display:none;" accept="image/*">
           <button id="clearBackground" onmousedown="event.preventDefault();">Clear</button>
-      </label>
+
     </div>
 
-    <div class="leftSidebarPanel">
-      <label><strong>Add Object:</strong>
+    <div id="objectList" class="object-list--pro">
+        <div class="pro-header"><span>Add Object</span></div>
+        
+        <div id="sidebar">
+            <div class="tabs">
+              <div class="tab active" data-target="textTab">Text 🔡</div>
+              <div class="tab" data-target="imageTab">Image 🖼️</div>
+              <div class="tab" data-target="shapesTab">Shape ⬜</div>
+              <div class="tab" data-target="drawTab">Draw 🎨</div>
+            </div>
 
-    <div id="sidebar">
-    <div class="tabs">
-      <div class="tab active" data-target="textTab">Text 🔡</div>
-      <div class="tab" data-target="imageTab">Images 🖼️</div>
-      <div class="tab" data-target="shapesTab">Shapes ⬜</div>
+          <!-- Text section -->
+          <div id="textTab" class="tab-content active">
+            <label>
+              Enter Text:
+              <input type="text" id="textContent" placeholder=""><button id="emojiButton">😀</button>
+            </label>
+           
+          <div id="emoji-hint"></div>
+
+          <script>
+            const input = document.getElementById("textContent");
+            const button = document.getElementById("emojiButton");
+            const emojiHint = document.getElementById("emoji-hint");
+
+            button.addEventListener("click", () => {
+              input.focus();
+
+              // Show shortcut hint depending on platform
+              const ua = navigator.userAgent.toLowerCase();
+              if (ua.includes("win")) {
+                emojiHint.textContent = "Press Win + . to open the emoji picker.";
+              } else if (ua.includes("mac")) {
+                emojiHint.textContent = "Press Cmd + Ctrl + Space to open the emoji picker.";
+              } else {
+                emojiHint.textContent = "Use your device's emoji keyboard.";
+              }
+              emojiHint.style.display = "block";
+            });
+          </script>
+
+          <button id="addTextBtn">Add Text</button>
+        </div>
+
+        <!-- Images section -->
+        <div id="imageTab" class="tab-content">
+          
+          <input type="file" id="imageInput" style="display:none;" accept="image/*">
+            <label>Select Image:
+          <button id="addImageBtn">Add Image</button></label>
+
+            Image Search
+          <input type="text" id="searchBox" placeholder="Search images..." />
+
+          <div id="pagination">
+            <span id="prevBtn" class="chevron">«</span>
+            <span id="pageInfo">Page 1</span>
+            <span id="nextBtn" class="chevron">»</span>
+          </div>
+          <div id="results"></div>
+
+        </div>
+
+        <!-- Shapes section -->
+        <div id="shapesTab" class="tab-content">
+            <label><input type="radio" name="shapeType" value="rectangle" checked> Rectangle</label>
+            <label><input type="radio" name="shapeType" value="square"> Square</label>
+            <label><input type="radio" name="shapeType" value="circle"> Circle</label>
+            <label><input type="radio" name="shapeType" value="triangle"> Triangle</label>
+
+            <button id="addShapeBtn">Add Shape</button>
+        </div>
+
+        <!-- Shapes section -->
+        <div id="drawTab" class="tab-content">
+            <label><input type="checkbox" id="drawPencilChk" name="drawType" value="pencil"> Pencil ✏️</label>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Text section -->
-    <div id="textTab" class="tab-content active">
-      <label>
-        Enter Text:
-        <input type="text" id="textContent" placeholder=""><button id="emojiButton">😀</button>
-      </label>
-       
-      <div id="emoji-hint"></div>
+    <div id="shapeList"></div>
 
-      <script>
-        const input = document.getElementById("textContent");
-        const button = document.getElementById("emojiButton");
-        const emojiHint = document.getElementById("emoji-hint");
+  </div>
 
-        button.addEventListener("click", () => {
-          input.focus();
+  <div id="mainContent">
+    <img src="logo_beta.png" width="140">
+    <div id="canvasViewport">
+      <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+    <div id="controls">
+      <button id="playAnimation" onmousedown="event.preventDefault();">▶ Play</button>
+      <button id="loopAnimation" onmousedown="event.preventDefault();">↻ Loop</button>
+      <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
+      <button id="stopAnimation" onmousedown="event.preventDefault();">⏹ Stop</button>
+      <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
+    </div>
+  </div>
 
-          // Show shortcut hint depending on platform
-          const ua = navigator.userAgent.toLowerCase();
-          if (ua.includes("win")) {
-            emojiHint.textContent = "Press Win + . to open the emoji picker.";
-          } else if (ua.includes("mac")) {
-            emojiHint.textContent = "Press Cmd + Ctrl + Space to open the emoji picker.";
-          } else {
-            emojiHint.textContent = "Use your device's emoji keyboard.";
-          }
-          emojiHint.style.display = "block";
-        });
-      </script>
+  <div id="rightSidebar">
 
-      <button id="addTextBtn">Add Text</button>
+    <div id="objectList" class="object-list--pro">
+        <div class="pro-header"><span>Files:</span></div>
+
+        <button id="importBtn" onmousedown="event.preventDefault();">Import</button>
+        <input type="file" id="importFile" style="display:none;" accept=".json">
+        <button id="exportBtn" onmousedown="event.preventDefault();">Export</button>
+        <button id="demoBtn">Load Demo</button>
     </div>
 
-    <!-- Images section -->
-    <div id="imageTab" class="tab-content">
-      
-      <input type="file" id="imageInput" style="display:none;" accept="image/*">
-        <label>Select Image:
-      <button id="addImageBtn">Add Image</button></label>
+    <p>
 
-    Image Search
-<input type="text" id="searchBox" placeholder="Search images..." />
-
-<div id="pagination">
-    <span id="prevBtn" class="chevron">«</span>
-    <span id="pageInfo">Page 1</span>
-    <span id="nextBtn" class="chevron">»</span>
+    <button id="cloneKeyframe">Clone Keyframe</button>
+    <button id="addKeyframe">Blank Keyframe</button>
+    <div id="timeline"></div>
 </div>
-<div id="results"></div>
 
+<div id="mobile-blocker" aria-modal="true" role="dialog" aria-label="Mobile not supported"
+     style="position: fixed; inset: 0; z-index: 10002 !important; display: none; align-items: center; justify-content: center; background: #111; color: #fff;">
+  <div class="box" style="background: #465985; padding: 16px 20px; border-radius: 8px; width: 100%; text-align: center; line-height: 1.4;">
+   <img src="logo_beta.png" width="150">
+    <h2 style="margin:0 0 8px;">Not supported on mobile :(</h2>
+    <p style="margin:0 0 8px;">Please open Animatey on a desktop or laptop.</p>
+  </div>
+</div>
 
+<script>
+(function(){
+  function isMobileish(){
+    const touch   = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const coarse  = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    const noHover = window.matchMedia && matchMedia('(hover: none)').matches;
+    const narrow  = Math.min(window.innerWidth, (screen && screen.width) || window.innerWidth) <= 820;
+    const ua      = navigator.userAgent || '';
+    const mobileUA= /Android|iPhone|iPad|iPod|Mobile|IEMobile|Windows Phone/i.test(ua);
+    return (coarse && noHover) || (touch && (narrow || mobileUA));
+  }
 
-    <script>
+function showBlocker(){
+  const el = document.getElementById('mobile-blocker');
+  if (!el) return;
+  el.style.display = 'flex';
+  // ensure it's a direct child of <body>, then remove everything else
+  if (el.parentNode !== document.body) document.body.appendChild(el);
+  document.body.replaceChildren(el);
+  // lock scrolling completely
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style.height = '100%';
+  document.body.style.overflow = 'hidden';
+  document.body.style.height = '100%';
+}
+  if (isMobileish()) showBlocker();
+
+})();
+</script>
+<script>
   const API_KEY = "21438573-416fcdaef6b6d40e4e93ab6c6";
   const searchBox = document.getElementById("searchBox");
   const resultsDiv = document.getElementById("results");
@@ -613,118 +712,42 @@
     img.src = src;
   }
 </script>
-
-    </div>
-
-    <!-- Shapes section -->
-    <div id="shapesTab" class="tab-content">
-      <label><input type="radio" name="shapeType" value="rectangle" checked> Rectangle</label>
-      <label><input type="radio" name="shapeType" value="square"> Square</label>
-      <label><input type="radio" name="shapeType" value="circle"> Circle</label>
-      <label><input type="radio" name="shapeType" value="triangle"> Triangle</label>
-      <button id="addShapeBtn">Add Shape</button>
-    </div>
-  </div>
-
-  <script>
-    // Tab switching
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.target).classList.add('active');
-      });
-    });
-
-    document.getElementById('addTextBtn').onclick = () => {
-      //alert(`Add Text: "${document.getElementById('textContent').value}" size ${document.getElementById('fontSize').value}px`);
-      addObject('text');
-
-    };
-    document.getElementById('addImageBtn').onclick = () => {
-      addObject('image');
-    };
-    document.getElementById('addShapeBtn').onclick = () => {
-      const type = document.querySelector('input[name="shapeType"]:checked').value;
-      addObject(type);
-      
-    };
-  </script>
-
-    </div>
-
-    <div id="shapeList"></div>
-  </div>
-
-  <div id="mainContent">
-    <img src="logo_beta.png" width="150">
-    <div id="canvasViewport">
-      <canvas id="canvas" width="800" height="600"></canvas>
-    </div>
-    <div id="controls">
-      <button id="playAnimation" onmousedown="event.preventDefault();">▶ Play</button>
-      <button id="loopAnimation" onmousedown="event.preventDefault();">↻ Loop</button>
-      <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
-      <button id="stopAnimation" onmousedown="event.preventDefault();">⏹ Stop</button>
-      <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
-    </div>
-  </div>
-
-  <div id="rightSidebar">
-    <div id="fileTools">
-      <button id="importBtn" onmousedown="event.preventDefault();">Import</button>
-      <input type="file" id="importFile" style="display:none;" accept=".json">
-      <button id="exportBtn" onmousedown="event.preventDefault();">Export</button>
-      <button id="demoBtn">Load Demo</button>
-    </div>
-
-    <hr>
-
-    <button id="cloneKeyframe">Clone Keyframe</button>
-    <button id="addKeyframe">Blank Keyframe</button>
-    <div id="timeline"></div>
-  </div>
-
-  <div id="mobile-blocker" aria-modal="true" role="dialog" aria-label="Mobile not supported"
-       style="position: fixed; inset: 0; z-index: 10002 !important; display: none; align-items: center; justify-content: center; background: #111; color: #fff;">
-
-    <div class="box" style="background: #465985; padding: 16px 20px; border-radius: 8px; width: 100%; text-align: center; line-height: 1.4;">
-     <img src="logo_beta.png" width="150">
-      <h2 style="margin:0 0 8px;">Not supported on mobile :(</h2>
-      <p style="margin:0 0 8px;">Please open Animatey on a desktop or laptop.</p>
-    </div>
-  </div>
 <script>
-(function(){
-  function isMobileish(){
-    const touch   = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    const coarse  = window.matchMedia && matchMedia('(pointer: coarse)').matches;
-    const noHover = window.matchMedia && matchMedia('(hover: none)').matches;
-    const narrow  = Math.min(window.innerWidth, (screen && screen.width) || window.innerWidth) <= 820;
-    const ua      = navigator.userAgent || '';
-    const mobileUA= /Android|iPhone|iPad|iPod|Mobile|IEMobile|Windows Phone/i.test(ua);
-    return (coarse && noHover) || (touch && (narrow || mobileUA));
-  }
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
 
-function showBlocker(){
-  const el = document.getElementById('mobile-blocker');
-  if (!el) return;
-  el.style.display = 'flex';
-  // ensure it's a direct child of <body>, then remove everything else
-  if (el.parentNode !== document.body) document.body.appendChild(el);
-  document.body.replaceChildren(el);
-  // lock scrolling completely
-  document.documentElement.style.overflow = 'hidden';
-  document.documentElement.style.height = '100%';
-  document.body.style.overflow = 'hidden';
-  document.body.style.height = '100%';
-}
-  if (isMobileish()) showBlocker();
+      if (tab.dataset.target !== 'drawTab') { exitFreehandMode();}
 
-})();
+    });
+  });
+
+  document.getElementById("drawPencilChk").addEventListener("change", function() {
+    if (this.checked) {
+      enableFreehandMode();
+    } else {
+      exitFreehandMode();
+    }
+  });
+
+  document.getElementById('addTextBtn').onclick = () => {
+    //alert(`Add Text: "${document.getElementById('textContent').value}" size ${document.getElementById('fontSize').value}px`);
+    addObject('text');
+  };
+
+  document.getElementById('addImageBtn').onclick = () => {
+    addObject('image');
+  };
+
+  document.getElementById('addShapeBtn').onclick = () => {
+      const type = document.querySelector('input[name="shapeType"]:checked').value;
+      addObject(type);   
+  };
 </script>
-
 <script src="tutorial.js"></script>
 <script src="default_animation.js"></script>
 <script>
@@ -741,7 +764,21 @@ function showBlocker(){
     ctx.setTransform(ratio,0,0,ratio,0,0);
   })();
 
-  
+  /* --- Mouse normalization for fullscreen --- */
+  /* fixme: hardcoded canvas size */
+  let _baseCssWidth  = parseFloat(getComputedStyle(canvas).width)  || 800;
+  let _baseCssHeight = parseFloat(getComputedStyle(canvas).height) || 600;
+
+  function _mouseToCanvasSpace(e){
+    /*fixme: cache getBoundingClientRect() so its not called on all mousemove events etc*/
+    const rect = canvas.getBoundingClientRect();
+    /* Convert from client pixels (fullscreen-scaled) to the canvas's original CSS pixel space */
+    return {
+      x: (e.clientX - rect.left) * (_baseCssWidth  / rect.width),
+      y: (e.clientY - rect.top)  * (_baseCssHeight / rect.height)
+    };
+  }
+
   const leftSidebar = document.getElementById('leftSidebar');
   const rightSidebar = document.getElementById('rightSidebar');
 
@@ -788,12 +825,22 @@ function showBlocker(){
   let selectedShapeId = null;
   let multiSelectedShapeIds = new Set();
   let shapeSelectionSource = 'list'; // 'list' or 'canvas'
+  let shapeSelectionForce = null;   // override shape outlines
 
   let isPlaying = false;
   let isLooping = false;
   let isBouncing = false;
   let animationFrameId = null;
   let playbackStartKeyframe = null;
+
+  /* ⬇️ NEW: freehand drawing state */
+  let drawMode = null;                // 'freehand' | null
+  let isDrawingFreehand = false;
+  let freehandPoints = [];            // raw points [{x,y}, ...]
+  let _freehandPreviewColor = '#000'; // temporary stroke while drawing
+
+  /*UI State*/
+  let lastCursor = null;
 
   // Shared angle-aim state that persists across updateShapeList() rebuilds
   const angleAim = {
@@ -902,6 +949,43 @@ function drawShape(s, outline = false) {
     return;
   }
 
+  if (s.type === 'freehand') {
+    // ⬇️ NEW: draw smoothed freehand path using quadratic curve through midpoints
+    const pts = Array.isArray(s.points) ? s.points : [];
+    if (pts.length > 1) {
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length - 1; i++) {
+        const midX = (pts[i].x + pts[i+1].x) / 2;
+        const midY = (pts[i].y + pts[i+1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+      }
+      // tail
+      ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+      ctx.stroke();
+
+      if (outline) {
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(s.x, s.y, s.w, s.h);
+      }
+    } else if (pts.length === 1) {
+      // single dot
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(pts[0].x, pts[0].y, 1.5, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+    return;
+  }
+
   if (s.type !== 'text') {
 
     switch (s.type) {
@@ -968,47 +1052,22 @@ function drawAllShapes(state = shapes) {
 
   const ordered = [...state].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
   // Only highlight shapes when they're selected from the shapes list, not from canvas
-  ordered.forEach(s => drawShape(s, shapeSelectionSource === 'list' && multiSelectedShapeIds.has(s.id)));
+ordered.forEach(s => {
+  const selected = multiSelectedShapeIds.has(s.id);
+  const showOutline =
+    (shapeSelectionForce === true  && selected) ||                   // Force ON: outline selected (canvas or list)
+    (shapeSelectionForce === null  && shapeSelectionSource === 'list' && selected); // Auto: list-only
+    // Force OFF (false) => no outline
+  drawShape(s, showOutline);
+});
 }
 
 function updateShapeList() {
+  // nicer visuals container class (safe to leave even if CSS not present)
+  shapeListDiv.classList.add('shape-list--pro');
+  shapeListDiv.innerHTML = '<div class="pro-header"><span>Layers</span></div>';
 
-  //shapes = normalizeZOrder();
-  shapeListDiv.innerHTML = '<strong>Layers:</strong>';
-
-  const shapesForDisplay = [...shapes].sort((a, b) => b.z - a.z);
-
-  shapesForDisplay.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'shape-item' + (multiSelectedShapeIds.has(s.id) ? ' selected' : '');
-    div.draggable = true;
-    div.dataset.id = s.id;
-
-    // ⬇️ ADDED: ⠿ drag handle at the start
-    div.innerHTML = `
-          <span class="drag-handle" title="Drag to reorder" draggable="true" aria-label="Drag shape">⠿</span>
-          <span class="shape-name" data-id="${s.id}">${s.name||s.type+' #'+s.id}</span>
-          ${s.type !== 'image'
-            ? `<input type="color" data-id="${s.id}" value="${s.color}">`
-            : ''
-          }
-          <!-- ───── Text input for text shapes ───── -->
-          ${s.type==='text' 
-            ? `<input type="text" class="text-input" data-id="${s.id}" value="${s.text||''}" style="width:80px; margin-left:8px;">`
-            : ''}
-          [<i>w&nbsp;</i><input type="number" id="w-input_${s.id}" class="w-input" data-id="${s.id}" value="${s.w}" min="1" max="9999">
-          &nbsp;<i>h&nbsp;</i><input type="number" id="h-input_${s.id}" class="h-input" data-id="${s.id}" value="${s.h}" min="1" max="9999">
-          <button type="button" class="lock-btn" data-id="${s.id}">${s.locked?'🔒':'🔓'}</button>]
-          <div style="display:flex; align-items:center;">
-            &nbsp; [°<input type="number" id="angle-input_${s.id}" class="angle-input" data-id="${s.id}" value="${s.angle||0}" min="-360" max="9999">
-            <button type="button" class="aim-btn" data-id="${s.id}" draggable="false" style="cursor: crosshair;">🔘</button>]
-          </div>
-          <button type="button" class="delete-btn" data-id="${s.id}">🗑️</button>
-        `;
-    shapeListDiv.appendChild(div);
-  });
-
-    // angle aiming overlay (only one globally)
+  // ── Angle aiming overlay (same as before) ─────────────────────────────────
   if (!document.getElementById('angleLine')) {
     const line = document.createElement('div');
     line.id = 'angleLine';
@@ -1021,49 +1080,405 @@ function updateShapeList() {
     line.style.zIndex = '9999';
     document.body.appendChild(line);
   }
-
   const angleLine = document.getElementById('angleLine');
 
-  // keep local vars (as in your original code), but mirror from shared state
+  // mirror shared aim state
   let isAiming = angleAim.isAiming;
   let aimingShapeId = angleAim.aimingShapeId;
   let aimCenter = { x: angleAim.aimCenter.x, y: angleAim.aimCenter.y };
 
-  // wire up aim buttons
-  document.querySelectorAll('.aim-btn').forEach(btn => {
-    btn.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      aimingShapeId = parseInt(btn.dataset.id);
-      isAiming = true;
+  // top→bottom (highest z first)
+  const shapesForDisplay = [...shapes].sort((a, b) => b.z - a.z);
 
-      // sync to shared state (used by the guarded global listeners)
-      angleAim.aimingShapeId = aimingShapeId;
-      angleAim.isAiming = isAiming;
+  // 🔧 NEW: shared drag state across all rows (fix)
+  let _draggingId = null;
 
-      const rect = btn.getBoundingClientRect();
-      aimCenter = {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2
-      };
-      angleAim.aimCenter = { x: aimCenter.x, y: aimCenter.y };
+  function renderRows() {
+    // remove previous rows (keep header)
+    [...shapeListDiv.querySelectorAll('.shape-row')].forEach(el => el.remove());
 
-      angleLine.style.display = 'block';
-      angleLine.style.left = aimCenter.x + 'px';
-      angleLine.style.top = aimCenter.y + 'px';
-      angleLine.style.width = '0px';
-      angleLine.style.transform = 'rotate(0deg)';
+    shapesForDisplay.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'shape-row' + (multiSelectedShapeIds.has(s.id) ? ' selected' : '');
+      row.dataset.id = s.id;
+      row.draggable = true; // keep for broader browser support
+
+      const colorBlock = (s.type !== 'image')
+        ? `<span class="swatch" style="background:${s.color}"></span>`
+        : `<span class="swatch" style="background:linear-gradient(45deg,#ddd,#bbb)"></span>`;
+
+      const angleCtl = `
+        <label class="mini"><span class="icon">⟳</span>
+          <input type="number" id="angle-input_${s.id}" class="angle-input" data-id="${s.id}" value="${s.angle||0}" min="-360" max="9999">
+        </label>
+        <button type="button" class="mini lock aim-btn" data-id="${s.id}" draggable="false" style="cursor: crosshair;">🔘</button>
+      `;
+
+      row.innerHTML = `
+        <div class="drag" title="Drag to reorder" aria-label="Drag shape">⠿</div>
+        <div class="name">
+          ${colorBlock}
+          <div class="title" data-id="${s.id}" title="Click to select / Double-click to rename">
+            ${s.name || (s.type + ' #' + s.id)}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn delete-btn-pro" data-id="${s.id}" title="Delete">🗑</button>
+        </div>
+        <div class="meta">
+          ${s.type !== 'image' ? `
+            <label class="mini"><span class="icon">🎨</span>
+              <input type="color" data-id="${s.id}" value="${s.color}">
+            </label>` : ''}
+          ${s.type==='text' ? `
+            <label class="mini"><span class="icon">🔤</span>
+              <input type="text" class="text-input" data-id="${s.id}" value="${s.text||''}" style="width:120px;">
+            </label>` : ''}
+          <label class="mini"><span class="icon">w</span>
+            <input type="number" id="w-input_${s.id}" class="w-input" data-id="${s.id}" value="${s.w}" min="1" max="9999">
+          </label>
+          <label class="mini"><span class="icon">h</span>
+            <input type="number" id="h-input_${s.id}" class="h-input" data-id="${s.id}" value="${s.h}" min="1" max="9999">
+          </label>
+          <button type="button" class="mini lock lock-btn" data-id="${s.id}" title="Lock aspect while resizing">
+            ${s.locked?'🔒':'🔓'}
+          </button>
+          ${angleCtl}
+        </div>
+      `;
+      shapeListDiv.appendChild(row);
+
+      // ── Selection (single / Ctrl|Cmd toggle) ───────────────────────────────
+      row.addEventListener('click', (e) => {
+        shapeSelectionSource = 'list';
+        if (e.target.closest('input,button,.drag')) return;
+        const id = s.id;
+        if (e.ctrlKey || e.metaKey) {
+          if (multiSelectedShapeIds.has(id)) {
+            multiSelectedShapeIds.delete(id);
+            if (selectedShapeId === id) {
+              selectedShapeId = multiSelectedShapeIds.size ? [...multiSelectedShapeIds][0] : null;
+            }
+          } else {
+            multiSelectedShapeIds.add(id);
+            selectedShapeId = id;
+          }
+        } else {
+          multiSelectedShapeIds.clear();
+          multiSelectedShapeIds.add(id);
+          selectedShapeId = id;
+        }
+        updateShapeList();
+        drawAllShapes();
+      });
+
+      // ── Rename on dblclick ─────────────────────────────────────────────────
+      row.querySelector('.title').addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        const id = s.id;
+        const shape = shapes.find(x => x.id === id);
+        if (!shape) return;
+        const newName = prompt("Rename shape:", shape.name || (shape.type + ' #' + shape.id));
+        if (newName && newName.trim()) {
+          shape.name = newName.trim();
+          animation.keyframes.forEach(kf => {
+            const sk = kf.shapes.find(o => o.id === id);
+            if (sk) sk.name = shape.name;
+          });
+          updateShapeList();
+        }
+      });
+
+      // ── Inputs wiring (color/text/w/h/angle/lock) — same logic as yours ───
+      row.querySelectorAll('input[type="color"]').forEach(inp => {
+        inp.oninput = () => {
+          const id = parseInt(inp.dataset.id), c = inp.value;
+          const ss = shapes.find(o => o.id === id);
+          if (!ss || ss.type === 'image') return;
+          ss.color = c;
+          if (currentKeyframeIndex != null) {
+            const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+            if (kf) kf.color = c;
+          }
+          drawAllShapes();
+        };
+      });
+
+      row.querySelectorAll('.text-input').forEach(inp => {
+        inp.oninput = () => {
+          const id = parseInt(inp.dataset.id, 10);
+          const ss = shapes.find(o => o.id === id);
+          if (!ss) return;
+          ss.text = inp.value;
+          if (currentKeyframeIndex != null) {
+            const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+            if (kf) kf.text = inp.value;
+          }
+          drawAllShapes();
+        };
+      });
+
+      row.querySelectorAll('.w-input').forEach(inp => {
+        inp.oninput = () => {
+          const id = parseInt(inp.dataset.id);
+          const ss = shapes.find(o => o.id === id);
+          const newW = parseFloat(inp.value);
+          if (!ss || isNaN(newW)) return;
+          const oldW = ss.w;
+          ss.w = newW;
+
+          if (ss.type === 'freehand' && oldW !== 0 && Array.isArray(ss.points)) {
+            const scaleX = newW / oldW;
+            ss.points.forEach(p => { p.x = ss.x + (p.x - ss.x) * scaleX; });
+          }
+
+          if (ss.locked && oldW !== 0) {
+            const aspect = ss.h / oldW;
+            const newH = newW * aspect;
+            if (ss.type === 'freehand' && ss.h !== newH && Array.isArray(ss.points)) {
+              const scaleY = newH / ss.h;
+              ss.points.forEach(p => { p.y = ss.y + (p.y - ss.y) * scaleY; });
+            }
+            ss.h = newH;
+            const hInput = row.querySelector(`.h-input[data-id="${id}"]`);
+            if (hInput) hInput.value = Math.round(newH);
+          }
+
+          if (currentKeyframeIndex != null) {
+            const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+            if (kf) {
+              kf.w = ss.w; kf.h = ss.h;
+              if (kf.type === 'freehand' && Array.isArray(kf.points)) {
+                kf.points = ss.points.map(p => ({x:p.x, y:p.y}));
+              }
+            }
+          }
+          drawAllShapes();
+        };
+      });
+
+      row.querySelectorAll('.h-input').forEach(inp => {
+        inp.oninput = () => {
+          const id = parseInt(inp.dataset.id);
+          const ss = shapes.find(o => o.id === id);
+          const newH = parseFloat(inp.value);
+          if (!ss || isNaN(newH)) return;
+          const oldH = ss.h;
+          ss.h = newH;
+
+          if (ss.type === 'freehand' && oldH !== 0 && Array.isArray(ss.points)) {
+            const scaleY = newH / oldH;
+            ss.points.forEach(p => { p.y = ss.y + (p.y - ss.y) * scaleY; });
+          }
+
+          if (ss.locked && oldH !== 0) {
+            const aspect = ss.w / oldH;
+            const newW = newH * aspect;
+            if (ss.type === 'freehand' && ss.w !== newW && Array.isArray(ss.points)) {
+              const scaleX = newW / ss.w;
+              ss.points.forEach(p => { p.x = ss.x + (p.x - ss.x) * scaleX; });
+            }
+            ss.w = newW;
+            const wInput = row.querySelector(`.w-input[data-id="${id}"]`);
+            if (wInput) wInput.value = Math.round(newW);
+          }
+
+          if (currentKeyframeIndex != null) {
+            const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+            if (kf) {
+              kf.w = ss.w; kf.h = ss.h;
+              if (kf.type === 'freehand' && Array.isArray(kf.points)) {
+                kf.points = ss.points.map(p => ({x:p.x, y:p.y}));
+              }
+            }
+          }
+          drawAllShapes();
+        };
+      });
+
+      row.querySelectorAll('.angle-input').forEach(inp => {
+        inp.oninput = () => {
+          const id = parseInt(inp.dataset.id);
+          const ss = shapes.find(o => o.id === id);
+          const newAngle = parseFloat(inp.value);
+          if (!ss || isNaN(newAngle)) return;
+          ss.angle = newAngle;
+          if (currentKeyframeIndex != null) {
+            const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
+            if (kf) kf.angle = newAngle;
+          }
+          drawAllShapes();
+        };
+      });
+
+      row.querySelectorAll('.lock-btn').forEach(btn => {
+        btn.onclick = () => {
+          const id = parseInt(btn.dataset.id);
+          const ss = shapes.find(o => o.id === id);
+          ss.locked = !ss.locked;
+          btn.textContent = ss.locked ? '🔒' : '🔓';
+        };
+      });
+
+      // ── Delete (same scope prompt) ─────────────────────────────────────────
+      row.querySelectorAll('.delete-btn-pro').forEach(btn => {
+        btn.onclick = () => {
+          const id = parseInt(btn.dataset.id);
+          const onlyOneKeyframe = animation.keyframes.length <= 1;
+          const shapeInOtherKeyframes = animation.keyframes.some((kf, i) => i !== currentKeyframeIndex && kf.shapes.some(o => o.id === id));
+          let scope = "1";
+          if (!onlyOneKeyframe && shapeInOtherKeyframes) {
+            scope = prompt(
+              "Delete shape from:\n" +
+              "1 = Current keyframe only (default)\n" +
+              "2 = This and forward keyframes\n" +
+              "3 = All keyframes"
+            );
+            if (scope === null) return;
+          }
+          shapes = normalizeZOrder(shapes.filter(o => o.id !== id));
+          if (currentKeyframeIndex != null) {
+            if (scope === "2") {
+              for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+                animation.keyframes[i].shapes = normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
+              }
+            } else if (scope === "3") {
+              for (let i = 0; i < animation.keyframes.length; i++) {
+                animation.keyframes[i].shapes = normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
+              }
+            } else {
+              animation.keyframes[currentKeyframeIndex].shapes =
+                normalizeZOrder(animation.keyframes[currentKeyframeIndex].shapes.filter(o => o.id !== id));
+            }
+          }
+          if (multiSelectedShapeIds.has(id)) multiSelectedShapeIds.delete(id);
+          if (selectedShapeId === id) selectedShapeId = null;
+
+          const idx = shapesForDisplay.findIndex(x => x.id === id);
+          if (idx >= 0) shapesForDisplay.splice(idx, 1);
+          renderRows();
+          drawAllShapes();
+        };
+      });
+
+      // ── Aim button wiring (unchanged) ──────────────────────────────────────
+      row.querySelectorAll('.aim-btn').forEach(btn => {
+        btn.addEventListener('mousedown', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          aimingShapeId = parseInt(btn.dataset.id);
+          isAiming = true;
+          angleAim.aimingShapeId = aimingShapeId;
+          angleAim.isAiming = isAiming;
+          const rect = btn.getBoundingClientRect();
+          aimCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+          angleAim.aimCenter = { x: aimCenter.x, y: aimCenter.y };
+          angleLine.style.display = 'block';
+          angleLine.style.left = aimCenter.x + 'px';
+          angleLine.style.top = aimCenter.y + 'px';
+          angleLine.style.width = '0px';
+          angleLine.style.transform = 'rotate(0deg)';
+        });
+      });
+
+      // ── Drag & drop reordering (FIXED: shared _draggingId) ────────────────
+      const handle = row.querySelector('.drag');
+      handle.setAttribute('draggable', 'true');           // ensure dragstart fires on handle, too
+      handle.addEventListener('mousedown', ev => ev.stopPropagation());
+
+      function startDrag(e) {
+        // only allow if started on handle
+        if (!e.target.closest('.drag')) { e.preventDefault(); return; }
+        _draggingId = s.id;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(s.id)); // required for Safari
+        const rect = row.getBoundingClientRect();
+        const offX = (e.clientX - rect.left), offY = (e.clientY - rect.top);
+        if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(row, offX, offY);
+      }
+      function dragOver(e) {
+        if (_draggingId == null) return;
+        e.preventDefault();
+        row.classList.add('drag-over');
+      }
+      function dragLeave() { row.classList.remove('drag-over'); }
+      function endDrag() { row.classList.remove('drag-over'); if (_draggingId != null) _draggingId = null; }
+
+      function dropOn(e) {
+        if (_draggingId == null) return;
+        e.preventDefault();
+        row.classList.remove('drag-over');
+
+        const draggedId = parseInt(e.dataTransfer.getData('text/plain'), 10) || _draggingId;
+        const targetId  = s.id;
+        if (!draggedId || draggedId === targetId) { _draggingId = null; return; }
+
+        // build display order (top→bottom), move dragged
+        const displayIds = shapesForDisplay.map(x => x.id);
+        const fromPos = displayIds.indexOf(draggedId);
+        const toPos   = displayIds.indexOf(targetId);
+        if (fromPos < 0 || toPos < 0) { _draggingId = null; return; }
+
+        displayIds.splice(toPos, 0, displayIds.splice(fromPos,1)[0]);
+
+        // apply to real data: top gets highest z
+        const n = displayIds.length;
+        displayIds.forEach((id, i) => {
+          const ss = shapes.find(x => x.id === id);
+          if (ss) ss.z = n - 1 - i;
+        });
+        normalizeZOrder(shapes);
+
+        // propagate to keyframes (same prompt)
+        if (currentKeyframeIndex != null) {
+          const option = prompt(
+            'Apply z-index change to:\n' +
+            '1 = current keyframe only\n' +
+            '2 = all keyframes\n' +
+            '3 = current and all future keyframes',
+            '1'
+          );
+          const affectedIndices = (() => {
+            if (option === '2') return [...animation.keyframes.keys()];
+            if (option === '3') return Array.from({length: animation.keyframes.length - currentKeyframeIndex}, (_, i) => i + currentKeyframeIndex);
+            return [currentKeyframeIndex];
+          })();
+          affectedIndices.forEach(i => {
+            const frame = animation.keyframes[i].shapes;
+            shapes.forEach(ss => {
+              const match = frame.find(k => k.id === ss.id);
+              if (match) match.z = ss.z;
+            });
+            normalizeZOrder(frame);
+          });
+        }
+
+        // refresh local list & UI
+        shapesForDisplay.length = 0;
+        shapesForDisplay.push(...[...shapes].sort((a,b)=> b.z - a.z));
+        renderRows();
+        drawAllShapes();
+
+        _draggingId = null;
+      }
+
+      // bind to both row and handle for cross-browser reliability
+      row.addEventListener('dragstart', startDrag);
+      handle.addEventListener('dragstart', startDrag);
+      row.addEventListener('dragover', dragOver);
+      row.addEventListener('dragenter', dragOver);
+      row.addEventListener('dragleave', dragLeave);
+      row.addEventListener('dragend', endDrag);
+      row.addEventListener('drop', dropOn);
     });
-  });
+  }
 
+  renderRows();
+
+  // ── Global aiming listeners (guarded) ─────────────────────────────────────
   if (!angleAimEventGuard) {
     window.addEventListener('mousemove', e => {
-      // read from shared state (NOT the old locals)
       if (!angleAim.isAiming || angleAim.aimingShapeId == null) return;
-
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
-
+      const mouseX = e.clientX, mouseY = e.clientY;
       const dx = mouseX - angleAim.aimCenter.x;
       const dy = mouseY - angleAim.aimCenter.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1071,22 +1486,18 @@ function updateShapeList() {
       if (angle < 0) angle += 360;
       angle = Math.round(angle);
 
-      // update the overlay
       angleLine.style.width = distance + 'px';
       angleLine.style.transform = `rotate(${angle}deg)`;
 
-      // update the shape + current keyframe
       const s = shapes.find(o => o.id === angleAim.aimingShapeId);
       if (s) {
         s.angle = angle;
         const input = document.querySelector(`.angle-input[data-id="${angleAim.aimingShapeId}"]`);
         if (input) input.value = angle;
-
         if (currentKeyframeIndex != null) {
           const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === s.id);
           if (kf) kf.angle = angle;
         }
-
         drawAllShapes();
       }
     });
@@ -1101,286 +1512,9 @@ function updateShapeList() {
 
     angleAimEventGuard = true;
   }
-
-  // shape drag/drop behavior
-  document.querySelectorAll('.shape-item').forEach(item => {
-    // ⬇️ CHANGED: only start drag when the ⠿ handle is the drag source
-    item.ondragstart = e => {
-      if (!e.target.classList.contains('drag-handle')) { e.preventDefault(); return; }
-      e.dataTransfer.setData('text/plain', item.dataset.id);
-      //use the full row as the ghost image
-      const rect = item.getBoundingClientRect();
-      const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
-      if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(item, offX, offY);
-    };
-    item.ondragover = e => { e.preventDefault(); item.classList.add('drag-over'); };
-    item.ondragleave = () => item.classList.remove('drag-over');
-    item.ondrop = e => {
-      e.preventDefault();
-      item.classList.remove('drag-over');
-      const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
-      const targetId = parseInt(item.dataset.id);
-      const draggedIdx = shapes.findIndex(s => s.id === draggedId);
-      const targetIdx = shapes.findIndex(s => s.id === targetId);
-      const [moved] = shapes.splice(draggedIdx, 1);
-      shapes.splice(targetIdx, 0, moved);
-      shapes.forEach((s, i) => s.z = i);
-      if (currentKeyframeIndex == null) return;
-      const option = prompt('Apply z-index change to:\n1 = current keyframe only\n2 = all keyframes\n3 = current and all future keyframes', '1');
-      const affectedIndices = (() => {
-        if (option === '2') return [...animation.keyframes.keys()];
-        if (option === '3') return Array.from({length: animation.keyframes.length - currentKeyframeIndex}, (_, i) => i + currentKeyframeIndex);
-        return [currentKeyframeIndex];
-      })();
-      affectedIndices.forEach(i => {
-        const frame = animation.keyframes[i].shapes;
-        shapes.forEach(s => {
-          const match = frame.find(k => k.id === s.id);
-          if (match) match.z = s.z;
-        });
-      });
-      updateShapeList();
-      drawAllShapes();
-    };
-
-    // ⬇️ ADDED: make the handle itself draggable & stop row click side-effects
-    const h = item.querySelector('.drag-handle');
-    if (h) {
-      h.addEventListener('mousedown', ev => ev.stopPropagation());
-      h.addEventListener('dragstart', e => {
-        e.stopPropagation();
-        e.dataTransfer.setData('text/plain', item.dataset.id);
-        item.classList.add('drag-over');
-        //use the full row as the ghost image
-        const rect = item.getBoundingClientRect();
-        const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
-        if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(item, offX, offY);
-      });
-      h.addEventListener('dragend', () => item.classList.remove('drag-over'));
-    }
-  });
-
-  document.querySelectorAll('.shape-name').forEach(el => {
-    el.onclick = (e) => {
-      const id = parseInt(el.dataset.id);
-      shapeSelectionSource = 'list';
-      if (e.ctrlKey || e.metaKey) {
-        // Ctrl+click: toggle selection of this shape
-        if (multiSelectedShapeIds.has(id)) {
-          multiSelectedShapeIds.delete(id);
-          // If we removed the selectedShapeId, pick another one or set to null
-          if (selectedShapeId === id) {
-            selectedShapeId = multiSelectedShapeIds.size > 0 ? [...multiSelectedShapeIds][0] : null;
-          }
-        } else {
-          multiSelectedShapeIds.add(id);
-          selectedShapeId = id;
-        }
-      } else {
-        // Regular click: select only this shape
-        multiSelectedShapeIds.clear();
-        multiSelectedShapeIds.add(id);
-        selectedShapeId = id;
-      }
-      updateShapeList();
-      drawAllShapes();
-    };
-
-    // ADD THIS NEW EVENT LISTENER for renaming
-    el.addEventListener('dblclick', (e) => {
-      e.stopPropagation();
-      const id = parseInt(el.dataset.id);
-      const shape = shapes.find(s => s.id === id);
-      if (!shape) return;
-
-      const newName = prompt("Rename shape:", shape.name);
-      if (newName && newName.trim()) {
-        shape.name = newName.trim();
-
-        // Update the name across ALL keyframes
-        animation.keyframes.forEach(kf => {
-          const shapeInKeyframe = kf.shapes.find(s => s.id === id);
-          if (shapeInKeyframe) {
-            shapeInKeyframe.name = shape.name;
-        }
-        });
-        updateShapeList(); // Redraw the list to show the new name
-      }
-    });
-  });
-
-  document.querySelectorAll('input[type="color"]').forEach(inp => {
-    inp.oninput = () => {
-      const id = parseInt(inp.dataset.id), c = inp.value;
-      const s = shapes.find(o => o.id === id);
-      if (!s || s.type === 'image') return; // <-- ignore images
-      s.color = c;
-      if (currentKeyframeIndex != null) {
-        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
-        if (kf) kf.color = c;
-      }
-      drawAllShapes();
-    };
-  });
-
-  bgColorInput.oninput = () => {
-    animation.canvas.background = bgColorInput.value;
-    drawAllShapes();
-  };
-
-
-  document.querySelectorAll('.w-input').forEach(inp => {
-    inp.oninput = () => {
-      const id = parseInt(inp.dataset.id);
-      const s = shapes.find(o => o.id === id);
-      const newW = parseFloat(inp.value);
-      if (!s || isNaN(newW)) return;
-
-      const oldW = s.w;
-      s.w = newW;
-
-      if (s.locked && oldW !== 0) {
-        const aspect = s.h / oldW;
-        const newH = newW * aspect;
-        s.h = newH;
-        const hInput = document.querySelector(`.h-input[data-id="${id}"]`);
-        hInput.value = Math.round(newH);
-      }
-
-      if (currentKeyframeIndex != null) {
-        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
-        if (kf) { kf.w = s.w; kf.h = s.h; }
-      }
-
-      drawAllShapes();
-    };
-  });
-
-  document.querySelectorAll('.h-input').forEach(inp => {
-    inp.oninput = () => {
-      const id = parseInt(inp.dataset.id);
-      const s = shapes.find(o => o.id === id);
-      const newH = parseFloat(inp.value);
-      if (!s || isNaN(newH)) return;
-
-      const oldH = s.h;
-      s.h = newH;
-
-      if (s.locked && oldH !== 0) {
-        const aspect = s.w / oldH;
-        const newW = newH * aspect;
-        s.w = newW;
-        const wInput = document.querySelector(`.w-input[data-id="${id}"]`);
-        wInput.value = Math.round(newW);
-      }
-
-      if (currentKeyframeIndex != null) {
-        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
-        if (kf) { kf.w = s.w; kf.h = s.h; }
-      }
-
-      drawAllShapes();
-    };
-  });
-
-  document.querySelectorAll('.angle-input').forEach(inp => {
-    inp.oninput = () => {
-      const id = parseInt(inp.dataset.id);
-      const s = shapes.find(o => o.id === id);
-      const newAngle = parseFloat(inp.value);
-      if (!s || isNaN(newAngle)) return;
-      s.angle = newAngle;
-      if (currentKeyframeIndex != null) {
-        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
-        if (kf) kf.angle = newAngle;
-      }
-      drawAllShapes();
-    };
-  });
-
-  document.querySelectorAll('.lock-btn').forEach(btn => {
-    btn.onclick = () => {
-      const id = parseInt(btn.dataset.id);
-      const s = shapes.find(o => o.id === id);
-      s.locked = !s.locked;
-      btn.textContent = s.locked ? '🔒' : '🔓';
-    };
-  });
-
-  document.querySelectorAll('#shapeList .delete-btn').forEach(btn => {
-      btn.onclick = () => {
-      const id = parseInt(btn.dataset.id);
-
-      // --- Safety checks ---
-      const onlyOneKeyframe = animation.keyframes.length <= 1;
-      const shapeInOtherKeyframes = animation.keyframes.some((kf, i) =>
-        i !== currentKeyframeIndex && kf.shapes.some(o => o.id === id)
-      );
-
-      let scope = "1"; // default = current only
-
-      // Only ask if there is more than 1 keyframe AND shape exists in other keyframes
-      if (!onlyOneKeyframe && shapeInOtherKeyframes) {
-        scope = prompt(
-          "Delete shape from:\n" +
-          "1 = Current keyframe only (default)\n" +
-          "2 = This and forward keyframes\n" +
-          "3 = All keyframes"
-        );
-
-        if (scope === null) {
-          // User pressed Cancel → abort deletion
-          return;
-        }
-      }
-
-      // Always delete from global shapes
-      shapes = normalizeZOrder(shapes.filter(o => o.id !== id));
-
-      // Handle keyframes
-      if (currentKeyframeIndex != null) {
-        if (scope === "2") {
-          // This + forward
-          for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
-            animation.keyframes[i].shapes =
-              normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
-          }
-
-        } else if (scope === "3") {
-          // All keyframes
-          for (let i = 0; i < animation.keyframes.length; i++) {
-            animation.keyframes[i].shapes =
-              normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
-          }
-
-        } else {
-          // "1" or auto-skip case → current keyframe only
-          animation.keyframes[currentKeyframeIndex].shapes =
-            normalizeZOrder(animation.keyframes[currentKeyframeIndex].shapes.filter(o => o.id !== id));
-        }
-      }
-
-      // Update UI
-      updateShapeList();
-      drawAllShapes();
-    };
-
-  });
-
-  document.querySelectorAll('.text-input').forEach(inp => {
-    inp.oninput = e => {
-      const id = parseInt(inp.dataset.id, 10);
-      const s = shapes.find(o => o.id === id);
-      if (!s) return;
-      s.text = inp.value;
-      if (currentKeyframeIndex != null) {
-        const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
-        if (kf) kf.text = inp.value;
-      }
-      drawAllShapes();
-    };
-  });
 }
+
+
 
 function cloneShape(o) {
   return {
@@ -1397,7 +1531,9 @@ function cloneShape(o) {
     text: o.text,
     // image fields (serialize src; _img is runtime)
     src: o.src,
-    _img: o._img
+    _img: o._img,
+    /* ⬇️ NEW: path data for freehand shapes */
+    points: o.points ? o.points.map(p => ({x:p.x, y:p.y})) : undefined
   };
 }
     
@@ -1507,219 +1643,167 @@ function easeInOutBounce(t) {
 function easeParabola(t) { return 4 * t * (1 - t);}
 
 function renderTimeline(active = null, playing = null) {
-  timelineDiv.innerHTML = '<strong>Keyframes:</strong>';
+  // opt into pro look
+  timelineDiv.classList.add('kf-list--pro');
+  timelineDiv.innerHTML = '<div class="pro-header"><span>Keyframes</span></div>';
 
   animation.keyframes.forEach((kf, i) => {
     if (!kf.name) kf.name = `KF ${i}`;
-    // ensure duration & easing defaults
-    kf.frames  ??= 30;
-    kf.easing  ??= 'linear';
+    kf.frames ??= 30;
+    kf.easing ??= 'linear';
 
-    const div = document.createElement('div');
-    div.className   = 'keyframe-item';
-    if (i === active)  div.classList.add('selected');
-    if (i === playing) div.classList.add('playing');
-    div.dataset.index = i;
-    div.draggable     = true;
+    const row = document.createElement('div');
+    row.className = 'kf-row';
+    if (i === active)  row.classList.add('selected');
+    if (i === playing) row.classList.add('playing');
+    row.dataset.index = i;
+    row.draggable = true;
 
-    // ⬇️ ADDED: ⠿ drag handle at the start
-    div.innerHTML = `
-      <span class="drag-handle" title="Drag to reorder" draggable="true" aria-label="Drag keyframe">⠿</span>
-      <span class="keyframe-name">${kf.name}</span>
-
-      <label style="margin-left:8px;">
-        <i>f&nbsp;</i><input type="number"
-               id="frame-input_${i}"
-               class="frame-input"
-               data-index="${i}"
-               value="${kf.frames}"
-               min="1"
-               style="width:40px;">
-      </label>
-
-<label style="margin-left:8px;">
-  <select id="easing-select_${i}" class="easing-select" data-index="${i}">
-
-    <optgroup label="Linear Interpolations">
-      <option value="linear"${kf.easing === 'linear'        ? ' selected' : ''}>Linear</option>
-
-      <option value="smoothstep"${kf.easing === 'smoothstep'  ? ' selected' : ''}>Smoothstep</option>
-
-      <option value="easeInOutQuad"${kf.easing === 'easeInOutQuad'? ' selected' : ''}>Quad In-Out</option>
-      <option value="easeInQuad"${kf.easing === 'easeInQuad'   ? ' selected' : ''}>QuadIn</option>
-      <option value="easeOutQuad"${kf.easing === 'easeOutQuad'  ? ' selected' : ''}>Quad Out</option>
-
-      <option value="easeInOutCubic"${kf.easing === 'easeInOutCubic'? ' selected' : ''}>Cubic In-Out</option>
-      <option value="easeInCubic"${kf.easing === 'easeInCubic'  ? ' selected' : ''}>Cubic In</option>
-      <option value="easeOutCubic"${kf.easing === 'easeOutCubic' ? ' selected' : ''}>Cubic Out</option>
-
-      <option value="easeInOutQuart"${kf.easing === 'easeInOutQuart'? ' selected' : ''}>Quart In-Out</option>
-      <option value="easeInQuart"${kf.easing === 'easeInQuart'  ? ' selected' : ''}>Quart In</option>
-      <option value="easeOutQuart"${kf.easing === 'easeOutQuart' ? ' selected' : ''}>Quart Out</option>
-
-      <option value="easeInOutQuint"${kf.easing === 'easeInOutQuint'? ' selected' : ''}>Quint In-Out</option>
-      <option value="easeInQuint"${kf.easing === 'easeInQuint'  ? ' selected' : ''}>Quint In</option>
-      <option value="easeOutQuint"${kf.easing === 'easeOutQuint' ? ' selected' : ''}>Quint Out</option>
-
-      <option value="easeInOutSine"${kf.easing === 'easeInOutSine'? ' selected' : ''}>Sine In-Out</option>
-      <option value="easeInSine"${kf.easing === 'easeInSine'   ? ' selected' : ''}>Sine In</option>
-      <option value="easeOutSine"${kf.easing === 'easeOutSine'  ? ' selected' : ''}>Sine Out</option>
-
-      <option value="easeInOutExpo"${kf.easing === 'easeInOutExpo'? ' selected' : ''}>Expo In-Out</option>
-      <option value="easeInExpo"${kf.easing === 'easeInExpo'   ? ' selected' : ''}>Expo In</option>
-      <option value="easeOutExpo"${kf.easing === 'easeOutExpo'  ? ' selected' : ''}>Expo Out</option>
-    </optgroup>
-
-    <optgroup label="Dynamic Interpolations">
-      <option value="parabola"${kf.easing === 'parabola'  ? ' selected' : ''}>Parabola</option>
-
-      <option value="easeInOutBounce"${kf.easing === 'easeInOutBounce'? ' selected' : ''}>Bounce In-Out</option>
-      <option value="easeInBounce"${kf.easing === 'easeInBounce'   ? ' selected' : ''}>Bounce In</option>
-      <option value="easeOutBounce"${kf.easing === 'easeOutBounce'  ? ' selected' : ''}>Bounce Out</option>
-
-      <option value="easeInOutElastic"${kf.easing === 'easeInOutElastic'? ' selected' : ''}>Elastic In-Out</option>
-      <option value="easeInElastic"${kf.easing === 'easeInElastic'   ? ' selected' : ''}>Elastic In</option>
-      <option value="easeOutElastic"${kf.easing === 'easeOutElastic'  ? ' selected' : ''}>Elastic Out</option>
-    </optgroup>
-
-    <optgroup label="Effects">
-      <option value="spiral"${kf.easing === 'spiral'          ? ' selected' : ''}>Spiral In</option>
-      <option value="wavy"${kf.easing === 'wavy'          ? ' selected' : ''}>Wavy In</option>
-    </optgroup>
-  </select>
-</label>
-
-      <span class="keyframe-controls">
-        <button class="play-btn"   data-index="${i}">▶</button>
-        <button class="delete-btn" data-index="${i}">🗑️</button>
-      </span>
+    // meta controls (frames + easing) grouped like shapes “meta”
+    row.innerHTML = `
+      <div class="drag" title="Drag to reorder" aria-label="Drag keyframe">⠿</div>
+      <div class="name">
+        <div class="title" title="Click to select / Double-click to rename">${kf.name}</div>
+      </div>
+      <div class="actions">
+        <button class="btn play-btn"   data-index="${i}" title="Preview">▶</button>
+        <button class="btn delete-btn" data-index="${i}" title="Delete">🗑</button>
+      </div>
+      <div class="meta">
+        <label class="mini" title="Duration in frames">
+          <span class="icon">⏱</span>
+          <input type="number" id="frame-input_${i}" class="frame-input" data-index="${i}" value="${kf.frames}" min="1" style="width:56px;">
+        </label>
+        <label class="mini" title="Easing">
+          <span class="icon">∿</span>
+          <select id="easing-select_${i}" class="easing-select" data-index="${i}">
+            <optgroup label="Linear Interpolations">
+              <option value="linear"${kf.easing==='linear'?' selected':''}>Linear</option>
+              <option value="smoothstep"${kf.easing==='smoothstep'?' selected':''}>Smoothstep</option>
+              <option value="easeInOutQuad"${kf.easing==='easeInOutQuad'?' selected':''}>Quad In-Out</option>
+              <option value="easeInQuad"${kf.easing==='easeInQuad'?' selected':''}>Quad In</option>
+              <option value="easeOutQuad"${kf.easing==='easeOutQuad'?' selected':''}>Quad Out</option>
+              <option value="easeInOutCubic"${kf.easing==='easeInOutCubic'?' selected':''}>Cubic In-Out</option>
+              <option value="easeInCubic"${kf.easing==='easeInCubic'?' selected':''}>Cubic In</option>
+              <option value="easeOutCubic"${kf.easing==='easeOutCubic'?' selected':''}>Cubic Out</option>
+              <option value="easeInOutQuart"${kf.easing==='easeInOutQuart'?' selected':''}>Quart In-Out</option>
+              <option value="easeInQuart"${kf.easing==='easeInQuart'?' selected':''}>Quart In</option>
+              <option value="easeOutQuart"${kf.easing==='easeOutQuart'?' selected':''}>Quart Out</option>
+              <option value="easeInOutQuint"${kf.easing==='easeInOutQuint'?' selected':''}>Quint In-Out</option>
+              <option value="easeInQuint"${kf.easing==='easeInQuint'?' selected':''}>Quint In</option>
+              <option value="easeOutQuint"${kf.easing==='easeOutQuint'?' selected':''}>Quint Out</option>
+              <option value="easeInOutSine"${kf.easing==='easeInOutSine'?' selected':''}>Sine In-Out</option>
+              <option value="easeInSine"${kf.easing==='easeInSine'?' selected':''}>Sine In</option>
+              <option value="easeOutSine"${kf.easing==='easeOutSine'?' selected':''}>Sine Out</option>
+              <option value="easeInOutExpo"${kf.easing==='easeInOutExpo'?' selected':''}>Expo In-Out</option>
+              <option value="easeInExpo"${kf.easing==='easeInExpo'?' selected':''}>Expo In</option>
+              <option value="easeOutExpo"${kf.easing==='easeOutExpo'?' selected':''}>Expo Out</option>
+            </optgroup>
+            <optgroup label="Dynamic Interpolations">
+              <option value="parabola"${kf.easing==='parabola'?' selected':''}>Parabola</option>
+              <option value="easeInOutBounce"${kf.easing==='easeInOutBounce'?' selected':''}>Bounce In-Out</option>
+              <option value="easeInBounce"${kf.easing==='easeInBounce'?' selected':''}>Bounce In</option>
+              <option value="easeOutBounce"${kf.easing==='easeOutBounce'?' selected':''}>Bounce Out</option>
+              <option value="easeInOutElastic"${kf.easing==='easeInOutElastic'?' selected':''}>Elastic In-Out</option>
+              <option value="easeInElastic"${kf.easing==='easeInElastic'?' selected':''}>Elastic In</option>
+              <option value="easeOutElastic"${kf.easing==='easeOutElastic'?' selected':''}>Elastic Out</option>
+            </optgroup>
+            <optgroup label="Effects">
+              <option value="spiral"${kf.easing==='spiral'?' selected':''}>Spiral In</option>
+              <option value="wavy"${kf.easing==='wavy'?' selected':''}>Wavy In</option>
+            </optgroup>
+          </select>
+        </label>
+      </div>
     `;
 
-    // wire up the frames input
-    const frameInput = div.querySelector('.frame-input');
-    frameInput.addEventListener('input', e => {
+    // frames
+    row.querySelector('.frame-input').addEventListener('input', e => {
       const val = parseInt(e.target.value, 10);
-      if (!isNaN(val) && val > 0) {
-        animation.keyframes[i].frames = val;
-      }
+      if (!isNaN(val) && val > 0) animation.keyframes[i].frames = val;
     });
-
-    // wire up the easing dropdown
-    const easingSelect = div.querySelector('.easing-select');
-    easingSelect.addEventListener('change', e => {
+    // easing
+    row.querySelector('.easing-select').addEventListener('change', e => {
       animation.keyframes[i].easing = e.target.value;
     });
 
-    // ⬇️ CHANGED: only allow drag if the ⠿ handle started it
-    div.ondragstart = e => {
-      if (!e.target.classList.contains('drag-handle')) { e.preventDefault(); return; }
-      e.dataTransfer.setData('text/plain', i);
-      div.classList.add('drag-over');
-      //use the full keyframe row as the ghost image
-      const rect = div.getBoundingClientRect();
-      const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
-      if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(div, offX, offY);
-    };
-
-    div.ondragover = e => {
-      e.preventDefault();
-      div.classList.add('drag-over');
-    };
-
-    div.ondragleave = () => div.classList.remove('drag-over');
-
-    div.ondrop = e => {
-      e.preventDefault();
-      div.classList.remove('drag-over');
-      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      const toIndex = parseInt(div.dataset.index, 10);
-      if (fromIndex === toIndex) return;
-
-      const [moved] = animation.keyframes.splice(fromIndex, 1);
-      animation.keyframes.splice(toIndex, 0, moved);
-
-      // Adjust currentKeyframeIndex if necessary
-      if (currentKeyframeIndex === fromIndex) {
-        currentKeyframeIndex = toIndex;
-      } else if (
-        currentKeyframeIndex > fromIndex &&
-        currentKeyframeIndex <= toIndex
-      ) {
-        currentKeyframeIndex--;
-      } else if (
-        currentKeyframeIndex < fromIndex &&
-        currentKeyframeIndex >= toIndex
-      ) {
-        currentKeyframeIndex++;
-      }
-
-      shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
-      updateShapeList();
-      drawAllShapes();
-      renderTimeline(currentKeyframeIndex, null);
-    };
-
-    // ⬇️ ADDED: make the handle itself draggable & quiet clicks
-    const h = div.querySelector('.drag-handle');
-    if (h) {
-      h.addEventListener('mousedown', ev => ev.stopPropagation());
-      h.addEventListener('dragstart', e => {
-        e.stopPropagation();
-        e.dataTransfer.setData('text/plain', i);
-        div.classList.add('drag-over');
-        //use the full keyframe row as the ghost image
-        const rect = div.getBoundingClientRect();
-        const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
-        if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(div, offX, offY);
-      });
-      h.addEventListener('dragend', () => div.classList.remove('drag-over'));
-    }
-
-    // 👇 single-click: select keyframe
-    div.addEventListener('click', e => {
+    // select keyframe (click on row except inputs/buttons/drag)
+    row.addEventListener('click', e => {
       if (isPlaying) return;
-      // ← ignore clicks on play/delete buttons…
-      //…or on the frames input itself (or its label), so typing works
-      if (e.target.closest('.keyframe-controls')
-       || e.target.closest('label')) return;
-
+      if (e.target.closest('.actions, .meta')) return;
       currentKeyframeIndex = i;
       shapes = cloneShapes(animation.keyframes[i].shapes);
       selectedShapeId = null;
-      updateShapeList();
-      drawAllShapes();
-      renderTimeline(currentKeyframeIndex, null);
+      updateShapeList(); drawAllShapes(); renderTimeline(currentKeyframeIndex, null);
     });
 
-    // 👇 double-click on label: rename keyframe
-    div.querySelector('.keyframe-name').addEventListener('dblclick', e => {
+    // rename on double-click of title
+    row.querySelector('.title').addEventListener('dblclick', e => {
       e.stopPropagation();
       const newName = prompt("Rename keyframe:", kf.name);
-      if (newName && newName.trim()) {
-        kf.name = newName.trim();
-        renderTimeline(active, playing);
-      }
+      if (newName && newName.trim()) { kf.name = newName.trim(); renderTimeline(active, playing); }
     });
 
-    div.querySelector('.play-btn').onclick = e => {
-      e.stopPropagation();
-      currentKeyframeIndex = i;
-      playAnimation('once');
-    };
-    
-    div.querySelector('.delete-btn').onclick = e => {
+    // play/delete
+    row.querySelector('.play-btn').onclick = e => { e.stopPropagation(); currentKeyframeIndex = i; playAnimation('once'); };
+    row.querySelector('.delete-btn').onclick = e => {
       e.stopPropagation();
       if (animation.keyframes.length <= 1) return;
       animation.keyframes.splice(i, 1);
       currentKeyframeIndex = Math.max(0, currentKeyframeIndex - (i <= currentKeyframeIndex ? 1 : 0));
       shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
-      updateShapeList();
-      drawAllShapes();
-      renderTimeline(currentKeyframeIndex, null);
+      updateShapeList(); drawAllShapes(); renderTimeline(currentKeyframeIndex, null);
     };
 
-    timelineDiv.appendChild(div);
+    // drag & drop reorder (use the same .drag convention as shapes)
+    const handle = row.querySelector('.drag');
+    handle.setAttribute('draggable', 'true');
+    handle.addEventListener('mousedown', ev => ev.stopPropagation());
+
+    function startDrag(e) {
+      if (!e.target.closest('.drag')) { e.preventDefault(); return; }
+      e.dataTransfer.setData('text/plain', String(i));
+      row.classList.add('drag-over');
+      const rect = row.getBoundingClientRect();
+      const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+      if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(row, offX, offY);
+    }
+    function dragOver(e){ e.preventDefault(); row.classList.add('drag-over'); }
+    function dragLeave(){ row.classList.remove('drag-over'); }
+    function dropOn(e){
+      e.preventDefault(); row.classList.remove('drag-over');
+      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const toIndex   = parseInt(row.dataset.index, 10);
+      if (Number.isNaN(fromIndex) || Number.isNaN(toIndex) || fromIndex === toIndex) return;
+
+      const [moved] = animation.keyframes.splice(fromIndex, 1);
+      animation.keyframes.splice(toIndex, 0, moved);
+
+      if (currentKeyframeIndex === fromIndex) {
+        currentKeyframeIndex = toIndex;
+      } else if (currentKeyframeIndex > fromIndex && currentKeyframeIndex <= toIndex) {
+        currentKeyframeIndex--;
+      } else if (currentKeyframeIndex < fromIndex && currentKeyframeIndex >= toIndex) {
+        currentKeyframeIndex++;
+      }
+
+      shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
+      updateShapeList(); drawAllShapes(); renderTimeline(currentKeyframeIndex, null);
+    }
+    function endDrag(){ row.classList.remove('drag-over'); }
+
+    row.addEventListener('dragstart', startDrag);
+    handle.addEventListener('dragstart', startDrag);
+    row.addEventListener('dragover', dragOver);
+    row.addEventListener('dragenter', dragOver);
+    row.addEventListener('dragleave', dragLeave);
+    row.addEventListener('drop', dropOn);
+    row.addEventListener('dragend', endDrag);
+
+    timelineDiv.appendChild(row);
   });
+
+  if (playing){document.querySelector('.kf-row.playing')?.scrollIntoView({ block: 'center' });}
 }
 
 function interpolateShapes(a, b, t) {
@@ -1727,17 +1811,28 @@ function interpolateShapes(a, b, t) {
     const sb = b.shapes.find(o => o.id === sa.id);
     if (!sb) return sa;
 
-    const out = { ...sa };            // carry all fields (incl. src/_img)
+    const out = { ...sa };            // carry all fields (incl. src/_img/points)
     out.x     = sa.x + (sb.x - sa.x) * t;
     out.y     = sa.y + (sb.y - sa.y) * t;
     out.w     = sa.w + (sb.w - sa.w) * t;
     out.h     = sa.h + (sb.h - sa.h) * t;
     out.angle = interpolateAngle(sa.angle || 0, sb.angle || 0, t);
-    out.z     = sa.z ?? 0;            // keep Z from source frame
+    out.z     = sa.z ?? 0;
+
+    /* ⬇️ NEW: move (and scale) freehand points with the bbox */
+    if (sa.type === 'freehand' && Array.isArray(sa.points)) {
+      const scaleX = (sa.w !== 0) ? (out.w / sa.w) : 1;
+      const scaleY = (sa.h !== 0) ? (out.h / sa.h) : 1;
+      out.points = sa.points.map(p => ({
+        x: out.x + (p.x - sa.x) * scaleX,
+        y: out.y + (p.y - sa.y) * scaleY
+      }));
+    }
 
     return out;
   });
 }
+
 
 
 function interpolateShapesSpiral(a, b, t) {
@@ -1761,6 +1856,16 @@ function interpolateShapesSpiral(a, b, t) {
     out.h     = sa.h + (sb.h - sa.h) * t;
     out.angle = interpolateAngle(sa.angle || 0, sb.angle || 0, t);
     out.z     = sa.z ?? 0;
+
+    /* ⬇️ NEW: move/scale freehand points with the interpolated bbox */
+    if (sa.type === 'freehand' && Array.isArray(sa.points)) {
+      const scaleX = (sa.w !== 0) ? (out.w / sa.w) : 1;
+      const scaleY = (sa.h !== 0) ? (out.h / sa.h) : 1;
+      out.points = sa.points.map(p => ({
+        x: out.x + (p.x - sa.x) * scaleX,
+        y: out.y + (p.y - sa.y) * scaleY
+      }));
+    }
 
     return out;
   });
@@ -1797,6 +1902,16 @@ function interpolateShapesWavy(a, b, t) {
     out.angle = interpolateAngle(sa.angle || 0, sb.angle || 0, t);
     out.z     = sa.z ?? 0;
 
+    /* ⬇️ NEW: move/scale freehand points with the interpolated bbox */
+    if (sa.type === 'freehand' && Array.isArray(sa.points)) {
+      const scaleX = (sa.w !== 0) ? (out.w / sa.w) : 1;
+      const scaleY = (sa.h !== 0) ? (out.h / sa.h) : 1;
+      out.points = sa.points.map(p => ({
+        x: out.x + (p.x - sa.x) * scaleX,
+        y: out.y + (p.y - sa.y) * scaleY
+      }));
+    }
+
     return out;
   });
 }
@@ -1806,10 +1921,19 @@ function interpolateAngle(a1, a2, t) {
   return a1 + (a2 - a1) * t;
 }
 
-// ─── 3) UPDATED playAnimation TO RESPECT EASING ─────────────────────────────
+// ─── 3) UPDATED playAnimation TO RESPECT EASING + FIXED FRAME TIMING ──────────
 function playAnimation(mode = 'once') {
   if (animation.keyframes.length < 2 || isPlaying) return;
+  lastCursor = canvas.style.cursor;
   isPlaying  = true;
+
+  if (!document.fullscreenElement){
+    canvas.style.cursor = 'wait';
+  }
+  else{
+    canvas.style.cursor = 'none';
+  }
+  
   isLooping  = (mode === 'loop');
   isBouncing = (mode === 'bounce');
 
@@ -1837,11 +1961,36 @@ function playAnimation(mode = 'once') {
   currentKeyframeIndex  = null;
   renderTimeline(null, null);
 
-  let t = 0;
-  function step() {
+  // ⬇️ NEW: fixed-rate frame timing (user-configurable via animation.settings.frameRate)
+  const targetFps       = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
+  const frameDurationMs = 1000 / targetFps;
+  let lastTime          = null;
+  let accumulator       = 0;
+
+  let t = 0;               // how many frames have been rendered in current segment (0..steps-1)
+  let _renderedOnce = false;
+
+  function step(now) {
     if (!isPlaying || segmentIndex >= segments.length) {
       stopAnimation();
       return;
+    }
+
+    // ⬇️ NEW: accumulate time and only advance a “step” when enough ms have passed
+    if (lastTime == null) lastTime = now;
+    const delta = now - lastTime;
+    lastTime = now;
+    accumulator += delta;
+
+    // If we haven’t reached the next frame time and we already rendered once, wait.
+    if (accumulator < frameDurationMs && _renderedOnce) {
+      animationFrameId = requestAnimationFrame(step);
+      return;
+    }
+
+    // Consume exactly one frame’s worth of time (don’t try to “catch up” multiple steps at once)
+    if (accumulator >= frameDurationMs) {
+      accumulator -= frameDurationMs;
     }
 
     const [fromIdx, toIdx] = segments[segmentIndex];
@@ -1850,7 +1999,7 @@ function playAnimation(mode = 'once') {
 
     // ← use per-keyframe frames & easing
     const steps  = a.frames || 30;
-    const rawT = t / steps;
+    const rawT   = t / steps;
 
     const easer  = EASERS[a.easing] || (x => x);
     const easedT = easer(rawT);
@@ -1865,6 +2014,7 @@ function playAnimation(mode = 'once') {
       interp = interpolateShapes(a, b, easedT);
     }
     drawAllShapes(interp);
+    _renderedOnce = true;
 
     t++;
     if (t < steps) {           // was: t <= steps
@@ -1895,7 +2045,54 @@ function playAnimation(mode = 'once') {
 
   selectedShapeId      = null;
   currentKeyframeIndex = null;
-  step();
+  animationFrameId = requestAnimationFrame(step);
+}
+
+
+function enableFreehandMode(){
+  drawMode = 'freehand';
+  isDrawingFreehand = false;
+  freehandPoints = [];
+  _freehandPreviewColor = getRandomColor();
+  canvas.style.cursor = 'crosshair';
+}
+
+function exitFreehandMode(){
+  drawMode = null;
+  canvas.style.cursor = 'pointer';
+  freehandPoints = [];
+}
+
+  /* ⬇️ NEW: draw a live, smoothed preview while dragging */
+function drawFreehandPreview(points, color){
+  if (!points || points.length < 1) return;
+  drawAllShapes(); // clear + redraw existing shapes as backdrop
+
+  ctx.save();
+  ctx.strokeStyle = color || '#000';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  if (points.length === 1) {
+    ctx.beginPath();
+    ctx.arc(points[0].x, points[0].y, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = color || '#000';
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length - 1; i++) {
+    const midX = (points[i].x + points[i+1].x) / 2;
+    const midY = (points[i].y + points[i+1].y) / 2;
+    ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+  }
+  ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function stopAnimation() {
@@ -1906,6 +2103,7 @@ function stopAnimation() {
   loopBtn.classList.remove('playing');
   bounceBtn.classList.remove('playing');
   cancelAnimationFrame(animationFrameId);
+  canvas.style.cursor = lastCursor;
   renderTimeline(currentKeyframeIndex, null);
   drawAllShapes();
   
@@ -1916,6 +2114,7 @@ function stopAnimation() {
     updateShapeList();
     playbackStartKeyframe = null; // Reset for future runs
   }
+  document.querySelector('.kf-row.selected')?.scrollIntoView({ block: 'center' });
 }
 
 playBtn.onclick = () => playAnimation('once');
@@ -1940,27 +2139,27 @@ demoBtn.onclick = () => {
 };
 
 
-    bgInput.onchange = e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        backgroundImage = img;
-        URL.revokeObjectURL(url);
-        drawAllShapes();
-      };
-      img.src = url;
-    };
+bgInput.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = () => {
+    backgroundImage = img;
+    URL.revokeObjectURL(url);
+    drawAllShapes();
+  };
+  img.src = url;
+};
 
-    clearBgBtn.onclick = () => {
-      animation.canvas.background = '#f0f0f0';
-      bgColorInput.value = '#f0f0f0';
-      backgroundImage = null;
-      if (animation.canvas) delete animation.canvas.backgroundImageSrc;
-      document.getElementById('bgInput').value = "";
-      drawAllShapes();
-    };
+clearBgBtn.onclick = () => {
+  animation.canvas.background = '#f0f0f0';
+  bgColorInput.value = '#f0f0f0';
+  backgroundImage = null;
+  if (animation.canvas) delete animation.canvas.backgroundImageSrc;
+  document.getElementById('bgInput').value = "";
+  drawAllShapes();
+};
 
 const imageInput = document.getElementById('imageInput');
 
@@ -2102,12 +2301,21 @@ function normalizeZOrder(list = shapes) {
 }
 
 canvas.addEventListener('mousedown', e => {
+  if (isPlaying){return;}
+
+  /* ⬇️ NEW: freehand start */
+  if (drawMode === 'freehand') {
+    const rect = canvas.getBoundingClientRect();
+    const m = _mouseToCanvasSpace(e);
+    isDrawingFreehand = true;
+    freehandPoints = [m];
+    drawFreehandPreview(freehandPoints, _freehandPreviewColor);
+    return; // do not trigger selection/drag logic while drawing
+  }
+
   dragOffsets.clear();
   const rect = canvas.getBoundingClientRect();
-  const m = {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
+  const m = _mouseToCanvasSpace(e);
   
   // Store mouse down position to detect if user moved mouse
   mouseDownPos = { x: m.x, y: m.y };
@@ -2183,12 +2391,24 @@ canvas.addEventListener('mousedown', e => {
 
 
 canvas.addEventListener('mousemove', e => {
+  if (isPlaying){return;}
+
+  /* ⬇️ NEW: freehand live capture */
+  if (drawMode === 'freehand' && isDrawingFreehand) {
+    const rect = canvas.getBoundingClientRect();
+    const m = _mouseToCanvasSpace(e);
+    const last = freehandPoints[freehandPoints.length - 1];
+    // add points only if moved a few px to reduce noise
+    if (!last || Math.hypot(m.x - last.x, m.y - last.y) >= 1) {
+      freehandPoints.push(m);
+      drawFreehandPreview(freehandPoints, _freehandPreviewColor);
+    }
+    return;
+  }
+
   if (dragOffsets.size > 0) {
     const rect = canvas.getBoundingClientRect();
-    const m = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+    const m = _mouseToCanvasSpace(e);
 
     let changed = false;
 
@@ -2198,9 +2418,18 @@ canvas.addEventListener('mousemove', e => {
 
       const newX = m.x - dx;
       const newY = m.y - dy;
+      const dX = newX - s.x;
+      const dY = newY - s.y;
+
       if (s.x !== newX || s.y !== newY) {
         s.x = newX;
         s.y = newY;
+
+        /* ⬇️ NEW: translate freehand points with the bbox */
+        if (s.type === 'freehand' && Array.isArray(s.points)) {
+          s.points.forEach(p => { p.x += dX; p.y += dY; });
+        }
+
         changed = true;
       }
 
@@ -2209,6 +2438,11 @@ canvas.addEventListener('mousemove', e => {
         if (kf) {
           kf.x = s.x;
           kf.y = s.y;
+
+          /* ⬇️ mirror freehand points in keyframe */
+          if (kf.type === 'freehand' && Array.isArray(kf.points)) {
+            kf.points.forEach(p => { p.x += dX; p.y += dY; });
+          }
         }
       }
     }
@@ -2221,11 +2455,61 @@ canvas.addEventListener('mousemove', e => {
 
 
 canvas.addEventListener('mouseup', e => {
+  if (isPlaying){return;}
+
+  /* ⬇️ NEW: finalize freehand shape */
+  if (drawMode === 'freehand' && isDrawingFreehand) {
+    isDrawingFreehand = false;
+
+    // compute bbox
+    if (freehandPoints.length) {
+      const xs = freehandPoints.map(p => p.x);
+      const ys = freehandPoints.map(p => p.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const w = Math.max(1, Math.round(maxX - minX));
+      const h = Math.max(1, Math.round(maxY - minY));
+
+      const id = shapeIdCounter++;
+      const s = {
+        id,
+        type: 'freehand',
+        name: `path #${id}`,
+        x: minX,
+        y: minY,
+        w, h,
+        color: _freehandPreviewColor,
+        angle: 0,
+        z: shapes.length,
+        locked: true,
+        mode: 0,
+        points: freehandPoints.map(p => ({x:p.x, y:p.y}))
+      };
+
+      shapes.push(s);
+      if (currentKeyframeIndex != null) {
+        for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+          animation.keyframes[i].shapes.push(cloneShape(s));
+        }
+      }
+
+      // select the new path
+      multiSelectedShapeIds.clear();
+      multiSelectedShapeIds.add(s.id);
+      selectedShapeId = s.id;
+      shapeSelectionSource = 'list';
+
+      updateShapeList();
+      drawAllShapes();
+    }
+
+    //exit draw mode
+    //exitFreehandMode();
+    return;
+  }
+
   const rect = canvas.getBoundingClientRect();
-  const m = {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
+  const m = _mouseToCanvasSpace(e);
   
   const mouseMoved = mouseDownPos &&
     (m.x !== mouseDownPos.x || m.y !== mouseDownPos.y);   // NEW
@@ -2332,12 +2616,12 @@ importFile.onchange = e => {
 };
 
 shapes = [
-  { id: shapeIdCounter++, type: 'circle',    name: 'head', x: 375, y:  80, w: 50, h: 50,  color: '#e74c3c', mode: 0, z: 5, locked: true },
-  { id: shapeIdCounter++, type: 'rectangle', name: 'torso', x: 350, y: 140, w: 100, h: 100, color: '#2ecc71', mode: 0, z: 2, locked: true},
-  { id: shapeIdCounter++, type: 'rectangle', name: 'left arm', x: 300, y: 140, w: 40,  h: 100, color: '#3498db', mode: 0, z: 4, locked: true },
-  { id: shapeIdCounter++, type: 'rectangle', name: 'right arm', x: 460, y: 140, w: 40,  h: 100, color: '#e67e22', mode: 0, z: 3, locked: true },
-  { id: shapeIdCounter++, type: 'rectangle', name: 'left leg', x: 350, y: 240, w: 40,  h: 100, color: '#9b59b6', mode: 0, z: 1, locked: true },
-  { id: shapeIdCounter++, type: 'rectangle', name: 'right leg', x: 410, y: 240, w: 40,  h: 100, color: '#f1c40f', mode: 0, z: 0, locked: true }
+  { id: shapeIdCounter++, type: 'circle',    name: 'head', x: 375, y:  147, w: 50, h: 50,  color: '#e74c3c', mode: 0, z: 5, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'torso', x: 350, y: 207, w: 100, h: 100, color: '#2ecc71', mode: 0, z: 2, locked: true},
+  { id: shapeIdCounter++, type: 'rectangle', name: 'left arm', x: 300, y: 207, w: 40,  h: 100, color: '#3498db', "angle": 18, mode: 0, z: 4, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'right arm', x: 460, y: 207, w: 40,  h: 100, color: '#e67e22', "angle": -18, mode: 0, z: 3, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'left leg', x: 350, y: 307, w: 40,  h: 100, color: '#9b59b6', mode: 0, z: 1, locked: true },
+  { id: shapeIdCounter++, type: 'rectangle', name: 'right leg', x: 410, y: 307, w: 40,  h: 100, color: '#f1c40f', mode: 0, z: 0, locked: true }
 ];
 
 shapes = normalizeZOrder();
@@ -2469,12 +2753,14 @@ function loadKeyframesFromJSON(json) {
       <div class="modal-body">
         <ul>
         <b>Global:</b>
-          <li><kbd>Space</kbd> : Play/Stop (from selected Keyframe)</li>
+          <li><kbd>Spacebar</kbd> : Play/Stop (from selected Keyframe)</li>
+          <li><kbd>f</kbd> : Toggle Fullscreen</li>
           <li><kbd>h</kbd> : Hide/Toggle Sidebar Menus</li>
         </ul>
 
         <ul>
         <b>With Shapes Selected:</b>
+          <li><kbd>o</kbd> : Toogle Shape Outline</li>
           <li><kbd>w</kbd><kbd>a</kbd><kbd>s</kbd><kbd>d</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> : Move Shape/s</li>
           <li><kbd>q</kbd> / <kbd>e</kbd> : Rotate Shape/s left/right</li>
           <li><kbd>Ctrl</kbd> + <kbd>D</kbd> : Duplicate Shape/s</li>
@@ -2548,6 +2834,20 @@ document.addEventListener('keydown', (e) => {
     leftSidebar.style.display = next;
     rightSidebar.style.display = next;
   }
+  if (e.key === 'f') {
+    if (!document.fullscreenElement) {
+    canvas.requestFullscreen().catch(err => {
+      alert(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  if (e.key === 'o') {
+    if (isPlaying){return;}
+    shapeSelectionForce = (shapeSelectionForce !== true) ? true : false;
+    drawAllShapes();
+  }
 });
 
 // Close button click
@@ -2601,6 +2901,7 @@ document.addEventListener('keydown', e => {
     updateShapeList();
     drawAllShapes();
     renderTimeline(currentKeyframeIndex, null);
+    document.querySelector('.kf-row.selected')?.scrollIntoView({ block: 'center' });
   }
 });
 
@@ -2627,13 +2928,23 @@ document.addEventListener('keydown', e => {
   if (_nudgeInt) return;
   _nudgeSpd = 1;
 
-  _nudgeInt = setInterval(() => {
+_nudgeInt = setInterval(() => {
+    const moveDX = dx * _nudgeSpd;
+    const moveDY = dy * _nudgeSpd;
     multiSelectedShapeIds.forEach(id => {
       const s = shapes.find(o => o.id === id);
       if (!s) return;
-      s.x     += dx     * _nudgeSpd;
-      s.y     += dy     * _nudgeSpd;
+
+      // position / rotation
+      s.x     += moveDX;
+      s.y     += moveDY;
       s.angle = (s.angle || 0) + dAngle * _nudgeSpd;
+
+      /* ⬇️ NEW: keep freehand path aligned with bbox while nudging */
+      if (s.type === 'freehand' && Array.isArray(s.points)) {
+        s.points.forEach(p => { p.x += moveDX; p.y += moveDY; });
+      }
+
       if (currentKeyframeIndex != null) {
         const k = animation.keyframes[currentKeyframeIndex]
                           .shapes.find(o => o.id === id);
@@ -2641,6 +2952,11 @@ document.addEventListener('keydown', e => {
           k.x     = s.x;
           k.y     = s.y;
           k.angle = s.angle;
+
+          /* ⬇️ mirror the translated points in the keyframe copy */
+          if (k.type === 'freehand' && Array.isArray(k.points)) {
+            k.points.forEach(p => { p.x += moveDX; p.y += moveDY; });
+          }
         }
       }
     });
