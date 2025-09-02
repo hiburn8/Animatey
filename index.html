@@ -53,6 +53,12 @@
       justify-content: center;
     }
 
+    #bigPlay {
+      width: 100%;
+      display: flex;
+      justify-content: center; /* horizontal */
+    }
+
     #shapeList, #objectList, #canvasList {
       margin-top: 10px;
       max-height: 100%;
@@ -108,7 +114,8 @@
     .drag-over {
       border: 2px dashed #007bff;
     }
-        /* Hint in the corner */
+    
+    /* Hint in the corner */
     #shortcut-hint {
       padding: 8px 12px;
       border-radius: 4px;
@@ -188,8 +195,6 @@
       box-shadow: inset 0 -1px 0 #bbb;
     }
 
-
-    
     /* Sidebar container */
     #sidebar {
       background: #f9f9f9;
@@ -291,7 +296,7 @@
       color: #aaa;
       cursor: default;
     }
-        /* ⬇️ NEW: lightweight card + actions bar */
+    /* lightweight card + actions bar */
     .result-card {
       display: flex;
       flex-direction: column;
@@ -320,6 +325,7 @@
     #shapeList.shape-list--pro,
     #objectList.object-list--pro,
     #canvasList.object-list--pro,
+    #filesList.object-list--pro,
     #timeline.kf-list--pro {
       border: 1px solid #ccc;
       background: #fff;
@@ -331,6 +337,7 @@
     /* Headers (shared) */
     #shapeList.shape-list--pro .pro-header,
     #objectList.object-list--pro .pro-header,
+    #filesList.object-list--pro .pro-header,
     #canvasList.object-list--pro .pro-header,
     #timeline.kf-list--pro .pro-header {
       position: sticky; top: -8px;
@@ -381,7 +388,6 @@
     .kf-row .actions button { border:1px solid #ccc; background:#fff; padding:2px 6px; border-radius:6px; cursor:pointer; }
     .shape-row .delete-btn-pro { color:#b00020; border-color:#e5b3b8; }
     .kf-row .delete-btn { color:#b00020; border-color:#e5b3b8; }
-    .kf-row .play-btn { color:#075a0b; border-color:#bde5c2; }
 
      .kf-row.playing {
       background: linear-gradient(90deg, #28a745 0%, #34ce57 100%);
@@ -398,7 +404,73 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
+    .fps-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 6px;
+    }
+    .fps-control input[type="number"] {
+      width: 68px;
+      padding: 2px 4px;
+    }
+    #fpsButtons button {
+      padding: 2px 6px;
+      margin-left: 2px;
+      font-size: 0.85em;
+      cursor: pointer;
+    }
+    #fpsButtons button.active {
+      font-weight: bold;
+      cursor: default;
+    }
 
+  /* PLAY TOGGLE BUTTON */
+   .bigPlayBtn{
+    width:150px;         /* wider, like a spacebar */
+    height:50px;         /* flatter height */
+    border-radius:12px;  /* soft rectangle corners */
+    border:none;
+    cursor:pointer;
+    display:grid;
+    place-items:center;
+    transition: background .25s ease, transform .18s ease, filter .18s ease;
+  }
+  
+  /* Prevent focus visuals */ .bigPlayBtn:focus{ outline:none; }
+
+  .bigPlayBtn:hover{ filter:brightness(1.08); }
+  .bigPlayBtn:active{ transform:scale(.95); }
+  .bigPlayBtn.fake-active { transform: scale(.95); }
+
+  .icon{
+    width:25%;           /* scaled down to fit new shape */
+    aspect-ratio:1;
+    position:relative;
+  }
+  .icon svg{
+    position:absolute;
+    inset:0;
+    width:100%; height:100%;
+    fill:#fff;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .icon .stop{ opacity:0; transform:scale(.8); }
+  .icon .play{ opacity:1; transform:scale(1); }
+
+  /* State styles with muted colors */
+  .bigPlayBtn[data-state="play"]{
+    background:#6fcf97; /* soft green */
+  }
+  .bigPlayBtn[data-state="stop"]{
+    background:#eb746c; /* soft red */
+  }
+
+  .bigPlayBtn[data-state="stop"] .icon .play{ opacity:0; transform:scale(.8); }
+  .bigPlayBtn[data-state="stop"] .icon .stop{ opacity:1; transform:scale(1); }
 </style>
 </head>
 <body>
@@ -487,7 +559,7 @@
             <button id="addShapeBtn">Add Shape</button>
         </div>
 
-        <!-- Shapes section -->
+        <!-- Draw section -->
         <div id="drawTab" class="tab-content">
             <label><input type="checkbox" id="drawPencilChk" name="drawType" value="pencil"> Pencil ✏️</label>
         </div>
@@ -505,11 +577,33 @@
       <canvas id="canvas" width="800" height="600"></canvas>
     </div>
     <div id="controls">
-      <button id="playAnimation" onmousedown="event.preventDefault();">▶ Play</button>
+        <div id="bigPlay">
+          <button class="bigPlayBtn" id="mainBtn" data-state="play">
+            <span class="icon" aria-hidden="true">
+              <!-- Play -->
+              <svg class="play" viewBox="0 0 100 100"><path d="M35 20 L80 50 L35 80 Z"/></svg>
+              <!-- Stop -->
+              <svg class="stop" viewBox="0 0 100 100"><rect x="30" y="30" width="40" height="40"/></svg>
+            </span>
+        </button>
+        </div>
+
       <button id="loopAnimation" onmousedown="event.preventDefault();">↻ Loop</button>
       <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
-      <button id="stopAnimation" onmousedown="event.preventDefault();">⏹ Stop</button>
       <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
+
+      <div class="fps-control">
+        <label for="fpsInput">FPS:</label>
+        <input type="number" id="fpsInput" min="1" max="240" step="1" value="60">
+        <div id="fpsButtons">
+          <button type="button" data-fps="1">1</button>
+          <button type="button" data-fps="12">12</button>
+          <button type="button" data-fps="24">24</button>
+          <button type="button" data-fps="30">30</button>
+          <button type="button" data-fps="60">60</button>
+          <button type="button" data-fps="120">120</button>
+        </div>
+      </div>
         <!-- Hint to the user -->
       <div id="shortcut-hint">
         Press <kbd>?</kbd> to view keyboard shortcuts
@@ -519,7 +613,7 @@
 
   <div id="rightSidebar">
 
-    <div id="objectList" class="object-list--pro">
+    <div id="filesList" class="object-list--pro">
         <div class="pro-header"><span>Files:</span></div>
 
         <button id="importBtn" onmousedown="event.preventDefault();">Import</button>
@@ -597,7 +691,9 @@ function showBlocker(){
 
     const url = `https://pixabay.com/api/?key=${API_KEY}&q=${encodeURIComponent(query)}&image_type=photo&per_page=${perPage}&page=${page}`;
     try {
+      document.body.style.cursor = 'progress';
       const response = await fetch(url);
+      document.body.style.cursor = '';
       const data = await response.json();
 
       resultsDiv.innerHTML = "";
@@ -647,6 +743,7 @@ function showBlocker(){
         nextBtn.classList.add("disabled");
       }
     } catch (err) {
+      document.body.style.cursor = '';
       console.error("Pixabay fetch error:", err);
       resultsDiv.innerHTML = "<p>Error fetching images.</p>";
     }
@@ -765,15 +862,15 @@ function showBlocker(){
     ctx.setTransform(ratio,0,0,ratio,0,0);
   })();
 
-  /* --- Mouse normalization for fullscreen --- */
-  /* fixme: hardcoded canvas size */
+  // Mouse normalization for fullscreen
+  // fixme: hardcoded canvas size
   let _baseCssWidth  = parseFloat(getComputedStyle(canvas).width)  || 800;
   let _baseCssHeight = parseFloat(getComputedStyle(canvas).height) || 600;
 
   function _mouseToCanvasSpace(e){
-    /*fixme: cache getBoundingClientRect() so its not called on all mousemove events etc*/
+    //fixme: cache getBoundingClientRect() so its not called on all mousemove events etc
     const rect = canvas.getBoundingClientRect();
-    /* Convert from client pixels (fullscreen-scaled) to the canvas's original CSS pixel space */
+    //Convert from client pixels (fullscreen-scaled) to the canvas's original CSS pixel space
     return {
       x: (e.clientX - rect.left) * (_baseCssWidth  / rect.width),
       y: (e.clientY - rect.top)  * (_baseCssHeight / rect.height)
@@ -789,10 +886,12 @@ function showBlocker(){
   const addKeyframeBtn = document.getElementById('addKeyframe');
   const cloneKeyframeBtn = document.getElementById('cloneKeyframe');
 
-  const playBtn = document.getElementById('playAnimation');
+  const newPlayBtn = document.getElementById('mainBtn');
+  newPlayBtn.addEventListener('pointerdown', (e) => {
+    newPlayBtn.setPointerCapture(e.pointerId);
+  });
   const loopBtn = document.getElementById('loopAnimation');
   const bounceBtn = document.getElementById('bounceAnimation');
-  const stopBtn = document.getElementById('stopAnimation');
   const fullscreenBtn = document.getElementById('fullscreenBtn');
   const bgColorInput = document.getElementById('bgColorInput');
   const bgInputBtn = document.getElementById('bgInputBtn');
@@ -834,13 +933,13 @@ function showBlocker(){
   let animationFrameId = null;
   let playbackStartKeyframe = null;
 
-  /* ⬇️ NEW: freehand drawing state */
+  // freehand drawing state
   let drawMode = null;                // 'freehand' | null
   let isDrawingFreehand = false;
   let freehandPoints = [];            // raw points [{x,y}, ...]
   let _freehandPreviewColor = '#000'; // temporary stroke while drawing
 
-  /*UI State*/
+  //UI State
   let lastCursor = null;
 
   // Shared angle-aim state that persists across updateShapeList() rebuilds
@@ -1091,7 +1190,7 @@ function updateShapeList() {
   // top→bottom (highest z first)
   const shapesForDisplay = [...shapes].sort((a, b) => b.z - a.z);
 
-  // 🔧 NEW: shared drag state across all rows (fix)
+  // shared drag state across all rows (fix)
   let _draggingId = null;
 
   function renderRows() {
@@ -1190,7 +1289,7 @@ function updateShapeList() {
         }
       });
 
-      // ── Inputs wiring (color/text/w/h/angle/lock) — same logic as yours ───
+      // ── Inputs wiring (color/text/w/h/angle/lock) —─────────────────────────
       row.querySelectorAll('input[type="color"]').forEach(inp => {
         inp.oninput = () => {
           const id = parseInt(inp.dataset.id), c = inp.value;
@@ -1667,7 +1766,6 @@ function renderTimeline(active = null, playing = null) {
         <div class="title" title="Click to select / Double-click to rename">${kf.name}</div>
       </div>
       <div class="actions">
-        <button class="btn play-btn"   data-index="${i}" title="Preview">▶</button>
         <button class="btn delete-btn" data-index="${i}" title="Delete">🗑</button>
       </div>
       <div class="meta">
@@ -1678,6 +1776,9 @@ function renderTimeline(active = null, playing = null) {
         <label class="mini" title="Easing">
           <span class="icon">∿</span>
           <select id="easing-select_${i}" class="easing-select" data-index="${i}">
+            <optgroup label="No Interpolation">
+              <option value="none"${kf.easing==='none'?' selected':''}>None</option>
+            </optgroup>
             <optgroup label="Linear Interpolations">
               <option value="linear"${kf.easing==='linear'?' selected':''}>Linear</option>
               <option value="smoothstep"${kf.easing==='smoothstep'?' selected':''}>Smoothstep</option>
@@ -1746,7 +1847,6 @@ function renderTimeline(active = null, playing = null) {
     });
 
     // play/delete
-    row.querySelector('.play-btn').onclick = e => { e.stopPropagation(); currentKeyframeIndex = i; playAnimation('once'); };
     row.querySelector('.delete-btn').onclick = e => {
       e.stopPropagation();
       if (animation.keyframes.length <= 1) return;
@@ -1938,10 +2038,10 @@ function playAnimation(mode = 'once') {
   isLooping  = (mode === 'loop');
   isBouncing = (mode === 'bounce');
 
-  playBtn.classList.remove('playing');
   loopBtn.classList.remove('playing');
   bounceBtn.classList.remove('playing');
-  if (mode === 'once')   playBtn.classList.add('playing');
+
+  newPlayBtn.dataset.state = 'stop';
   if (mode === 'loop')   loopBtn.classList.add('playing');
   if (mode === 'bounce') bounceBtn.classList.add('playing');
 
@@ -2007,7 +2107,12 @@ function playAnimation(mode = 'once') {
 
     renderTimeline(null, fromIdx);
     let interp;
-    if (a.easing === 'spiral') {
+    
+    if (a.easing === 'none') {
+      // Hold on A for frames 0..steps-2, then cut to B on the last frame
+      const isLastFrame = (t >= steps - 1);
+      interp = isLastFrame ? b.shapes : a.shapes; // (Optionally: cloneShapes(...) if you want immutability)
+    }else if (a.easing === 'spiral') {
       interp = interpolateShapesSpiral(a, b, easedT);
     } else if (a.easing === 'wavy') {
       interp = interpolateShapesWavy(a, b, easedT);
@@ -2100,9 +2205,11 @@ function stopAnimation() {
   isPlaying = false;
   isLooping = false;
   isBouncing = false;
-  playBtn.classList.remove('playing');
+
+  newPlayBtn.dataset.state = 'play';
   loopBtn.classList.remove('playing');
   bounceBtn.classList.remove('playing');
+
   cancelAnimationFrame(animationFrameId);
   canvas.style.cursor = lastCursor;
   renderTimeline(currentKeyframeIndex, null);
@@ -2118,10 +2225,11 @@ function stopAnimation() {
   document.querySelector('.kf-row.selected')?.scrollIntoView({ block: 'center' });
 }
 
-playBtn.onclick = () => playAnimation('once');
+newPlayBtn.onclick = () => {
+  (newPlayBtn.dataset.state === 'play') ? playAnimation('once') : stopAnimation();
+}
 loopBtn.onclick = () => playAnimation('loop');
 bounceBtn.onclick = () => playAnimation('bounce');
-stopBtn.onclick = stopAnimation;
 
 fullscreenBtn.onclick = () => {
   if (!document.fullscreenElement) {
@@ -2324,6 +2432,7 @@ canvas.addEventListener('mousedown', e => {
 
   let clickedShapeId = null;
   
+  //fixme: hit-tests don't account for rotation.
   // Find topmost shape under mouse
   // ← NEW: use z-sorted copy for hit-test so the highest z (drawn last) is checked first
   const hitOrder = [...shapes].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
@@ -2821,7 +2930,14 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.code === 'Space') {
     e.preventDefault(); // stop browser from scrolling
-    (isPlaying) ? stopBtn.click() : playBtn.click();
+
+    // Add fake active style
+    newPlayBtn.classList.add('fake-active');
+    setTimeout(() => {
+      newPlayBtn.classList.remove('fake-active');
+    }, 150); // 150ms matches your CSS transition
+
+    newPlayBtn.click();
   }
   if (e.key === 'k') { cloneKeyframeBtn.click();}
   if (e.key === 'Escape') { toggleModal(false);}
@@ -3107,6 +3223,43 @@ document.addEventListener('keydown', e => {
 });
 
 
+</script>
+<script>
+    const fpsInput = document.getElementById("fpsInput");
+    const fpsButtons = document.getElementById("fpsButtons");
+
+    // Helper: update which preset button is active
+    function updatePresetHighlight() {
+      const currentFps = parseInt(animation.settings.frameRate, 10);
+      fpsButtons.querySelectorAll("button").forEach(btn => {
+        if (parseInt(btn.dataset.fps, 10) === currentFps) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+    }
+    // init number input
+    fpsInput.value = animation.settings.frameRate || 30;
+    updatePresetHighlight();
+
+    fpsInput.addEventListener("change", () => {
+      let fps = parseInt(fpsInput.value, 10);
+      if (isNaN(fps) || fps < 1) fps = 1;
+      if (fps > 240) fps = 240;
+      animation.settings.frameRate = fps;
+      fpsInput.value = fps; // clamp
+      updatePresetHighlight();
+    });
+
+    fpsButtons.addEventListener("click", (e) => {
+      if (e.target.matches("button[data-fps]")) {
+        const fps = parseInt(e.target.dataset.fps, 10);
+        animation.settings.frameRate = fps;
+        fpsInput.value = fps;
+        updatePresetHighlight();
+      }
+    });
 </script>
 
 </body>
