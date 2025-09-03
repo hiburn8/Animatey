@@ -21,7 +21,7 @@ window.tutorialSteps = [
   {
     element: '#canvas',
     text: '[1/8] Here’s your canvas area. You can drag objects around to reposition them, or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotate shapes.<p><kbd>O</kbd> to toggle highlighting.',
-    placement: 'left-top'
+    placement: 'right-bottom'
   },
   {
     element: '#cloneKeyframe',
@@ -32,9 +32,7 @@ window.tutorialSteps = [
     element: '#timeline',
     text: '[3/8] Your animation is based on creating keyframes, and transitioning between them. You can control the number of frames used to interpolate between specific keyframes, and choose an animation style.',
     placement: 'left',
-    fn: () => {
-      document.getElementById('cloneKeyframe').click();
-    },
+    fn: () => {},
   },
   {
     element: '#shapeList',
@@ -52,7 +50,7 @@ window.tutorialSteps = [
     placement: 'top-center'
   },
   {
-    element: '#playAnimation',
+    element: '#newPlayBtn',
     text: '[7/8] ▶ Play (or <kbd>Spacebar</kbd>) runs your animation once from the currently selected keyframe.',
     placement: 'bottom-right'
   },

@@ -70,6 +70,9 @@
     }
 
     #timeline {
+      overflow-y: scroll;   /* or auto */
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;  /* IE/Edge */
       scroll-behavior: smooth;
       display: flex;
       flex-direction: column;
@@ -428,49 +431,58 @@
       cursor: default;
     }
 
-  /* PLAY TOGGLE BUTTON */
-   .bigPlayBtn{
-    width:150px;         /* wider, like a spacebar */
-    height:50px;         /* flatter height */
-    border-radius:12px;  /* soft rectangle corners */
-    border:none;
-    cursor:pointer;
-    display:grid;
-    place-items:center;
-    transition: background .25s ease, transform .18s ease, filter .18s ease;
-  }
-  
-  /* Prevent focus visuals */ .bigPlayBtn:focus{ outline:none; }
+    /* PLAY TOGGLE BUTTON */
+     .bigPlayBtn{
+      width:150px;         /* wider, like a spacebar */
+      height:50px;         /* flatter height */
+      border-radius:12px;  /* soft rectangle corners */
+      border:none;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      transition: background .25s ease, transform .18s ease, filter .18s ease;
+    }
+    
+    /* Prevent focus visuals */ .bigPlayBtn:focus{ outline:none; }
 
-  .bigPlayBtn:hover{ filter:brightness(1.08); }
-  .bigPlayBtn:active{ transform:scale(.95); }
-  .bigPlayBtn.fake-active { transform: scale(.95); }
+    .bigPlayBtn:hover{ filter:brightness(1.08); }
+    .bigPlayBtn:active{ transform:scale(.95); }
+    .bigPlayBtn.fake-active { transform: scale(.95); }
 
-  .icon{
-    width:25%;           /* scaled down to fit new shape */
-    aspect-ratio:1;
-    position:relative;
-  }
-  .icon svg{
-    position:absolute;
-    inset:0;
-    width:100%; height:100%;
-    fill:#fff;
-    transition:opacity .2s ease, transform .2s ease;
-  }
-  .icon .stop{ opacity:0; transform:scale(.8); }
-  .icon .play{ opacity:1; transform:scale(1); }
+    .icon{
+      width:25%;           /* scaled down to fit new shape */
+      aspect-ratio:1;
+      position:relative;
+    }
+    .icon svg{
+      position:absolute;
+      inset:0;
+      width:100%; height:100%;
+      fill:#fff;
+      transition:opacity .2s ease, transform .2s ease;
+    }
+    .icon .stop{ opacity:0; transform:scale(.8); }
+    .icon .play{ opacity:1; transform:scale(1); }
 
-  /* State styles with muted colors */
-  .bigPlayBtn[data-state="play"]{
-    background:#6fcf97; /* soft green */
-  }
-  .bigPlayBtn[data-state="stop"]{
-    background:#eb746c; /* soft red */
-  }
+    /* State styles with muted colors */
+    .bigPlayBtn[data-state="play"]{
+      background:#6fcf97; /* soft green */
+    }
+    .bigPlayBtn[data-state="stop"]{
+      background:#eb746c; /* soft red */
+    }
 
-  .bigPlayBtn[data-state="stop"] .icon .play{ opacity:0; transform:scale(.8); }
-  .bigPlayBtn[data-state="stop"] .icon .stop{ opacity:1; transform:scale(1); }
+    .bigPlayBtn[data-state="stop"] .icon .play{ opacity:0; transform:scale(.8); }
+    .bigPlayBtn[data-state="stop"] .icon .stop{ opacity:1; transform:scale(1); }
+
+    .btn:disabled, .btn[disabled] {
+      border: 1px solid #00000000 !important;
+      background: #00000000 !important;
+      opacity: 0.3 !important;
+      cursor: default !important;
+      filter: grayscale(100%) !important;
+      color: #888;
+    }
 </style>
 </head>
 <body>
@@ -578,7 +590,7 @@
     </div>
     <div id="controls">
         <div id="bigPlay">
-          <button class="bigPlayBtn" id="mainBtn" data-state="play">
+          <button class="bigPlayBtn" id="newPlayBtn" data-state="play">
             <span class="icon" aria-hidden="true">
               <!-- Play -->
               <svg class="play" viewBox="0 0 100 100"><path d="M35 20 L80 50 L35 80 Z"/></svg>
@@ -625,7 +637,7 @@
     <p>
 
     <button id="cloneKeyframe">Clone Keyframe</button>
-    <button id="addKeyframe">Blank Keyframe</button>
+    <button id="addKeyframe">New Keyframe</button>
     <div id="timeline"></div>
 </div>
 
@@ -886,7 +898,7 @@ function showBlocker(){
   const addKeyframeBtn = document.getElementById('addKeyframe');
   const cloneKeyframeBtn = document.getElementById('cloneKeyframe');
 
-  const newPlayBtn = document.getElementById('mainBtn');
+  const newPlayBtn = document.getElementById('newPlayBtn');
   newPlayBtn.addEventListener('pointerdown', (e) => {
     newPlayBtn.setPointerCapture(e.pointerId);
   });
@@ -906,6 +918,12 @@ function showBlocker(){
 
   const timelineDiv = document.getElementById('timeline');
 
+
+
+  //Canvas
+  let backgroundImage = null;
+  const defaultEasing = 'none';
+
   let shapes = [];
   let animation = {
     title: "Untitled",
@@ -915,7 +933,7 @@ function showBlocker(){
     settings: { frameRate: 30, loop: false },
     keyframes: []
   };
-  let backgroundImage = null;
+
   let currentKeyframeIndex = null;
   let draggingId = null;
   let dragOffsets = new Map();
@@ -1246,6 +1264,7 @@ function updateShapeList() {
           ${angleCtl}
         </div>
       `;
+
       shapeListDiv.appendChild(row);
 
       // ── Selection (single / Ctrl|Cmd toggle) ───────────────────────────────
@@ -1748,9 +1767,9 @@ function renderTimeline(active = null, playing = null) {
   timelineDiv.innerHTML = '<div class="pro-header"><span>Keyframes</span></div>';
 
   animation.keyframes.forEach((kf, i) => {
-    if (!kf.name) kf.name = `KF ${i}`;
+    if (!kf.name) kf.name = `Keyframe ${i}`;
     kf.frames ??= 30;
-    kf.easing ??= 'linear';
+    kf.easing ??= defaultEasing;
 
     const row = document.createElement('div');
     row.className = 'kf-row';
@@ -1766,7 +1785,7 @@ function renderTimeline(active = null, playing = null) {
         <div class="title" title="Click to select / Double-click to rename">${kf.name}</div>
       </div>
       <div class="actions">
-        <button class="btn delete-btn" data-index="${i}" title="Delete">🗑</button>
+        <button class="btn delete-btn" data-index="${i}" title="Delete" ${ (animation.keyframes.length === 1) ? 'disabled>🚫' : '>🗑'}</button>
       </div>
       <div class="meta">
         <label class="mini" title="Duration in frames">
@@ -2352,7 +2371,7 @@ imageInput.onchange = e => {
 addKeyframeBtn.onclick = () => {
   shapes = [];
   const newKeyframe = {
-    name: `KF ${animation.keyframes.length}`,
+    name: `Keyframe ${animation.keyframes.length}`,
     shapes: [],
     frames: 30
  };
@@ -2372,14 +2391,14 @@ cloneKeyframeBtn.onclick = () => {
   // inherit the current keyframe’s frames & easing (or default if none)
   const inheritedName = currentKeyframeIndex != null
     ? animation.keyframes[currentKeyframeIndex].name
-    : `KF ${animation.keyframes.length}`;
+    : `Keyframe ${animation.keyframes.length}`;
 
   const inheritedFrames = currentKeyframeIndex != null
     ? animation.keyframes[currentKeyframeIndex].frames
     : 30;
   const inheritedEasing = currentKeyframeIndex != null
     ? animation.keyframes[currentKeyframeIndex].easing
-    : 'linear';
+    : defaultEasing;
 
   const newKeyframe = {
     name: inheritedName,
@@ -2738,7 +2757,7 @@ shapes = normalizeZOrder();
 
 // include default frames for the very first keyframe
 animation.keyframes.push({
-  name: "KF 0",
+  name: "Keyframe",
   shapes: cloneShapes(shapes),
   frames: 30
 });
