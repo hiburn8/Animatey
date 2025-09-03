@@ -18,6 +18,7 @@
 
     #leftSidebar, #rightSidebar {
       min-width: 350px;
+      max-width: 450px;
       padding: 10px;
       box-sizing: border-box;
       background: #f9f9f9;
@@ -632,6 +633,10 @@
         <input type="file" id="importFile" style="display:none;" accept=".json">
         <button id="exportBtn" onmousedown="event.preventDefault();">Export</button>
         <button id="demoBtn">Load Demo</button>
+        <button id="exportGifBtn" onmousedown="event.preventDefault();">Export GIF</button>
+        <progress id="gifProgress" value="0" max="1" style="width:100%; display:none;"></progress>
+
+
     </div>
 
     <p>
@@ -915,6 +920,8 @@ function showBlocker(){
   const exportBtn = document.getElementById('exportBtn');
   const importBtn = document.getElementById('importBtn');
   const importFile = document.getElementById('importFile');
+  const exportGifBtn = document.getElementById('exportGifBtn');
+
 
   const timelineDiv = document.getElementById('timeline');
 
@@ -1089,7 +1096,7 @@ function drawShape(s, outline = false) {
 
       if (outline) {
         ctx.strokeStyle = 'black';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.strokeRect(s.x, s.y, s.w, s.h);
       }
     } else if (pts.length === 1) {
@@ -2289,6 +2296,12 @@ clearBgBtn.onclick = () => {
   drawAllShapes();
 };
 
+// Update canvas background color live when the color picker changes
+bgColorInput.addEventListener('input', () => {
+  animation.canvas.background = bgColorInput.value;
+  drawAllShapes();
+});
+
 const imageInput = document.getElementById('imageInput');
 
 function addObject(type){
@@ -3280,6 +3293,87 @@ document.addEventListener('keydown', e => {
       }
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+<script>
+exportGifBtn.onclick = async () => {
+  if (animation.keyframes.length < 2) {
+    alert("Need at least 2 keyframes to export a GIF.");
+    return;
+  }
 
+  const fps = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
+  const gif = new GIF({
+    workers: 2,
+    quality: 10,
+    width: canvas.width,
+    height: canvas.height,
+    workerScript: URL.createObjectURL(new Blob([`
+      importScripts('https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js');
+    `], { type: 'application/javascript' }))
+  });
+
+  // show the progress bar
+  const progressEl = document.getElementById('gifProgress');
+  progressEl.value = 0;
+  progressEl.style.display = 'block';
+
+  let segments = [];
+  for (let i = 0; i < animation.keyframes.length - 1; i++) {
+    segments.push([i, i + 1]);
+  }
+
+  for (const [fromIdx, toIdx] of segments) {
+    const a = animation.keyframes[fromIdx];
+    const b = animation.keyframes[toIdx];
+    const steps = a.frames || 30;
+    const easer = EASERS[a.easing] || (x => x);
+
+    for (let t = 0; t < steps; t++) {
+      const rawT = t / steps;
+      const easedT = easer(rawT);
+      let interp;
+      if (a.easing === 'none') {
+        interp = (t >= steps - 1) ? b.shapes : a.shapes;
+      } else if (a.easing === 'spiral') {
+        interp = interpolateShapesSpiral(a, b, easedT);
+      } else if (a.easing === 'wavy') {
+        interp = interpolateShapesWavy(a, b, easedT);
+      } else {
+        interp = interpolateShapes(a, b, easedT);
+      }
+
+      drawAllShapes(interp);
+
+      const frameCanvas = document.createElement('canvas');
+      frameCanvas.width = canvas.width;
+      frameCanvas.height = canvas.height;
+      frameCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
+      gif.addFrame(frameCanvas, { delay: 1000 / fps });
+    }
+  }
+
+  gif.on('progress', (p) => {
+    progressEl.value = p;
+  });
+
+  gif.on('finished', (blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'animation.gif';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // hide the progress bar after download
+    progressEl.style.display = 'none';
+  });
+
+  gif.render();
+};
+
+</script>
 </body>
 </html>
