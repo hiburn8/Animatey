@@ -9,11 +9,28 @@
 
   <title>Animatey</title>
   <style>
+
     body {
-      font-family: sans-serif;
-      margin: 0;
+      font-family: system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #333;
+            margin: 0;
       display: flex;
       height: 100vh;
+    }
+
+    h1, h2, h3 {
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #222;
+    }
+
+    .pro-header span {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #555;
     }
 
     #leftSidebar, #rightSidebar {
@@ -24,6 +41,7 @@
       background: #f9f9f9;
       border-right: 1px solid #ccc;
       overflow-y: auto;
+      box-shadow: 0 0 6px rgba(0,0,0,0.08);
     }
 
     #rightSidebar {
@@ -36,14 +54,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      box-shadow: 0 0 6px rgba(0,0,0,0.08);
     }
 
     canvas {
-      border: 1px solid #000;
       background: #f0f0f0;
       margin-top: 10px;
       cursor: pointer;
       isolation: isolate;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
     #controls {
@@ -71,7 +91,7 @@
     }
 
     #timeline {
-      overflow-y: scroll;   /* or auto */
+      overflow-y: auto;
       scrollbar-width: none; /* Firefox */
       -ms-overflow-style: none;  /* IE/Edge */
       scroll-behavior: smooth;
@@ -80,15 +100,10 @@
       gap: 4px;
       margin-top: 10px;
       max-height: 100%;
-      overflow-y: auto;
       border: 1px solid #aaa;
       padding: 10px;
       width: 100%;
       box-sizing: border-box;
-    }
-
-    button {
-      margin-left: 5px;
     }
 
     .aim-btn, .lock-btn {
@@ -339,20 +354,21 @@
     }
 
     /* Headers (shared) */
-    #shapeList.shape-list--pro .pro-header,
-    #objectList.object-list--pro .pro-header,
-    #filesList.object-list--pro .pro-header,
-    #canvasList.object-list--pro .pro-header,
-    #timeline.kf-list--pro .pro-header {
+    .pro-header {
       position: sticky; top: -8px;
-      background: linear-gradient(#fafafa, #f5f5f5);
       border: 1px solid #ddd;
       border-radius: 6px;
       padding: 8px 10px;
-      font-weight: 700;
+      font-size: 0.95rem;
       margin-bottom: 8px;
       display:flex; align-items:center; gap:10px;
       z-index: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #555;
+      background: linear-gradient(#fafafa, #f1f1f1);
+
+
     }
 
     /* Rows: share all “shape-row” rules with “kf-row” */
@@ -393,7 +409,7 @@
     .shape-row .delete-btn-pro { color:#b00020; border-color:#e5b3b8; }
     .kf-row .delete-btn { color:#b00020; border-color:#e5b3b8; }
 
-     .kf-row.playing {
+    .kf-row.playing {
       background: linear-gradient(90deg, #28a745 0%, #34ce57 100%);
       color: #fff;
       border-left: 4px solid #1e7e34;
@@ -483,6 +499,38 @@
       cursor: default !important;
       filter: grayscale(100%) !important;
       color: #888;
+    }
+    button {
+      margin-left: 5px;
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover {
+      background: #e9e9e9;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    #shapeList::-webkit-scrollbar,
+    #timeline::-webkit-scrollbar {
+      width: 8px;
+    }
+    #shapeList::-webkit-scrollbar-thumb,
+    #timeline::-webkit-scrollbar-thumb {
+      background: #bbb;
+      border-radius: 4px;
+    }
+    #shapeList::-webkit-scrollbar-thumb:hover,
+    #timeline::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+
+    .tab, .tab-content, .pro-header, .fps-control {
+      transition: background 0.25s, color 0.25s, box-shadow 0.25s;
     }
 </style>
 </head>
@@ -629,11 +677,11 @@
     <div id="filesList" class="object-list--pro">
         <div class="pro-header"><span>Files:</span></div>
 
-        <button id="importBtn" onmousedown="event.preventDefault();">Import</button>
+        <button id="importBtn" onmousedown="event.preventDefault();">Open Project</button>
         <input type="file" id="importFile" style="display:none;" accept=".json">
-        <button id="exportBtn" onmousedown="event.preventDefault();">Export</button>
-        <button id="demoBtn">Load Demo</button>
-        <button id="exportGifBtn" onmousedown="event.preventDefault();">Export GIF</button>
+        <button id="exportBtn" onmousedown="event.preventDefault();">Save Project</button>
+        <button id="demoBtn">Load Demo Project</button><p>
+        <button id="exportGifBtn" onmousedown="event.preventDefault();">Export .GIF</button>
         <progress id="gifProgress" value="0" max="1" style="width:100%; display:none;"></progress>
 
 
