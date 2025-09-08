@@ -1238,7 +1238,7 @@ ordered.forEach(s => {
 function updateShapeList() {
   // nicer visuals container class (safe to leave even if CSS not present)
   shapeListDiv.classList.add('shape-list--pro');
-  shapeListDiv.innerHTML = '<div class="pro-header"><span>Layers</span></div>';
+  shapeListDiv.innerHTML = '<div class="pro-header"><span>Current Objects</span></div>';
 
   // ── Angle aiming overlay (same as before) ─────────────────────────────────
   if (!document.getElementById('angleLine')) {
@@ -2193,6 +2193,10 @@ function playAnimation(mode = 'once') {
     } else {
       interp = interpolateShapes(a, b, easedT);
     }
+    // Fixme: This keeps shapes + UI in sync during playback but is EXPENSIVE.
+    shapes = cloneShapes(interp);
+    updateShapeList();
+
     drawAllShapes(interp);
     _renderedOnce = true;
 
@@ -2844,6 +2848,8 @@ function loadKeyframesFromJSON(json) {
     animation.canvas   ??= { width: 800, height: 600, background: "#f0f0f0" };
     bgColorInput.value = animation.canvas.background || '#f0f0f0';
     animation.settings ??= { frameRate: 30, loop: false };
+    fpsInput.value = animation.settings.frameRate || 30;
+    updatePresetHighlight();
     animation.keyframes.forEach(kf => { kf.frames ??= 30; });
 
     // 🔹 Normalize z-order for every keyframe on import
@@ -3225,54 +3231,13 @@ document.addEventListener('keydown', e => {
       })
       .filter(Boolean);
     shapeClipboard.sourceKeyframeIndex = currentKeyframeIndex;
-  }
 
-  // Ctrl+V: Paste shapes into current keyframe
-  if ((e.ctrlKey || e.metaKey) && key === 'v') {
-    if (_isEditableTarget(e)) return;
-    e.preventDefault();
-    if (!shapeClipboard.shapes.length) return;
-    if (currentKeyframeIndex == null) return;
-
-    const sameFrame = shapeClipboard.sourceKeyframeIndex === currentKeyframeIndex;
-    const newIds = [];
-
-    // Build live sets so we can guarantee uniqueness even when pasting many shapes
-    const frameIds = new Set(animation.keyframes[currentKeyframeIndex].shapes.map(s => s.id));
-    const liveIds  = new Set(shapes.map(s => s.id));
-    const idExists = (id) => frameIds.has(id) || liveIds.has(id);
-
-    shapeClipboard.shapes.forEach(orig => {
-      // Clone the shape data
-      const copy = cloneShape(orig);
-
-      // If pasting back into the same frame OR the id already exists in this frame,
-      // assign a fresh unique id. Otherwise preserve the original id.
-      if (sameFrame || idExists(copy.id)) {
-        let newId = shapeIdCounter++;
-        while (idExists(newId)) newId = shapeIdCounter++;  // just in case
-        copy.id = newId;
-      }
-
-      // Add to the live shapes array
-      shapes.push(copy);
-      newIds.push(copy.id);
-      liveIds.add(copy.id);   // keep sets in sync as we paste
-
-      // Also insert into the current keyframe’s shapes
-      const kfCopy = cloneShape(copy);
-      animation.keyframes[currentKeyframeIndex].shapes.push(kfCopy);
-      frameIds.add(copy.id);  // track in frame set too
+    navigator.clipboard.writeText("__SHAPE_CLIPBOARD__").catch(() => {
+    // Fallback: ignore if permissions denied
     });
-
-    // Select the newly pasted shapes
-    multiSelectedShapeIds.clear();
-    newIds.forEach(id => multiSelectedShapeIds.add(id));
-    selectedShapeId = newIds.length === 1 ? newIds[0] : null;
-
-    updateShapeList();
-    drawAllShapes();
   }
+
+  
 });
 
 // ─── Delete / Backspace to remove selected shapes from CURRENT keyframe only ──
@@ -3421,6 +3386,155 @@ exportGifBtn.onclick = async () => {
 
   gif.render();
 };
+
+// Single paste handler: handles both images and shape clipboard
+document.addEventListener("paste", event => {
+  const items = event.clipboardData?.items;
+  if (!items) return;
+
+  // 1) Check if clipboard has an image
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (!file) continue;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target.result;
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 200, maxH = 200;
+          let w = img.naturalWidth, h = img.naturalHeight;
+          const scale = Math.min(1, maxW / w, maxH / h);
+          w = Math.max(1, Math.round(w * scale));
+          h = Math.max(1, Math.round(h * scale));
+
+          const s = {
+            id: shapeIdCounter++,
+            type: "image",
+            x: 100 + Math.random() * 400,
+            y: 100 + Math.random() * 250,
+            w, h,
+            angle: 0,
+            z: shapes.length,
+            locked: true,
+            mode: 0,
+            src: dataUrl,
+            _img: img
+          };
+
+          shapes.push(s);
+          if (currentKeyframeIndex != null) {
+            for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+              animation.keyframes[i].shapes.push(cloneShape(s));
+            }
+          }
+
+          updateShapeList();
+          drawAllShapes();
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+
+      event.preventDefault();
+      return; // stop here if image handled
+    }
+  }
+
+  // 2) Otherwise, handle shape paste (Ctrl+V shapes)
+  if (!shapeClipboard.shapes.length) return;
+  if (currentKeyframeIndex == null) return;
+
+  event.preventDefault();
+
+  const sameFrame = shapeClipboard.sourceKeyframeIndex === currentKeyframeIndex;
+  const newIds = [];
+
+  const frameIds = new Set(animation.keyframes[currentKeyframeIndex].shapes.map(s => s.id));
+  const liveIds  = new Set(shapes.map(s => s.id));
+  const idExists = id => frameIds.has(id) || liveIds.has(id);
+
+  shapeClipboard.shapes.forEach(orig => {
+    const copy = cloneShape(orig);
+
+    if (sameFrame || idExists(copy.id)) {
+      let newId = shapeIdCounter++;
+      while (idExists(newId)) newId = shapeIdCounter++;
+      copy.id = newId;
+    }
+
+    shapes.push(copy);
+    newIds.push(copy.id);
+    liveIds.add(copy.id);
+
+    const kfCopy = cloneShape(copy);
+    animation.keyframes[currentKeyframeIndex].shapes.push(kfCopy);
+    frameIds.add(copy.id);
+  });
+
+  multiSelectedShapeIds.clear();
+  newIds.forEach(id => multiSelectedShapeIds.add(id));
+  selectedShapeId = newIds.length === 1 ? newIds[0] : null;
+
+  updateShapeList();
+  drawAllShapes();
+});
+
+// Enable drag-and-drop image import
+canvas.addEventListener("dragover", e => {
+  e.preventDefault(); // allow drop
+});
+
+canvas.addEventListener("drop", e => {
+  e.preventDefault();
+
+  const files = e.dataTransfer.files;
+  if (!files.length) return;
+
+  for (const file of files) {
+    if (!file.type.startsWith("image/")) continue;
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const dataUrl = ev.target.result;
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 200, maxH = 200;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const scale = Math.min(1, maxW / w, maxH / h);
+        w = Math.max(1, Math.round(w * scale));
+        h = Math.max(1, Math.round(h * scale));
+
+        const s = {
+          id: shapeIdCounter++,
+          type: "image",
+          x: e.offsetX,          // drop at cursor position
+          y: e.offsetY,
+          w, h,
+          angle: 0,
+          z: shapes.length,
+          locked: true,
+          mode: 0,
+          src: dataUrl,
+          _img: img
+        };
+
+        shapes.push(s);
+        if (currentKeyframeIndex != null) {
+          for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+            animation.keyframes[i].shapes.push(cloneShape(s));
+          }
+        }
+
+        updateShapeList();
+        drawAllShapes();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+});
 
 </script>
 </body>
