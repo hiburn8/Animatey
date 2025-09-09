@@ -1069,12 +1069,16 @@ function createShape(type, x, y) {
   let w = size, h = size;
   if (type === 'rectangle') { w = 80; h = 40; }
   if (type === 'text') {
-        const defaultText = 'Text';
+        const userText = document.getElementById('textContent')?.value || 'Text';
+
+        const fontSize = 16;
         // temporarily set font so we can measure
-        ctx.font = '16px sans-serif';
-        const metrics = ctx.measureText(defaultText);
+        ctx.font = `${fontSize}px sans-serif`;
+        const metrics = ctx.measureText(userText);
         w = metrics.width;
-        h = 16 * 1.2;
+        h = fontSize;
+        //Fixme: This was for line spacing. maybe we bring that back if we support multiline at some point.
+        //h = 16 * 1.2;
   }
   const id = shapeIdCounter++;
   return {
@@ -1393,11 +1397,28 @@ function updateShapeList() {
           const id = parseInt(inp.dataset.id, 10);
           const ss = shapes.find(o => o.id === id);
           if (!ss) return;
+
           ss.text = inp.value;
+
+          // 🔑 Recompute width from actual font size
+          ctx.save();
+          ctx.font = `${ss.h}px sans-serif`;
+          ss.w = ctx.measureText(ss.text || '').width;
+          //change the value on the input to the correct one now we've extended the 'shape'. 
+          //we avoid updateShapeList() because the refresh will lose focus on the input.
+          const wInput = row.querySelector(`.w-input[data-id="${id}"]`);
+          if (wInput) wInput.value = Math.round(ss.w);
+
+          ctx.restore();
+
           if (currentKeyframeIndex != null) {
             const kf = animation.keyframes[currentKeyframeIndex].shapes.find(o => o.id === id);
-            if (kf) kf.text = inp.value;
+            if (kf) {
+              kf.text = inp.value;
+              kf.w = ss.w; // keep in sync
+            }
           }
+
           drawAllShapes();
         };
       });
