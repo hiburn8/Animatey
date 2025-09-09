@@ -424,7 +424,7 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
-    .fps-control {
+    .group-control {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -432,8 +432,11 @@
       border: 1px solid #ccc;
       background: #fff;
       border-radius: 6px;
+      width: -moz-available;          /* WebKit-based browsers will ignore this. */
+      width: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+      width: stretch;
     }
-    .fps-control input[type="number"] {
+    .group-control input[type="number"] {
       width: 68px;
       padding: 2px 4px;
     }
@@ -529,7 +532,7 @@
       background: #999;
     }
 
-    .tab, .tab-content, .pro-header, .fps-control {
+    .tab, .tab-content, .pro-header, .group-control {
       transition: background 0.25s, color 0.25s, box-shadow 0.25s;
     }
 </style>
@@ -538,13 +541,32 @@
   <div id="leftSidebar">
 
     <div id="canvasList" class="object-list--pro">
-        <div class="pro-header"><span>Background</span></div>
+        <div class="pro-header"><span>Settings</span></div>
 
+
+        
+        <div id="fps-widget" class="group-control">
+          <label for="fpsInput">FPS:</label>
+        <input type="number" id="fpsInput" min="1" max="240" step="1" value="60">
+        <div id="fpsButtons">
+          <button type="button" data-fps="1">1</button>
+          <button type="button" data-fps="12">12</button>
+          <button type="button" data-fps="24">24</button>
+          <button type="button" data-fps="30">30</button>
+          <button type="button" data-fps="60">60</button>
+          <button type="button" data-fps="120">120</button>
+        </div>
+      </div>
+      
+      <p>
+      
+      <div class="group-control">
+        <label for="bgColorInput">Background:</label>
         <input type="color" id="bgColorInput" value="#f0f0f0" title="Set background color">
           <button id="bgInputBtn" onmousedown="event.preventDefault();">Load Image</button>
           <input type="file" id="bgInput" style="display:none;" accept="image/*">
           <button id="clearBackground" onmousedown="event.preventDefault();">Clear</button>
-
+      </div>    
     </div>
 
     <div id="objectList" class="object-list--pro">
@@ -653,18 +675,6 @@
       <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
       <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
 
-      <div class="fps-control">
-        <label for="fpsInput">FPS:</label>
-        <input type="number" id="fpsInput" min="1" max="240" step="1" value="60">
-        <div id="fpsButtons">
-          <button type="button" data-fps="1">1</button>
-          <button type="button" data-fps="12">12</button>
-          <button type="button" data-fps="24">24</button>
-          <button type="button" data-fps="30">30</button>
-          <button type="button" data-fps="60">60</button>
-          <button type="button" data-fps="120">120</button>
-        </div>
-      </div>
         <!-- Hint to the user -->
       <div id="shortcut-hint">
         Press <kbd>?</kbd> to view keyboard shortcuts
@@ -1840,7 +1850,7 @@ function renderTimeline(active = null, playing = null) {
         <div class="title" title="Click to select / Double-click to rename">${kf.name}</div>
       </div>
       <div class="actions">
-        <button class="btn delete-btn" data-index="${i}" title="Delete" ${ (animation.keyframes.length === 1) ? 'disabled>🚫' : '>🗑'}</button>
+        <button class="btn delete-btn" data-index="${i}" title="Delete" ${animation.keyframes.length === 1 ? 'disabled' : ''}>${animation.keyframes.length === 1 ? '🚫' : '🗑'}</button>
       </div>
       <div class="meta">
         <label class="mini" title="Duration in frames">
@@ -2136,7 +2146,7 @@ function playAnimation(mode = 'once') {
   currentKeyframeIndex  = null;
   renderTimeline(null, null);
 
-  // ⬇️ NEW: fixed-rate frame timing (user-configurable via animation.settings.frameRate)
+  //fixed-rate frame timing (user-configurable via animation.settings.frameRate)
   const targetFps       = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
   const frameDurationMs = 1000 / targetFps;
   let lastTime          = null;
@@ -2289,9 +2299,9 @@ function stopAnimation() {
   bounceBtn.classList.remove('playing');
 
   cancelAnimationFrame(animationFrameId);
-  canvas.style.cursor = lastCursor;
+  canvas.style.cursor = lastCursor || '';
+
   renderTimeline(currentKeyframeIndex, null);
-  drawAllShapes();
   
   if (playbackStartKeyframe != null) {
     currentKeyframeIndex = playbackStartKeyframe;
@@ -2301,6 +2311,7 @@ function stopAnimation() {
     playbackStartKeyframe = null; // Reset for future runs
   }
   document.querySelector('.kf-row.selected')?.scrollIntoView({ block: 'center' });
+  drawAllShapes();
 }
 
 newPlayBtn.onclick = () => {
@@ -2516,7 +2527,6 @@ canvas.addEventListener('mousedown', e => {
 
   let clickedShapeId = null;
   
-  //fixme: hit-tests don't account for rotation.
   // Find topmost shape under mouse
   // ← NEW: use z-sorted copy for hit-test so the highest z (drawn last) is checked first
   const hitOrder = [...shapes].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
@@ -2524,7 +2534,46 @@ canvas.addEventListener('mousedown', e => {
     const s = hitOrder[i];
     const inside = s.type === 'circle'
       ? ((m.x - (s.x + s.w / 2)) ** 2 / (s.w / 2) ** 2 + (m.y - (s.y + s.h / 2)) ** 2 / (s.h / 2) ** 2 <= 1)
-      : (m.x >= s.x && m.x <= s.x + s.w && m.y >= s.y && m.y <= s.y + s.h);
+      //previous code, without rotation:
+      //: (m.x >= s.x && m.x <= s.x + s.w && m.y >= s.y && m.y <= s.y + s.h);
+      :  (function(){
+          const cx = s.x + s.w/2, cy = s.y + s.h/2;
+          const px = m.x - cx,     py = m.y - cy;
+          const ang = -((s.angle||0) * Math.PI/180);
+          const cosA = Math.cos(ang), sinA = Math.sin(ang);
+          const rx = px*cosA - py*sinA;
+          const ry = px*sinA + py*cosA;
+          const tx = rx + cx, ty = ry + cy;
+
+          if (s.type === 'triangle') {
+            // matches your draw: top center, bottom-right, bottom-left
+            const Ax = s.x + s.w/2, Ay = s.y;
+            const Bx = s.x + s.w,   By = s.y + s.h;
+            const Cx = s.x,         Cy = s.y + s.h;
+
+            // barycentric test
+            const v0x = Cx - Ax, v0y = Cy - Ay;
+            const v1x = Bx - Ax, v1y = By - Ay;
+            const v2x = tx - Ax, v2y = ty - Ay;
+
+            const dot00 = v0x*v0x + v0y*v0y;
+            const dot01 = v0x*v1x + v0y*v1y;
+            const dot02 = v0x*v2x + v0y*v2y;
+            const dot11 = v1x*v1x + v1y*v1y;
+            const dot12 = v1x*v2x + v1y*v2y;
+
+            const denom = (dot00 * dot11 - dot01 * dot01);
+            if (denom === 0) return false; // degenerate triangle
+            const invDen = 1 / denom;
+            const u = (dot11 * dot02 - dot01 * dot12) * invDen;
+            const v = (dot00 * dot12 - dot01 * dot02) * invDen;
+
+            return (u >= 0 && v >= 0 && (u + v) <= 1);
+          }
+
+          // rectangles/squares/images/text/freehand → rotated AABB
+          return (tx >= s.x && tx <= s.x + s.w && ty >= s.y && ty <= s.y + s.h);
+        })();
 
     if (inside) {
       clickedShapeId = s.id;
