@@ -586,30 +586,7 @@
               Enter Text:
               <input type="text" id="textContent" placeholder=""><button id="emojiButton">😀</button>
             </label>
-           
-          <div id="emoji-hint"></div>
-
-          <script>
-            const input = document.getElementById("textContent");
-            const button = document.getElementById("emojiButton");
-            const emojiHint = document.getElementById("emoji-hint");
-
-            button.addEventListener("click", () => {
-              input.focus();
-
-              // Show shortcut hint depending on platform
-              const ua = navigator.userAgent.toLowerCase();
-              if (ua.includes("win")) {
-                emojiHint.textContent = "Press Win + . to open the emoji picker.";
-              } else if (ua.includes("mac")) {
-                emojiHint.textContent = "Press Cmd + Ctrl + Space to open the emoji picker.";
-              } else {
-                emojiHint.textContent = "Use your device's emoji keyboard.";
-              }
-              emojiHint.style.display = "block";
-            });
-          </script>
-
+  
           <button id="addTextBtn">Add Text</button>
         </div>
 
@@ -3047,10 +3024,38 @@ let lastInteractionArea = null;
 
 /* Guard: ignore global shortcuts while typing in editable controls */
 function _isEditableTarget(e){
-  const el = e.target;
-  if (!el) return false;
-  return !!el.closest('input, textarea, select, [contenteditable], [role="textbox"]');
+  const SELECTORS = [
+    'input',
+    'textarea',
+    'select',
+    '[contenteditable]',
+    '[role="textbox"]',
+    '[role="dialog"]',
+    '[aria-modal="true"]',
+    '[data-shortcuts="off"]'
+  ].join(',');
+
+  // 1) Normal DOM fast path
+  const t = e.target;
+  if (t && typeof t.closest === 'function' && t.closest(SELECTORS)) return true;
+
+  // 2) Shadow DOM aware path check
+  if (typeof e.composedPath === 'function') {
+    const path = e.composedPath();
+    for (let i = 0; i < path.length; i++) {
+      const node = path[i];
+      if (node && node.nodeType === 1 && typeof node.matches === 'function') {
+        if (node.matches(SELECTORS)) return true;
+      }
+      if (node && node.host && typeof node.host.matches === 'function') {
+        if (node.host.matches(SELECTORS)) return true;
+      }
+    }
+  }
+
+  return false;
 }
+
 
 // whenever the user clicks or focuses in one of these regions, record it:
 canvas.addEventListener('mousedown',        () => { lastInteractionArea = 'canvas'; });
@@ -3606,6 +3611,47 @@ canvas.addEventListener("drop", e => {
   }
 });
 
+</script>
+<!-- emoji-picker-element (vanilla, no framework) -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
+<!-- The popup (hidden by default) -->
+<emoji-picker id="emojiPicker" style="position:absolute; display:none; z-index:3000;"></emoji-picker>
+
+<script>
+  (function () {
+    const btn   = document.getElementById('emojiButton');
+    const input = document.getElementById('textContent');
+    const picker= document.getElementById('emojiPicker');
+
+    function insertAtCursor(el, text){
+      const [s, e] = [el.selectionStart ?? el.value.length, el.selectionEnd ?? el.value.length];
+      el.value = el.value.slice(0, s) + text + el.value.slice(e);
+      const pos = s + text.length;
+      el.setSelectionRange(pos, pos);
+      el.focus();
+    }
+
+    function togglePicker(){
+      const r = btn.getBoundingClientRect();
+      picker.style.left = (r.left + window.scrollX) + 'px';
+      picker.style.top  = (r.bottom + window.scrollY + 6) + 'px';
+      picker.style.display = (picker.style.display === 'none' ? 'block' : 'none');
+    }
+
+    btn.addEventListener('click', (e) => { e.stopPropagation(); input.focus(); togglePicker(); });
+
+    picker.addEventListener('emoji-click', (e) => {
+      insertAtCursor(input, e.detail.unicode);
+      picker.style.display = 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (picker.style.display !== 'none' && !picker.contains(e.target) && e.target !== btn) {
+        picker.style.display = 'none';
+      }
+    });
+  })();
 </script>
 </body>
 </html>
