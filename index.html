@@ -922,7 +922,28 @@
 
         <button id="importBtn" onmousedown="event.preventDefault();">Open Project</button>
         <input type="file" id="importFile" style="display:none;" accept=".json">
-        <button id="exportBtn" onmousedown="event.preventDefault();">Save Project</button>
+
+        <!-- Split Save Button -->
+<div id="saveSplit" class="split" style="margin-left:0;">
+  <button type="button" class="btn btn-main" id="exportBtn" onmousedown="event.preventDefault();" title="Save Project (without history)">
+    Save Project
+  </button>
+
+  <div class="dropdown">
+    <button type="button" class="btn btn-caret" aria-label="More save options">
+      <span class="caret"></span>
+    </button>
+    <div class="dropdown-menu">
+      <button type="button" onmousedown="document.getElementById('exportBtn').click();" title="Save project">
+        Normal Save (default)
+      </button>
+
+      <button type="button" id="exportWithHistoryBtn" onmousedown="event.preventDefault();" title="Save project including undo/redo history">
+        <b>Legendary Save</b> (includes undo/redo history) 🕰️
+      </button>
+    </div>
+  </div>
+</div>
         <button id="demoBtn">Load Demo Project</button><p>
         <button id="exportGifBtn" onmousedown="event.preventDefault();">Export .GIF</button>
         <progress id="gifProgress" value="0" max="1" style="width:100%; display:none;"></progress>
@@ -1111,6 +1132,7 @@ function showBlocker(){
 
       updateShapeList();
       drawAllShapes();
+      commit('New Object (Img from URL)');
     };
     img.onerror = () => {
       alert("Failed to load image from Pixabay URL.");
@@ -1209,6 +1231,35 @@ function showBlocker(){
   const demoBtn = document.getElementById('demoBtn');
 
   const exportBtn = document.getElementById('exportBtn');
+
+      // Split "Save Project" dropdown logic
+    const saveSplit = document.getElementById('saveSplit');
+    const saveDropdown = saveSplit.querySelector('.dropdown');
+    const saveCaret = saveSplit.querySelector('.btn-caret');
+    const exportWithHistoryBtn = document.getElementById('exportWithHistoryBtn');
+
+    // Toggle dropdown visibility
+    saveCaret.addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveDropdown.classList.toggle('open');
+    });
+
+    // Close if user clicks elsewhere
+    window.addEventListener('click', () => {
+      saveDropdown.classList.remove('open');
+    });
+
+    // Hook up the two save actions
+    exportBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportProject(false); // normal save
+    });
+
+    exportWithHistoryBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportProject(true); // save including undo/redo history
+    });
+
   const importBtn = document.getElementById('importBtn');
   const importFile = document.getElementById('importFile');
   const exportGifBtn = document.getElementById('exportGifBtn');
@@ -1298,6 +1349,15 @@ function showBlocker(){
 };
 
 
+//UNDO/REDO functionality
+// History commits are taken from:
+// Initial state
+// Deleting text / image / shapes / pencil
+// Adding   text / image / shapes / pencil
+// Object:
+  //Changing Color
+  //Aim Angle Change
+  //Reordering
 (function(){
   const MAX = 100;
   const H = { history: [], index: -1 };
@@ -1767,6 +1827,11 @@ function updateShapeList() {
           }
           drawAllShapes();
         };
+
+        // Only commit when user finishes interaction
+        inp.addEventListener('change', () => {
+          commit('Shape (Color Change)');
+        });
       });
 
       row.querySelectorAll('.text-input').forEach(inp => {
@@ -2034,6 +2099,7 @@ function updateShapeList() {
         shapesForDisplay.push(...[...shapes].sort((a,b)=> b.z - a.z));
         renderRows();
         drawAllShapes();
+        commit('Object Reordering')
 
         _draggingId = null;
       }
@@ -2084,6 +2150,7 @@ function updateShapeList() {
         angleAim.isAiming = false;
         angleAim.aimingShapeId = null;
         angleLine.style.display = 'none';
+        commit('Object Aim Angle Change')
       }
     });
 
@@ -2856,6 +2923,7 @@ addKeyframeBtn.onclick = () => {
   updateShapeList();
   drawAllShapes();
   renderTimeline(currentKeyframeIndex, null);
+  commit('Blank Keyframe');
 };
 
 cloneKeyframeBtn.onclick = () => {
@@ -2889,6 +2957,7 @@ cloneKeyframeBtn.onclick = () => {
   updateShapeList();
   drawAllShapes();
   renderTimeline(currentKeyframeIndex, null);
+  commit('Cloned Keyframe');
 };
 
 let mouseDownPos = null;
@@ -3205,7 +3274,8 @@ canvas.addEventListener('mouseup', e => {
 });
 
 
-exportBtn.onclick = () => {
+function exportProject(includeHistory = false){
+
 
   // Check if a background image exists and is fully loaded.
   if (backgroundImage && backgroundImage.complete && backgroundImage.naturalWidth > 0) {
@@ -3222,6 +3292,11 @@ exportBtn.onclick = () => {
     // If there's no background, ensure we remove any old data.
     delete animation.canvas.backgroundImageSrc;
   }
+
+  if (includeHistory) {
+    animation.animationHistory = animationHistory;
+  }
+
   const exportData = JSON.stringify(
     animation,
     (key, value) => (key === '_img' ? undefined : value),
@@ -3303,7 +3378,7 @@ function loadKeyframesFromJSON(json) {
     updatePresetHighlight();
     animation.keyframes.forEach(kf => { kf.frames ??= 30; });
 
-    // 🔹 Normalize z-order for every keyframe on import
+    // Normalize z-order for every keyframe on import
     animation.keyframes.forEach(kf => {
       kf.shapes = normalizeZOrder(kf.shapes || []);
     });
@@ -3368,6 +3443,16 @@ function loadKeyframesFromJSON(json) {
         }
       });
     });
+
+    // Restore animationHistory if present in imported JSON
+    if (parsed.animationHistory && Array.isArray(parsed.animationHistory.history)) {
+      const histCopy = JSON.parse(JSON.stringify(parsed.animationHistory));
+      window.animationHistory.history = histCopy.history;
+      window.animationHistory.index   = histCopy.index ?? histCopy.history.length - 1;
+    }
+    else{
+      commit('Project File Loaded');
+    }
 
     // If there are no images, we can proceed immediately
     if (imagesToLoad === 0) {
