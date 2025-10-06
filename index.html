@@ -129,10 +129,6 @@
       background: none;
       isolation: isolate;
     }
-
-    .drag-over {
-      border: 2px dashed #007bff;
-    }
     
     /* Hint in the corner */
     #shortcut-hint {
@@ -386,6 +382,10 @@
       background:#fff;
       align-items:center;
     }
+
+    .drag-over {
+      border: 2px dashed #007bff;
+    }
     .shape-row:hover, .kf-row:hover { background:#f9fbff; border-color:#dbe7ff; }
     .shape-row.selected, .kf-row.selected { outline: 2px solid #2684ff33; background:#eef5ff; }
     .shape-row.drag-over, .kf-row.drag-over { border-style: dashed; border-color:#2684ff; background:#f5f9ff; }
@@ -406,8 +406,6 @@
     .shape-row .actions, .kf-row .actions { grid-area: actions; display:flex; align-items:center; gap:6px; }
     .shape-row .actions .btn, .kf-row .actions .btn,
     .kf-row .actions button { border:1px solid #ccc; background:#fff; padding:2px 6px; border-radius:6px; cursor:pointer; }
-    .shape-row .delete-btn-pro { color:#b00020; border-color:#e5b3b8; }
-    .kf-row .delete-btn { color:#b00020; border-color:#e5b3b8; }
 
     .kf-row.playing {
       background: linear-gradient(90deg, #28a745 0%, #34ce57 100%);
@@ -535,7 +533,185 @@
     .tab, .tab-content, .pro-header, .group-control {
       transition: background 0.25s, color 0.25s, box-shadow 0.25s;
     }
+
+    #res-widget {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #res-widget select {
+      padding: 4px 6px;
+      font-size: 0.9em;
+    }
+
+    .res-dimensions {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap; /* keep everything on one line */
+    }
+
+
+  /* Split button (consolidated) */
+.split {
+  display: inline-flex;
+  position: relative;      /* menu anchors to this */
+  align-items: stretch;
+}
+.split .btn {
+  border-radius: 0;
+  margin-left: 0;
+}
+.split .btn-main { border-radius: 6px 0 0 6px; }
+.split .dropdown { position: static; display: flex; }
+.split .btn-caret {
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  display: grid;
+  place-items: center;
+}
+.split .caret {
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid #666;
+}
+.split .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid #ccc;
+  display: none;                 /* base hidden state */
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border-radius: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.split .dropdown.open .dropdown-menu { display: flex; }  /* single source of truth */
+
+.split .dropdown-menu button {
+  background: #fff;
+  color: #222;
+  padding: 10px 12px;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.split .dropdown-menu button + button { border-top: 1px solid #eee; }
+
+/* ─────────────────────────────────────────────────────────────
+   SPLIT DELETE — FINAL: clean corners + slim caret + working menu
+   (scoped to the shapes list actions only)
+   ──────────────────────────────────────────────────────────── */
+.shape-row .actions .split{
+  display:inline-flex;
+  position:relative;
+  align-items:stretch;
+
+  /* single rounded outline around both halves */
+  border:1px solid #ccc !important;
+  border-radius:6px !important;
+  background:#fff;
+  background-clip: padding-box;
+
+  /* allow dropdown to escape the button (harmless if removed) */
+  overflow:visible;
+}
+
+/* fuse halves (kill any inner gaps/borders/radii that fight the outline) */
+.shape-row .actions .split .btn,
+.shape-row .actions .split button{
+  margin:0 !important;
+  border:0 !important;
+}
+/* keep global press animation elsewhere, not inside split */
+.shape-row .actions .split button:active{ transform:none !important; }
+
+/* main half: no old inset divider, draw a shorter divider so corners stay intact */
+.shape-row .actions .split .btn-main{
+  position:relative;
+  box-shadow:none !important;      /* neutralize any earlier full-height divider */
+}
+.shape-row .actions .split .btn-main::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:3px;                         /* inset so it doesn't collide with rounded corners */
+  bottom:3px;
+  width:1px;
+  background:#ccc;
+}
+
+/* ultra-slim caret half (almost hidden) */
+.shape-row .actions .split .btn-caret{
+  width:14px;
+  min-width:14px;
+  padding:0;
+}
+.shape-row .actions .split .caret{
+  width:0; height:0;
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:6px solid #666;
+  pointer-events:none;             /* clicks go to the button */
+}
+
+/* dropdown: opens inward from the right and stays clickable */
+.shape-row .actions .split .dropdown-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  right:0;                         /* anchor to the right edge */
+  left:auto;
+  min-width:260px;
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:10px;
+  box-shadow:0 14px 40px rgba(0,0,0,0.12);
+  flex-direction:column;
+  z-index:3000;
+  overflow:hidden;
+}
+
+.shape-row .actions .split .dropdown-menu button{
+  background:#fff;
+  color:#222;
+  padding:10px 14px;
+  border:none;
+  text-align:left;
+  cursor:pointer;
+  margin:0;
+  font-size:14px;
+}
+.shape-row .actions .split .dropdown-menu button + button{
+  border-top:1px solid #eee;
+}
+
+
+/* Subtle grey hover for dropdown items (additive, no overrides removed) */
+.split .dropdown-menu button{
+  transition: background-color .12s ease !important; /* smoothen it a bit */
+}
+
+.split .dropdown-menu button:hover{
+  background: #f3f4f6 !important; /* subtle grey hover */
+}
+
+/* Optional: a slightly different tone on keyboard focus for accessibility */
+.split .dropdown-menu button:focus-visible{
+  background: #eef1f4 !important;
+  outline: 2px solid #0a7 !important;   /* matches your existing focus style */
+  outline-offset: -2px !important;       /* keeps outline inside the popover */
+}
+
 </style>
+
+
 </head>
 <body>
   <div id="leftSidebar">
@@ -557,6 +733,84 @@
           <button type="button" data-fps="120">120</button>
         </div>
       </div>
+
+      <p>
+
+<div id="res-widget" class="group-control">
+  <label for="resolutionPreset">Resolution:</label>
+  
+  <select id="resolutionPreset">
+    <option value="">Custom</option>
+    <option value="1280x720">HD 1280×720 (16:9)</option>
+    <option value="1920x1080">Full HD 1920×1080 (16:9)</option>
+    <option value="2560x1440">QHD 2560×1440 (16:9)</option>
+    <option value="3840x2160">4K 3840×2160 (16:9)</option>
+    <option value="1024x768">1024×768 (4:3)</option>
+    <option value="720x720">720×720 (1:1 Square)</option>
+    <option value="1080x1350">1080×1350 (Instagram Portrait)</option>
+  </select>
+
+  <div class="res-dimensions">
+    <label for="canvasWidth">w:</label>
+    <input type="number" id="canvasWidth" min="1" max="8192" step="1" value="800">
+    <label for="canvasHeight">h:</label>
+    <input type="number" id="canvasHeight" min="1" max="8192" step="1" value="600">
+  </div>
+</div>
+
+
+<script>
+  const canvasWidthInput = document.getElementById('canvasWidth');
+  const canvasHeightInput = document.getElementById('canvasHeight');
+  const resolutionPreset = document.getElementById('resolutionPreset');
+
+  function updateCanvasSize(w, h) {
+    if (!w || !h) return;
+    // update animation object
+    animation.canvas.width = w;
+    animation.canvas.height = h;
+
+    // update base values for mouse normalization
+    _baseCssWidth = w;
+    _baseCssHeight = h;
+
+    // update CSS size and underlying resolution (respect HiDPI)
+    const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width  = w * ratio;
+    canvas.height = h * ratio;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    // redraw
+    drawAllShapes();
+  }
+
+  // manual input changes
+  canvasWidthInput.addEventListener('change', () => {
+    const w = parseInt(canvasWidthInput.value, 10);
+    const h = parseInt(canvasHeightInput.value, 10);
+    if (w > 0 && h > 0) updateCanvasSize(w, h);
+  });
+
+  canvasHeightInput.addEventListener('change', () => {
+    const w = parseInt(canvasWidthInput.value, 10);
+    const h = parseInt(canvasHeightInput.value, 10);
+    if (w > 0 && h > 0) updateCanvasSize(w, h);
+  });
+
+  // preset dropdown
+  resolutionPreset.addEventListener('change', () => {
+    const val = resolutionPreset.value;
+    if (!val) return;
+    const [w, h] = val.split('x').map(n => parseInt(n, 10));
+    if (w && h) {
+      canvasWidthInput.value = w;
+      canvasHeightInput.value = h;
+      updateCanvasSize(w, h);
+    }
+  });
+</script>
       
       <p>
       
@@ -635,6 +889,7 @@
     <img src="logo_beta.png" width="140">
     <div id="canvasViewport">
       <canvas id="canvas" width="800" height="600"></canvas>
+      
     </div>
     <div id="controls">
         <div id="bigPlay">
@@ -657,6 +912,7 @@
         Press <kbd>?</kbd> to view keyboard shortcuts
       </div>
     </div>
+    <div id="historyBarContainer" style="margin-top:6px; text-align:center;"></div>
   </div>
 
   <div id="rightSidebar">
@@ -1041,6 +1297,129 @@ function showBlocker(){
     parabola:          easeParabola
 };
 
+
+(function(){
+  const MAX = 100;
+  const H = { history: [], index: -1 };
+
+  function cleanAnimation(anim){
+    const copy = JSON.parse(JSON.stringify(anim||{})); // strip functions, _img
+    // ensure shapes don’t carry non-serializable _img
+    copy.keyframes?.forEach(kf=>{
+      kf.shapes = (kf.shapes||[]).map(s=>{
+        if (!s) return s;
+        const { _img, ...rest } = s;
+        return rest;
+      });
+    });
+    return copy;
+  }
+
+  function snapshot(){
+    // CHANGED: read the real global binding, not window.animation
+    return cleanAnimation(animation);
+  }
+
+function restore(anim){
+    if (!anim) return;
+
+    // 1) Swap in a deep clone so we don’t share refs
+    animation = JSON.parse(JSON.stringify(anim));
+
+    // 2) Rehydrate Image() for image shapes stored in keyframes
+    animation.keyframes?.forEach(kf=>{
+      kf.shapes?.forEach(s=>{
+        if (s?.type==='image' && s.src){
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = s.src;
+          s._img = img;
+        }
+      });
+    });
+
+    // 3) Sync the live canvas array `shapes` from the active keyframe
+    if (Array.isArray(animation.keyframes) && animation.keyframes.length){
+      if (currentKeyframeIndex == null) currentKeyframeIndex = 0;
+      if (currentKeyframeIndex >= animation.keyframes.length){
+        currentKeyframeIndex = animation.keyframes.length - 1;
+      }
+      const srcShapes = animation.keyframes[currentKeyframeIndex]?.shapes || [];
+      // normalize z + clone into the live array (your UI renders from `shapes`)
+      shapes = cloneShapes(normalizeZOrder(srcShapes));
+    } else {
+      shapes = [];
+      currentKeyframeIndex = null;
+    }
+
+    // 4) Keep IDs monotonic so new shapes don’t collide after restores
+    if (typeof shapeIdCounter !== 'undefined'){
+      const allIds = animation.keyframes?.flatMap(kf => (kf.shapes||[]).map(s => s.id)) || [];
+      shapeIdCounter = allIds.length ? Math.max(...allIds) + 1 : 1;
+    }
+
+    // 5) Refresh FPS UI and canvas size if the snapshot changed them
+    if (animation.settings && typeof fpsInput !== 'undefined' && fpsInput){
+      fpsInput.value = animation.settings.frameRate || 30;
+      if (typeof updatePresetHighlight === 'function') updatePresetHighlight();
+    }
+    if (animation.canvas && typeof updateCanvasSize === 'function'){
+      updateCanvasSize(animation.canvas.width, animation.canvas.height);
+    }
+
+    // 6) Redraw / rebuild panels
+    if (typeof updateShapeList==='function') updateShapeList();
+    if (typeof drawAllShapes==='function') drawAllShapes();
+    if (typeof rebuildTimeline==='function') rebuildTimeline();
+    if (typeof renderTimeline==='function') renderTimeline(currentKeyframeIndex, null);
+  }
+
+  function commit(label=''){
+    // truncate forward history if we undid
+    if (H.index < H.history.length - 1) {
+      H.history = H.history.slice(0, H.index + 1);
+    }
+    H.history.push(snapshot());
+    if (H.history.length > MAX) {
+      H.history.shift();
+    } else {
+      H.index++;
+    }
+    console.log(`✅ commit "${label}" | index=${H.index} len=${H.history.length}`);
+  }
+
+  function undo(){
+    if (H.index <= 0) return;
+    H.index--;
+    restore(H.history[H.index]);
+    console.log(`↩️ undo -> index=${H.index}`);
+  }
+
+  function redo(){
+    if (H.index >= H.history.length - 1) return;
+    H.index++;
+    restore(H.history[H.index]);
+    console.log(`↪️ redo -> index=${H.index}`);
+  }
+
+  // expose globally
+  window.animationHistory = H;
+  window.commit = commit;
+  window.undo   = undo;
+  window.redo   = redo;
+
+  // shortcuts
+  window.addEventListener('keydown', e=>{
+    const typing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable;
+    if (typing) return;
+    if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){
+      e.preventDefault();
+      if (e.shiftKey) redo(); else undo();
+    }
+  });
+})();
+
+
 function createShape(type, x, y) {
   const size = 50;
   let w = size, h = size;
@@ -1080,7 +1459,7 @@ function getRandomColor() {
   return c[Math.floor(Math.random() * c.length)];
 }
 
-function drawShape(s, outline = false) {
+function drawShape(ctx, s, outline = false) {
   const cx = s.x + s.w / 2;
   const cy = s.y + s.h / 2;
 
@@ -1222,7 +1601,7 @@ ordered.forEach(s => {
     (shapeSelectionForce === true  && selected) ||                   // Force ON: outline selected (canvas or list)
     (shapeSelectionForce === null  && shapeSelectionSource === 'list' && selected); // Auto: list-only
     // Force OFF (false) => no outline
-  drawShape(s, showOutline);
+  drawShape(ctx, s, showOutline);
 });
 }
 
@@ -1286,9 +1665,30 @@ function updateShapeList() {
             ${s.name || (s.type + ' #' + s.id)}
           </div>
         </div>
-        <div class="actions">
-          <button type="button" class="btn delete-btn-pro" data-id="${s.id}" title="Delete">🗑</button>
-        </div>
+<div class="actions">
+  <div class="split delete-split" data-id="${s.id}">
+    <button type="button" class="btn btn-main delete-main" title="Delete from current keyframe only">🗑</button>
+
+    <div class="dropdown">
+      <button type="button" class="btn btn-caret delete-caret" aria-label="More delete options">
+        <span class="caret"></span>
+      </button>
+      <div class="dropdown-menu">
+        <button type="button" class="delete-option" data-scope="1" title="Delete from current keyframe only">
+          Delete from current keyframe only (default)
+        </button>
+
+        <button type="button" class="delete-option" data-scope="2" title="Delete from current and forward keyframes">
+          Delete from current & forward keyframes
+        </button>
+
+        <button type="button" class="delete-option" data-scope="3" title="Delete from all keyframes">
+          Delete from all keyframes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
         <div class="meta">
           ${s.type !== 'image' ? `
             <label class="mini"><span class="icon">🎨</span>
@@ -1502,45 +1902,39 @@ function updateShapeList() {
         };
       });
 
-      // ── Delete (same scope prompt) ─────────────────────────────────────────
-      row.querySelectorAll('.delete-btn-pro').forEach(btn => {
-        btn.onclick = () => {
-          const id = parseInt(btn.dataset.id);
-          const onlyOneKeyframe = animation.keyframes.length <= 1;
-          const shapeInOtherKeyframes = animation.keyframes.some((kf, i) => i !== currentKeyframeIndex && kf.shapes.some(o => o.id === id));
-          let scope = "1";
-          if (!onlyOneKeyframe && shapeInOtherKeyframes) {
-            scope = prompt(
-              "Delete shape from:\n" +
-              "1 = Current keyframe only (default)\n" +
-              "2 = This and forward keyframes\n" +
-              "3 = All keyframes"
-            );
-            if (scope === null) return;
-          }
-          shapes = normalizeZOrder(shapes.filter(o => o.id !== id));
-          if (currentKeyframeIndex != null) {
-            if (scope === "2") {
-              for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
-                animation.keyframes[i].shapes = normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
-              }
-            } else if (scope === "3") {
-              for (let i = 0; i < animation.keyframes.length; i++) {
-                animation.keyframes[i].shapes = normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
-              }
-            } else {
-              animation.keyframes[currentKeyframeIndex].shapes =
-                normalizeZOrder(animation.keyframes[currentKeyframeIndex].shapes.filter(o => o.id !== id));
-            }
-          }
-          if (multiSelectedShapeIds.has(id)) multiSelectedShapeIds.delete(id);
-          if (selectedShapeId === id) selectedShapeId = null;
+      row.querySelectorAll('.delete-split').forEach(split => {
+        const id    = parseInt(split.dataset.id, 10);
+        const dd    = split.querySelector('.dropdown');
+        const caret = split.querySelector('.delete-caret');
+        const main  = split.querySelector('.delete-main');
+        const menu  = split.querySelector('.dropdown-menu');
 
-          const idx = shapesForDisplay.findIndex(x => x.id === id);
-          if (idx >= 0) shapesForDisplay.splice(idx, 1);
-          renderRows();
-          drawAllShapes();
-        };
+        // Main part = default delete (current keyframe only)
+        main.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteShapeWithScope(id, "1");
+        });
+
+        // Toggle dropdown
+        caret.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+
+        // Pick a non-default scope
+        menu.addEventListener('click', (e) => {
+          const btn = e.target.closest('.delete-option');
+          if (!btn) return;
+          e.stopPropagation();
+          const scope = btn.getAttribute('data-scope'); // "2" or "3"
+          deleteShapeWithScope(id, scope);
+          dd.classList.remove('open');
+        });
+
+        // Close when clicking outside this split
+        document.addEventListener('click', (e) => {
+          if (!split.contains(e.target)) dd.classList.remove('open');
+        });
       });
 
       // ── Aim button wiring (unchanged) ──────────────────────────────────────
@@ -1572,6 +1966,7 @@ function updateShapeList() {
         if (!e.target.closest('.drag')) { e.preventDefault(); return; }
         _draggingId = s.id;
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.dropEffect = 'move';
         e.dataTransfer.setData('text/plain', String(s.id)); // required for Safari
         const rect = row.getBoundingClientRect();
         const offX = (e.clientX - rect.left), offY = (e.clientY - rect.top);
@@ -1848,7 +2243,10 @@ function renderTimeline(active = null, playing = null) {
         <div class="title" title="Click to select / Double-click to rename">${kf.name}</div>
       </div>
       <div class="actions">
-        <button class="btn delete-btn" data-index="${i}" title="Delete" ${animation.keyframes.length === 1 ? 'disabled' : ''}>${animation.keyframes.length === 1 ? '🚫' : '🗑'}</button>
+        <button class="btn delete-btn" data-index="${i}" 
+        title="${animation.keyframes.length === 1 ? 'Cannot delete the last keyframe' : 'Delete'}"
+        ${animation.keyframes.length === 1 ? 'disabled' : ''}>
+        ${animation.keyframes.length === 1 ? '🚫' : '🗑'}</button>
       </div>
       <div class="meta">
         <label class="mini" title="Duration in frames">
@@ -1945,6 +2343,8 @@ function renderTimeline(active = null, playing = null) {
 
     function startDrag(e) {
       if (!e.target.closest('.drag')) { e.preventDefault(); return; }
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.dropEffect = 'move';
       e.dataTransfer.setData('text/plain', String(i));
       row.classList.add('drag-over');
       const rect = row.getBoundingClientRect();
@@ -2388,6 +2788,7 @@ function addObject(type){
 
     updateShapeList();
     drawAllShapes();
+    commit('New Object ('+type+')');
     return;
   }
 
@@ -2436,6 +2837,7 @@ imageInput.onchange = e => {
 
       updateShapeList();
       drawAllShapes();
+      commit('New Object (image)');
     };
     img.src = dataUrl;
   };
@@ -2742,6 +3144,7 @@ canvas.addEventListener('mouseup', e => {
 
       updateShapeList();
       drawAllShapes();
+      commit('New Object (pencil)');
     }
 
     //exit draw mode
@@ -2878,6 +3281,7 @@ updateShapeList();
 drawAllShapes();
 // pass null for playing param to match other calls
 renderTimeline(currentKeyframeIndex, null);
+commit('Init');
 
 function loadKeyframesFromJSON(json) {
   try {
@@ -2985,33 +3389,34 @@ function loadKeyframesFromJSON(json) {
   <div id="shortcut-modal" role="dialog" aria-modal="true" aria-labelledby="shortcut-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="shortcut-title">Keyboard Shortcut Map</h2>
+        <h2 id="shortcut-title">Keyboard Shortcuts</h2>
         <button id="close-modal" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
         <ul>
         <b>Global:</b>
           <li><kbd>Spacebar</kbd> : Play/Stop (from selected Keyframe)</li>
-          <li><kbd>f</kbd> : Toggle Fullscreen</li>
-          <li><kbd>h</kbd> : Hide/Toggle Sidebar Menus</li>
+          <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> : Undo/Redo</li>
+          <li><kbd>F</kbd> : Toggle Fullscreen</li>
+          <li><kbd>H</kbd> : Hide/Toggle Sidebar Menus</li>
         </ul>
 
         <ul>
         <b>With Shapes Selected:</b>
-          <li><kbd>o</kbd> : Toogle Shape Outline</li>
-          <li><kbd>w</kbd><kbd>a</kbd><kbd>s</kbd><kbd>d</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> : Move Shape/s</li>
-          <li><kbd>q</kbd> / <kbd>e</kbd> : Rotate Shape/s left/right</li>
-          <li><kbd>Ctrl</kbd> + <kbd>D</kbd> : Duplicate Shape/s</li>
-          <li><kbd>Ctrl</kbd> + <kbd>C</kbd> : Copy Shape/s</li>
-          <li><kbd>Ctrl</kbd> + <kbd>V</kbd> : Paste Shape/s</li>
+          <li><kbd>O</kbd> : Toogle Shape Outline</li>
+          <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> : Move Shape/s</li>
+          <li><kbd>Q</kbd> / <kbd>E</kbd> : Rotate object/s Left/Right</li>
+          <li><kbd>Ctrl</kbd>+<kbd>D</kbd> : Duplicate Shape/s</li>
+          <li><kbd>Ctrl</kbd>+<kbd>C</kbd> : Copy Shape/s</li>
+          <li><kbd>Ctrl</kbd>+<kbd>V</kbd> : Paste Shape/s</li>
           <li><kbd>Tab</kbd> : Cycle Shapes or Keyframes</li>
-          <li><kbd>Shift</kbd> + <kbd>Tab</kbd> : Reverse-cycle Shapes or Keyframes</li>
-          <li><kbd>Ctrl</kbd> + <kbd>Left Mouse Click</kbd> : Select Multiple Shapes</li>
+          <li><kbd>Shift</kbd>+<kbd>Tab</kbd> : Reverse-cycle Shapes or Keyframes</li>
+          <li><kbd>Ctrl</kbd>+<kbd>Left Mouse Click</kbd> : Select Multiple Shapes</li>
         </ul>
 
         <ul>
         <b>With Keyframes Selected:</b>
-          <li><kbd>k</kbd> : Clone Current Keyframe</li>
+          <li><kbd>K</kbd> : Clone Current Keyframe</li>
           <li><kbd>Tab</kbd> : Cycle Keyframes</li>
         </ul>
       </div>
@@ -3383,7 +3788,7 @@ document.addEventListener('keydown', e => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 <script>
-exportGifBtn.onclick = async () => {
+/**exportGifBtn.onclick = async () => {
   if (animation.keyframes.length < 2) {
     alert("Need at least 2 keyframes to export a GIF.");
     return;
@@ -3461,6 +3866,99 @@ exportGifBtn.onclick = async () => {
 
   gif.render();
 };
+**/
+
+exportGifBtn.onclick = async () => {
+  if (animation.keyframes.length < 2) {
+    alert("Need at least 2 keyframes to export a GIF.");
+    return;
+  }
+
+  const exportW = animation.canvas.width;
+  const exportH = animation.canvas.height;
+
+  const fps = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
+  const gif = new GIF({
+    workers: 2,
+    quality: 10,
+    width: exportW,
+    height: exportH,
+    workerScript: URL.createObjectURL(new Blob([`
+      importScripts('https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js');
+    `], { type: 'application/javascript' }))
+  });
+
+  // show the progress bar
+  const progressEl = document.getElementById('gifProgress');
+  progressEl.value = 0;
+  progressEl.style.display = 'block';
+
+  let segments = [];
+  for (let i = 0; i < animation.keyframes.length - 1; i++) {
+    segments.push([i, i + 1]);
+  }
+
+  for (const [fromIdx, toIdx] of segments) {
+    const a = animation.keyframes[fromIdx];
+    const b = animation.keyframes[toIdx];
+    const steps = a.frames || 30;
+    const easer = EASERS[a.easing] || (x => x);
+
+    for (let t = 0; t < steps; t++) {
+      const rawT = t / steps;
+      const easedT = easer(rawT);
+      let interp;
+      if (a.easing === 'none') {
+        interp = (t >= steps - 1) ? b.shapes : a.shapes;
+      } else if (a.easing === 'spiral') {
+        interp = interpolateShapesSpiral(a, b, easedT);
+      } else if (a.easing === 'wavy') {
+        interp = interpolateShapesWavy(a, b, easedT);
+      } else {
+        interp = interpolateShapes(a, b, easedT);
+      }
+
+      // ⬇️ render into an offscreen canvas at logical resolution
+      const frameCanvas = document.createElement('canvas');
+      frameCanvas.width = exportW;
+      frameCanvas.height = exportH;
+      const fctx = frameCanvas.getContext('2d');
+      fctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      // draw background + shapes just like drawAllShapes, but targeting fctx
+      fctx.fillStyle = animation.canvas.background || '#f0f0f0';
+      fctx.fillRect(0, 0, exportW, exportH);
+      if (backgroundImage) {
+        fctx.drawImage(backgroundImage, 0, 0, exportW, exportH);
+      }
+      const ordered = [...interp].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
+      ordered.forEach(s => drawShape(fctx, s)); // reuse drawShape with fctx bound
+
+      gif.addFrame(frameCanvas, { delay: 1000 / fps });
+    }
+  }
+
+  gif.on('progress', (p) => {
+    progressEl.value = p;
+  });
+
+  gif.on('finished', (blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'animation.gif';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // hide the progress bar after download
+    progressEl.style.display = 'none';
+  });
+
+  gif.render();
+};
+
 
 // Single paste handler: handles both images and shape clipboard
 document.addEventListener("paste", event => {
@@ -3653,5 +4151,129 @@ canvas.addEventListener("drop", e => {
     });
   })();
 </script>
+<script>
+  // Delete helper used by the split button (no prompts; scope provided by the menu).
+  // scope: "1" = current keyframe only
+  //        "2" = this and forward keyframes
+  //        "3" = all keyframes
+  function deleteShapeWithScope(id, scope) {
+    // 1) remove from live shapes shown on canvas
+    shapes = normalizeZOrder(shapes.filter(o => o.id !== id));
+
+    // 2) apply to keyframes based on scope
+    if (currentKeyframeIndex != null) {
+      if (scope === "2") {
+        for (let i = currentKeyframeIndex; i < animation.keyframes.length; i++) {
+          animation.keyframes[i].shapes =
+            normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
+        }
+      } else if (scope === "3") {
+        for (let i = 0; i < animation.keyframes.length; i++) {
+          animation.keyframes[i].shapes =
+            normalizeZOrder(animation.keyframes[i].shapes.filter(o => o.id !== id));
+        }
+      } else {
+        // "1" (default): current keyframe only
+        animation.keyframes[currentKeyframeIndex].shapes =
+          normalizeZOrder(animation.keyframes[currentKeyframeIndex].shapes.filter(o => o.id !== id));
+      }
+    }
+
+    // 3) selection cleanup
+    if (multiSelectedShapeIds.has(id)) multiSelectedShapeIds.delete(id);
+    if (selectedShapeId === id) selectedShapeId = null;
+
+    // 4) refresh UI
+    updateShapeList();
+    drawAllShapes();
+    commit('Shape Delete');
+  }
+
+// create ASCII-style history bar
+(function(){
+  const bar = document.createElement('div');
+  bar.id = 'historyBar';
+  bar.style.cssText = `
+    position:fixed;
+    bottom:8px;
+    left:50%;
+    transform:translateX(-50%);
+    font-family:monospace;
+    font-size:14px;
+    letter-spacing:2px;
+    color:#aaa;
+    background:#eef5ff;
+    padding:3px 8px;
+    border-radius:6px;
+    user-select:none;
+    z-index:9999;
+    opacity:0;
+    transition:opacity .35s ease;
+    pointer-events:none;
+  `;
+  document.body.appendChild(bar);
+
+  // local state
+  let active = 0;
+  let total = 0;
+  let fadeTimer = null;
+  const FADE_DELAY = 3000; // ms before fade out
+
+  function showBar(){
+    bar.style.opacity = '1';
+    clearTimeout(fadeTimer);
+    fadeTimer = setTimeout(()=> bar.style.opacity = '0', FADE_DELAY);
+  }
+
+  function render(){
+    total = (window.animationHistory?.history?.length || 0);
+    if (total === 0){
+      bar.textContent = '';
+      return;
+    }
+    active = Math.max(0, Math.min(active, total - 1));
+    bar.innerHTML = Array.from({length: total}, (_,i)=>
+      `<span style="color:${i===active?'#ff4040':'#999'}">${i===active?'●':'–'}</span>`
+    ).join('');
+  }
+
+  // initial draw
+  render();
+
+  // keyboard listeners (Ctrl/Cmd + Z)
+  window.addEventListener('keydown', e=>{
+    const typing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable;
+    if (typing) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    if (e.key.toLowerCase()==='z'){
+      e.preventDefault();
+      const len = window.animationHistory?.history?.length || 0;
+      if (len !== total){ total = len; }
+      if (e.shiftKey) active = Math.min(active + 1, len - 1); // redo
+      else active = Math.max(active - 1, 0); // undo
+      render();
+      showBar(); // 👈 only show on undo/redo
+    }
+  });
+
+  // when commit() adds new snapshots, update silently (no show)
+  const origCommit = window.commit;
+  if (typeof origCommit === 'function'){
+    window.commit = (...args)=>{
+      const r = origCommit(...args);
+      const len = window.animationHistory?.history?.length || 0;
+      total = len;
+      active = Math.max(0, len - 1);
+      render();
+      return r;
+    };
+  }
+
+  // expose manual refresh if needed
+  window.renderHistoryBar = render;
+})();
+</script>
+
 </body>
 </html>
