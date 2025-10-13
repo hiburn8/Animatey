@@ -20,43 +20,38 @@
 window.tutorialSteps = [
   {
     element: '#canvas',
-    text: '[1/8] Here’s your canvas area. You can drag objects around to reposition them, or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotate shapes.<p><kbd>O</kbd> to toggle highlighting.',
+    text: '[1/7] Here’s your canvas area. It holds the objects (shapes, images, text, drawings etc) for your current keyframe. <p>When you select an object, you can move it around with the mouse or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotates objects.<p><kbd>O</kbd> to toggles highlighting.',
     placement: 'right-bottom'
   },
   {
     element: '#cloneKeyframe',
-    text: '[2/8] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
+    text: '[2/7] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
     placement: 'left'
   },
   {
     element: '#timeline',
-    text: '[3/8] Your animation is based on creating keyframes, and transitioning between them. You can control the number of frames used to interpolate between specific keyframes, and choose an animation style.',
+    text: '[3/7] Your animation is based on designing keyframes, and blending between them. You can control the number of frames used to blend between keyframes, and choose a blend style.',
     placement: 'left',
     fn: () => {},
   },
   {
     element: '#shapeList',
-    text: '[4/8] Each keyframe holds objects for that scene. This panel lists all your objects. You can reorder, resize, recolor, rotate, or delete them here. <kbd>Ctrl-Click</kbd> to select multiple objects.',
+    text: '[4/7] Each keyframe holds objects for that scene. This panel lists all your objects. You can reorder, resize, recolor, rotate, or delete them here. <kbd>Ctrl-Click</kbd> to select multiple objects.',
     placement: 'right-top'
   },
     {
     element: '#objectList',
-    text: '[5/8] Add new objects to the scene here.',
+    text: '[5/7] Add new objects to the scene here.',
     placement: 'right-top'
   },
   {
-    element: '#shapeType',
-    text: '[6/8] Use this dropdown to select the kind of shape you want to add (rectangle, circle, triangle, square, or text), then press Add.',
-    placement: 'top-center'
-  },
-  {
     element: '#newPlayBtn',
-    text: '[7/8] ▶ Play (or <kbd>Spacebar</kbd>) runs your animation once from the currently selected keyframe.',
+    text: '[6/7] ▶ Play (or <kbd>Spacebar</kbd>) runs your animation once from the currently selected keyframe.',
     placement: 'bottom-right'
   },
   {
     element: '#demoBtn',
-    text: '[8/8] Try loading this demo animation and experimenting. Have fun!',
+    text: '[7/7] Try loading this demo animation and experimenting. Have fun!',
     placement: 'left'
   }
 ];

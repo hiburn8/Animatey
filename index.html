@@ -886,7 +886,7 @@
   </div>
 
   <div id="mainContent">
-    <img src="logo_beta.png" width="140">
+    <img id="logoImg" src="logo_beta.png" width="140">
     <div id="canvasViewport">
       <canvas id="canvas" width="800" height="600"></canvas>
       
@@ -906,6 +906,9 @@
       <button id="loopAnimation" onmousedown="event.preventDefault();">↻ Loop</button>
       <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
       <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
+      <button id="onionToggleBtn" onmousedown="event.preventDefault();">🧅 Onion Skin</button>
+      <button id="motionPathToggleBtn" onmousedown="event.preventDefault();">🔵 Motion Paths</button>
+
 
         <!-- Hint to the user -->
       <div id="shortcut-hint">
@@ -1355,6 +1358,7 @@ function showBlocker(){
 // Deleting text / image / shapes / pencil
 // Adding   text / image / shapes / pencil
 // Object:
+  //Move
   //Changing Color
   //Aim Angle Change
   //Reordering
@@ -1664,6 +1668,79 @@ ordered.forEach(s => {
   drawShape(ctx, s, showOutline);
 });
 }
+
+//────────────────────────────────────────────────
+//     ONION SKINNING
+//────────────────────────────────────────────────
+
+let onionEnabled = false;
+
+const onionBtn = document.getElementById('onionToggleBtn');
+if (onionBtn) {
+  onionBtn.addEventListener('click', () => {
+    onionEnabled = !onionEnabled;
+    onionBtn.classList.toggle('playing', onionEnabled);
+    drawAllShapes();
+  });
+}
+
+// Keyboard shortcut "O"
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'o' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    onionEnabled = !onionEnabled;
+    if (onionBtn) onionBtn.classList.toggle('playing', onionEnabled);
+    drawAllShapes();
+  }
+});
+
+// Extend existing drawAllShapes() to include onion layers
+const _originalDrawAllShapes = drawAllShapes;
+drawAllShapes = function(state = shapes) {
+  // first draw onion skin layers if enabled
+  if (onionEnabled && animation.keyframes.length > 1 && currentKeyframeIndex != null) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = animation.canvas.background || '#f0f0f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (backgroundImage) {
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    }
+
+    const prevKF = animation.keyframes[currentKeyframeIndex - 1];
+    const nextKF = animation.keyframes[currentKeyframeIndex + 1];
+
+    // Helper for muted shapes
+    function drawMuted(shapesArr, color) {
+      if (!shapesArr) return;
+      const ordered = [...shapesArr].sort((a,b)=>(a.z??0)-(b.z??0));
+      ordered.forEach(s=>{
+        const clone = { ...s, color: color };
+        drawShape(ctx, clone, false);
+      });
+    }
+
+    // Past (grey)
+if (prevKF) drawMuted(prevKF.shapes, 'rgba(200,100,100,0.30)');   // soft warm red-grey for past
+if (nextKF) drawMuted(nextKF.shapes, 'rgba(100,160,220,0.30)');   // soft cool blue for future
+
+    // then draw current shapes normally
+    const ordered = [...state].sort((a,b)=>(a.z??0)-(b.z??0));
+    ordered.forEach(s=>{
+      const selected = multiSelectedShapeIds.has(s.id);
+      const showOutline =
+        (shapeSelectionForce === true  && selected) ||
+        (shapeSelectionForce === null  && shapeSelectionSource === 'list' && selected);
+      drawShape(ctx, s, showOutline);
+    });
+  } else {
+    // fallback to original logic when disabled
+    _originalDrawAllShapes(state);
+  }
+};
+
+//────────────────────────────────────────────────
+//     ONION SKINNING END
+//────────────────────────────────────────────────
 
 function updateShapeList() {
   // nicer visuals container class (safe to leave even if CSS not present)
@@ -2403,6 +2480,14 @@ function renderTimeline(active = null, playing = null) {
       updateShapeList(); drawAllShapes(); renderTimeline(currentKeyframeIndex, null);
     };
 
+    // Hide tween-related controls on the final keyframe
+    //if (i === animation.keyframes.length - 1) {
+    //  const tweenControls = row.querySelectorAll('.frame-input, .easing-select');
+    //  tweenControls.forEach(el => {
+    //    el.disabled = true;    // or el.style.display = 'none';
+    //  });
+    //}
+
     // drag & drop reorder (use the same .drag convention as shapes)
     const handle = row.querySelector('.drag');
     handle.setAttribute('draggable', 'true');
@@ -2864,6 +2949,18 @@ function addObject(type){
   imageInput.click();
 }
 
+function isDragging() {
+  return draggingId !== null || (dragOffsets && dragOffsets.size > 0);
+}
+
+function makeShortUUID() {
+  return crypto.randomUUID().split('-')[0];
+}
+
+function makeUUID() {
+  return crypto.randomUUID();
+}
+
 imageInput.onchange = e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -2914,6 +3011,7 @@ imageInput.onchange = e => {
 addKeyframeBtn.onclick = () => {
   shapes = [];
   const newKeyframe = {
+    id: makeShortUUID(),
     name: `Keyframe ${animation.keyframes.length}`,
     shapes: [],
     frames: 30
@@ -2945,6 +3043,7 @@ cloneKeyframeBtn.onclick = () => {
     : defaultEasing;
 
   const newKeyframe = {
+    id: makeShortUUID(),
     name: inheritedName,
     shapes: from,
     frames: inheritedFrames,
@@ -3225,7 +3324,11 @@ canvas.addEventListener('mouseup', e => {
   const m = _mouseToCanvasSpace(e);
   
   const mouseMoved = mouseDownPos &&
-    (m.x !== mouseDownPos.x || m.y !== mouseDownPos.y);   // NEW
+    (m.x !== mouseDownPos.x || m.y !== mouseDownPos.y);
+
+  if (mouseMoved) {
+    commit('Shape Move');
+  }
 
   // If it was effectively a click, apply selection logic now.
   if (mouseDownPos && !mouseMoved) {
@@ -3347,6 +3450,7 @@ shapes = normalizeZOrder();
 
 // include default frames for the very first keyframe
 animation.keyframes.push({
+  id: makeShortUUID(),
   name: "Keyframe",
   shapes: cloneShapes(shapes),
   frames: 30
@@ -3377,6 +3481,10 @@ function loadKeyframesFromJSON(json) {
     fpsInput.value = animation.settings.frameRate || 30;
     updatePresetHighlight();
     animation.keyframes.forEach(kf => { kf.frames ??= 30; });
+
+    animation.keyframes.forEach(kf => {
+      if (!kf.id) kf.id = makeShortUUID();
+    });
 
     // Normalize z-order for every keyframe on import
     animation.keyframes.forEach(kf => {
@@ -3592,7 +3700,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === 'k') { cloneKeyframeBtn.click();}
   if (e.key === 'Escape') { toggleModal(false);}
-  if (e.key === 'h') {
+  if (e.key === '.') {
     const next = leftSidebar.style.display !== 'none' ? 'none' : '';
     leftSidebar.style.display = next;
     rightSidebar.style.display = next;
@@ -3606,7 +3714,7 @@ document.addEventListener('keydown', (e) => {
       document.exitFullscreen();
     }
   }
-  if (e.key === 'o') {
+  if (e.key === 'h') {
     if (isPlaying){return;}
     shapeSelectionForce = (shapeSelectionForce !== true) ? true : false;
     drawAllShapes();
@@ -3670,6 +3778,9 @@ document.addEventListener('keydown', e => {
 
 // ─── Arrow/WASD nudges & Q/E rotation for selected shapes (with acceleration) ───
 let _nudgeInt = null, _nudgeSpd = 1;
+let keyMoveHappened = false;
+let keyRotateHappened = false;
+
 document.addEventListener('keydown', e => {
   if (_isEditableTarget(e)) return;
 
@@ -3678,6 +3789,13 @@ document.addEventListener('keydown', e => {
   const step = 1, rotStep = 1, max = 20, accel = 1;
   let dx = 0, dy = 0, dAngle = 0;
   const key = e.key.toLowerCase();
+
+  if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) {
+    keyMoveHappened = true;
+  }
+  if (['q','e'].includes(key)) {
+    keyRotateHappened = true;
+  }
 
   if (key === 'arrowup'    || key === 'w') dy = -step;
   else if (key === 'arrowdown'|| key === 's') dy =  step;
@@ -3732,11 +3850,21 @@ _nudgeInt = setInterval(() => {
 document.addEventListener('keyup', e => {
   const key = e.key.toLowerCase();
   if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','q','e'].includes(key)) {
-    e.preventDefault();
-    clearInterval(_nudgeInt);
-    _nudgeInt = null;
+
+    if (keyMoveHappened || keyRotateHappened){
+      keyMoveHappened = false;
+      keyRotateHappened = false;
+      e.preventDefault();
+      clearInterval(_nudgeInt);
+      _nudgeInt = null;
+
+      if (!isDragging()){
+        commit('move/rotate nudge');
+      }
+    }
   }
 });
+
 // ─── Ctrl+D to clone selected shapes ─────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (_isEditableTarget(e)) return;
@@ -3830,6 +3958,7 @@ document.addEventListener('keydown', e => {
 
   updateShapeList();
   drawAllShapes();
+  commit('Shape Delete');
 });
 
 
@@ -4360,5 +4489,317 @@ canvas.addEventListener("drop", e => {
 })();
 </script>
 
+<!-- ────────────────────────────────────────────────
+      DARK MODE
+──────────────────────────────────────────────── -->
+<style>
+  #darkModeToggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 99999;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: background 0.25s, transform 0.1s;
+  }
+  #darkModeToggle:hover { background: #444; }
+  #darkModeToggle:active { transform: scale(0.9); }
+
+  body.dark-mode {
+    background: #1e1e1e;
+    color: #ddd;
+  }
+
+  /* Sidebars, Tabs, Groups, Lists */
+  body.dark-mode #leftSidebar,
+  body.dark-mode #rightSidebar,
+  body.dark-mode #sidebar,
+  body.dark-mode .tab-content,
+  body.dark-mode .pro-header,
+  body.dark-mode .group-control,
+  body.dark-mode .shape-row,
+  body.dark-mode .kf-row,
+  body.dark-mode #canvasList,
+  body.dark-mode #objectList,
+  body.dark-mode #filesList,
+  body.dark-mode #timeline,
+  body.dark-mode #shapeList,
+  body.dark-mode #shapeList.shape-list--pro,
+  body.dark-mode #objectList.object-list--pro,
+  body.dark-mode #canvasList.object-list--pro,
+  body.dark-mode #filesList.object-list--pro,
+  body.dark-mode #timeline.kf-list--pro {
+    background: #2a2a2a !important;
+    color: #eee !important;
+    border-color: #444 !important;
+  }
+
+  /* Tabs */
+  body.dark-mode .tab {
+    background: #333 !important;
+    color: #eee !important;
+    border-color: #444 !important;
+  }
+  body.dark-mode .tab.active {
+    background: #444 !important;
+    color: #fff !important;
+  }
+
+  /* Buttons */
+  body.dark-mode button {
+    background: #333 !important;
+    color: #eee !important;
+    border-color: #555 !important;
+  }
+
+  /* Inputs and selects */
+  body.dark-mode input,
+  body.dark-mode select {
+    background: #444 !important;
+    color: #fff !important;
+    border-color: #555 !important;
+  }
+
+  /* Canvas and control buttons */
+  body.dark-mode canvas {
+    background: #333 !important;
+    border-color: #444 !important;
+  }
+
+  body.dark-mode #bigPlay button,
+  body.dark-mode #loopAnimation,
+  body.dark-mode #bounceAnimation,
+  body.dark-mode #fullscreenBtn,
+  body.dark-mode #onionToggleBtn {
+    background: #333 !important;
+    color: #eee !important;
+  }
+
+  /* Scrollbars for dark mode */
+  body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #555 !important;
+  }
+  body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #666 !important;
+  }
+    body.dark-mode #shortcut-hint {
+    background: #2c2c2c !important;
+    color: #f0f0f0 !important;
+    box-shadow: 0 0 6px rgba(0,0,0,0.4) !important;
+    border: 1px solid #444 !important;
+  }
+
+  body.dark-mode #shortcut-hint kbd {
+    background: #555 !important;
+    color: #fff !important;
+    border: 1px solid #666 !important;
+  }
+
+  /* Shortcut modal overlay */
+  body.dark-mode #shortcut-modal {
+    background: rgba(0, 0, 0, 0.75) !important;
+  }
+
+  /* Shortcut modal content box */
+  body.dark-mode #shortcut-modal .modal-content {
+    background: #2b2b2b !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+  }
+
+  body.dark-mode #shortcut-modal .modal-header {
+    background: #333 !important;
+    border-bottom: 1px solid #444 !important;
+    color: #fff !important;
+  }
+
+  body.dark-mode #shortcut-modal .modal-body {
+    background: #2b2b2b !important;
+  }
+
+  body.dark-mode #shortcut-modal .modal-body li {
+    color: #ddd !important;
+  }
+
+  body.dark-mode #shortcut-modal .modal-body kbd {
+    background: #444 !important;
+    color: #fff !important;
+    border: 1px solid #666 !important;
+    box-shadow: inset 0 -1px 0 #111 !important;
+  }
+
+  body.dark-mode #close-modal {
+    color: #fff !important;
+  }
+
+  body.dark-mode #close-modal:hover {
+    background: #444 !important;
+  }
+
+  body.dark-mode img#logoImg {
+    filter: contrast(0);
+  }
+</style>
+
+<script>
+(function(){
+  // Create button dynamically and append into existing controls cluster
+  const controls = document.getElementById('controls');
+  if (controls) {
+    const btn = document.createElement('button');
+    btn.id = 'darkModeBtn';
+    btn.textContent = '🌙 Dark';
+    btn.title = 'Toggle Dark Mode';
+    controls.appendChild(btn);
+
+    const savedMode = localStorage.getItem('animatey-dark-mode');
+    if (savedMode === 'true') {
+      document.body.classList.add('dark-mode');
+      btn.textContent = '☀️ Light';
+    }
+
+    btn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      btn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
+      localStorage.setItem('animatey-dark-mode', isDark);
+    });
+  }
+})();
+</script>
+<!-- ────────────────────────────────────────────────
+     END DARK MODE
+──────────────────────────────────────────────── -->
+<!-- ────────────────────────────────────────────────
+     MOTION PATH EDITING
+──────────────────────────────────────────────── -->
+<!-- ────────────────────────────────────────────────
+     🧭 MOTION PATH EDITING (Pro Feature)
+     Drop this entire block just before </body>
+     It is 100% self-contained and non-destructive.
+──────────────────────────────────────────────── -->
+<script>
+(function(){
+
+  // Global flags
+  window.motionPathsEnabled = false;
+  // Remember the last non-null selected keyframe index so paths persist during playback
+  window._mp_lastSelectedKFIndex = (typeof currentKeyframeIndex === 'number') ? currentKeyframeIndex : null;
+
+  const btn = document.getElementById('motionPathToggleBtn');
+  if (btn) {
+    btn.onmousedown = (e)=>e.preventDefault();
+    btn.onclick = ()=>{
+      motionPathsEnabled = !motionPathsEnabled;
+      btn.classList.toggle('playing', motionPathsEnabled);
+
+      // When turning ON, snapshot the currently selected keyframe (for playback persistence)
+      if (motionPathsEnabled) {
+        if (typeof currentKeyframeIndex === 'number') {
+          window._mp_lastSelectedKFIndex = currentKeyframeIndex;
+        }
+      }
+      drawAllShapes();
+    };
+  } else {
+    console.warn('Motion path toggle button not found (#motionPathToggleBtn or #moationPathToggleBtn).');
+  }
+
+  // Preserve original drawAllShapes if not wrapped yet
+  if (!window._drawAllShapes_original_forMotionPaths) {
+    window._drawAllShapes_original_forMotionPaths = drawAllShapes;
+  }
+
+  // Replace drawAllShapes with extended version
+  drawAllShapes = function(state = shapes) {
+    // Draw normal frame first (your loop calls this every frame during playback)
+    _drawAllShapes_original_forMotionPaths(state);
+
+    if (!motionPathsEnabled || !animation || !animation.keyframes?.length) return;
+
+    // Keep track of latest selected keyframe whenever it's defined
+    if (typeof currentKeyframeIndex === 'number') {
+      window._mp_lastSelectedKFIndex = currentKeyframeIndex;
+    }
+
+    // Use the current selected keyframe if available; otherwise the last selected one (during playback)
+    const effectiveKFIndex =
+      (typeof currentKeyframeIndex === 'number') ? currentKeyframeIndex : window._mp_lastSelectedKFIndex;
+
+    if (effectiveKFIndex == null) return;
+
+    const currentKF = animation.keyframes[effectiveKFIndex];
+    if (!currentKF || !currentKF.shapes?.length) return;
+
+    try {
+      ctx.save();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(80,160,255,0.5)';
+      ctx.fillStyle   = 'rgba(80,160,255,0.9)';
+
+      // Filter: only shapes that exist in the (effective) current keyframe
+      const visibleIds = currentKF.shapes.map(s => s.id);
+
+      // Build/draw motion tracks only for these shapes
+      for (const id of visibleIds) {
+        const track = [];
+        for (let idx = 0; idx < animation.keyframes.length; idx++) {
+          const kf = animation.keyframes[idx];
+          const s  = kf.shapes.find(sh => sh.id === id);
+          if (s) {
+            track.push({
+              x: s.x + s.w / 2,
+              y: s.y + s.h / 2,
+              idx
+            });
+          }
+        }
+
+        if (track.length < 2) continue; // no motion across frames
+
+        // draw path
+        ctx.beginPath();
+        ctx.moveTo(track[0].x, track[0].y);
+        for (let i = 1; i < track.length; i++) ctx.lineTo(track[i].x, track[i].y);
+        ctx.stroke();
+
+        // draw anchors
+        const isNum = (v)=>typeof v === 'number';
+        const highlightIdx = isNum(currentKeyframeIndex) ? currentKeyframeIndex : effectiveKFIndex;
+
+        track.forEach(pt => {
+          const isCurrent = (pt.idx === highlightIdx);
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, isCurrent ? 5 : 3, 0, Math.PI * 2);
+          ctx.fillStyle = isCurrent ? 'rgba(50,130,255,0.9)' : 'rgba(80,160,255,0.6)';
+          ctx.fill();
+          if (!isCurrent) {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3.8, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(80,160,255,0.4)';
+            ctx.stroke();
+          }
+        });
+      }
+
+      ctx.restore();
+    } catch(err) {
+      console.warn('Motion path draw error:', err);
+    }
+  };
+
+})();
+</script>
+
+<!-- ────────────────────────────────────────────────
+     END MOTION PATH EDITING
+──────────────────────────────────────────────── -->
 </body>
 </html>
