@@ -4784,7 +4784,14 @@ canvas.addEventListener("drop", e => {
       ctx.fillStyle   = 'rgba(80,160,255,0.9)';
 
       // Filter: only shapes that exist in the (effective) current keyframe
-      const visibleIds = currentKF.shapes.map(s => s.id);
+      let visibleIds = currentKF.shapes.map(s => s.id);
+
+      // Filter: further filter by selected shapes (if any)
+      if (multiSelectedShapeIds && multiSelectedShapeIds.size > 0) {
+        visibleIds = visibleIds.filter(id => multiSelectedShapeIds.has(id));
+      } else if (selectedShapeId != null) {
+        visibleIds = visibleIds.filter(id => id === selectedShapeId);
+      }
 
       // Build/draw motion tracks only for these shapes
       for (const id of visibleIds) {
