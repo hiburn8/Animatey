@@ -900,6 +900,15 @@
               <!-- Stop -->
               <svg class="stop" viewBox="0 0 100 100"><rect x="30" y="30" width="40" height="40"/></svg>
             </span>
+            <span id="playTimer" style="
+              position:relative;
+              bottom:4px;
+              font-size:11px;
+              color:#fff;
+              opacity:0;
+              pointer-events:none;
+              font-family:monospace;">
+            </span>
         </button>
         </div>
 
@@ -1425,17 +1434,16 @@ function restore(anim){
     // 5) Refresh FPS UI and canvas size if the snapshot changed them
     if (animation.settings && typeof fpsInput !== 'undefined' && fpsInput){
       fpsInput.value = animation.settings.frameRate || 30;
-      if (typeof updatePresetHighlight === 'function') updatePresetHighlight();
+      updatePresetHighlight();
     }
     if (animation.canvas && typeof updateCanvasSize === 'function'){
       updateCanvasSize(animation.canvas.width, animation.canvas.height);
     }
 
     // 6) Redraw / rebuild panels
-    if (typeof updateShapeList==='function') updateShapeList();
-    if (typeof drawAllShapes==='function') drawAllShapes();
-    if (typeof rebuildTimeline==='function') rebuildTimeline();
-    if (typeof renderTimeline==='function') renderTimeline(currentKeyframeIndex, null);
+    updateShapeList();
+    drawAllShapes();
+    renderTimeline(currentKeyframeIndex, null);
   }
 
   function commit(label=''){
@@ -1667,6 +1675,7 @@ ordered.forEach(s => {
     // Force OFF (false) => no outline
   drawShape(ctx, s, showOutline);
 });
+
 }
 
 //────────────────────────────────────────────────
@@ -2539,6 +2548,8 @@ function renderTimeline(active = null, playing = null) {
   });
 
   if (playing){document.querySelector('.kf-row.playing')?.scrollIntoView({ block: 'center' });}
+
+  updatePlayTimer();
 }
 
 function interpolateShapes(a, b, t) {
@@ -2758,6 +2769,28 @@ function playAnimation(mode = 'once') {
     updateShapeList();
 
     drawAllShapes(interp);
+
+
+    //timer overlay start
+// ⬇️ show current playback time (for timer overlay)
+const fps = targetFps;
+let currentFrame = Math.max(1, currentKeyframeIndex||1);
+
+// sum completed segments
+for (let i = 0; i < segmentIndex; i++) {
+  const fromKf = animation.keyframes[segments[i][0]];
+  currentFrame += fromKf.frames || 0;
+}
+
+// add current frame within the active segment
+currentFrame += t;
+
+// update play button timer
+updatePlayTimer(currentFrame);
+//timer overlay end
+
+
+
     _renderedOnce = true;
 
     t++;
@@ -2866,6 +2899,7 @@ function stopAnimation() {
 
 newPlayBtn.onclick = () => {
   (newPlayBtn.dataset.state === 'play') ? playAnimation('once') : stopAnimation();
+  updatePlayTimer(0);
 }
 loopBtn.onclick = () => playAnimation('loop');
 bounceBtn.onclick = () => playAnimation('bounce');
@@ -3591,12 +3625,14 @@ function loadKeyframesFromJSON(json) {
           <li><kbd>Spacebar</kbd> : Play/Stop (from selected Keyframe)</li>
           <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> : Undo/Redo</li>
           <li><kbd>F</kbd> : Toggle Fullscreen</li>
-          <li><kbd>H</kbd> : Hide/Toggle Sidebar Menus</li>
+          <li><kbd>O</kbd> : Toogle Onion Skins</li>
+          <li><kbd>P</kbd> : Toogle Motion Paths</li>
+          <li><kbd>.</kbd> : Hide/Toggle Sidebar Menus</li>
         </ul>
 
         <ul>
         <b>With Shapes Selected:</b>
-          <li><kbd>O</kbd> : Toogle Shape Outline</li>
+          <li><kbd>H</kbd> : Toogle Shape Highlighting</li>
           <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> : Move Shape/s</li>
           <li><kbd>Q</kbd> / <kbd>E</kbd> : Rotate object/s Left/Right</li>
           <li><kbd>Ctrl</kbd>+<kbd>D</kbd> : Duplicate Shape/s</li>
@@ -4796,6 +4832,70 @@ canvas.addEventListener("drop", e => {
   };
 
 })();
+
+function framesToTime(frames, fps) {
+  fps = fps || (animation.settings?.frameRate || 30);
+  const kf = animation.keyframes || [];
+
+  if (typeof frames === 'number') return frames / fps;
+  if (kf.length === 0) return 0;
+
+  // Sum all keyframe.frames
+  let totalFrames = 0;
+  // only count frames from keyframes that serve as 'from' in a→b pairs
+  for (let i = 0; i < kf.length - 1; i++) {
+    totalFrames += kf[i].frames || 0;
+  }
+
+
+
+  return totalFrames / fps;
+}
+
+const playTimer = document.getElementById('playTimer');
+
+function updatePlayTimer(currentFrame = 0) {
+  const fps = animation.settings?.frameRate || 30;
+  const totalSeconds = framesToTime(); // your helper
+  const currentSeconds = currentFrame / fps;
+
+  playTimer.textContent = `${currentSeconds.toFixed(2)} / ${totalSeconds.toFixed(2)}s`;
+}
+
+// initial label
+updatePlayTimer();
+
+function setupPlayTimer() {
+  const btn   = document.getElementById('newPlayBtn');
+  const timer = document.getElementById('playTimer');
+  if (!btn || !timer) return;
+
+  let hideTimeout;
+
+  timer.style.transition = 'opacity 0.3s ease';
+  timer.style.opacity    = '0';
+  timer.style.visibility = 'hidden';
+
+  btn.addEventListener('mouseenter', () => {
+    // cancel any pending hide
+    clearTimeout(hideTimeout);
+    timer.style.visibility = 'visible';
+    timer.style.opacity    = '0.8';
+  });
+
+  btn.addEventListener('mouseleave', () => {
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+      timer.style.opacity = '0';
+      // hide after fade-out completes, but only if still not hovering
+      hideTimeout = setTimeout(() => {
+        if (!btn.matches(':hover')) timer.style.visibility = 'hidden';
+      }, 300);
+    }, 0);
+  });
+}
+setupPlayTimer();
+
 </script>
 
 <!-- ────────────────────────────────────────────────
