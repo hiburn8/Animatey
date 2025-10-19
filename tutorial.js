@@ -20,19 +20,19 @@
 window.tutorialSteps = [
   {
     element: '#canvas',
-    text: '[1/7] Here’s your canvas area. It holds the objects (shapes, images, text, drawings etc) for your current keyframe. <p>When you select an object, you can move it around with the mouse or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotates objects.<p><kbd>O</kbd> to toggles highlighting.',
-    placement: 'right-bottom'
-  },
-  {
-    element: '#cloneKeyframe',
-    text: '[2/7] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
-    placement: 'left'
+    text: '[1/7] Here’s your canvas area. It holds the objects (shapes, images, text, drawings etc) for your current keyframe. <p>When you select an object, you can move it around with the mouse or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotates objects.<p><kbd>H</kbd> toggles highlighting.',
+    placement: 'left-bottom'
   },
   {
     element: '#timeline',
-    text: '[3/7] Your animation is based on designing keyframes, and blending between them. You can control the number of frames used to blend between keyframes, and choose a blend style.',
+    text: '[2/7] Your animation is based on designing keyframes, and blending between them. You can control the number of frames used to blend between keyframes, and choose a blend style.',
     placement: 'left',
     fn: () => {},
+  },
+  {
+    element: '#cloneKeyframe',
+    text: '[3/7] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
+    placement: 'left'
   },
   {
     element: '#shapeList',

@@ -1304,7 +1304,7 @@ function showBlocker(){
   let selectedShapeId = null;
   let multiSelectedShapeIds = new Set();
   let shapeSelectionSource = 'list'; // 'list' or 'canvas'
-  let shapeSelectionForce = null;   // override shape outlines
+  let shapeSelectionForce = true;   // override shape outlines
 
   let isPlaying = false;
   let isLooping = false;
@@ -2549,7 +2549,10 @@ function renderTimeline(active = null, playing = null) {
 
   if (playing){document.querySelector('.kf-row.playing')?.scrollIntoView({ block: 'center' });}
 
-  updatePlayTimer();
+  //wont exist on first render
+  if (typeof updatePlayTimer === 'function') {
+    updatePlayTimer();
+  }
 }
 
 function interpolateShapes(a, b, t) {
