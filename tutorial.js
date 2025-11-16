@@ -50,7 +50,7 @@ window.tutorialSteps = [
     placement: 'bottom-right'
   },
   {
-    element: '#demoBtn',
+    element: '#file-menu',
     text: '[7/7] Try loading this demo animation and experimenting. Have fun!',
     placement: 'left'
   }

@@ -9,13 +9,13 @@
 
   <title>Animatey</title>
   <style>
-
+  
     body {
       font-family: system-ui, sans-serif;
       font-size: 15px;
       line-height: 1.5;
       color: #333;
-            margin: 0;
+      margin: 0;
       display: flex;
       height: 100vh;
     }
@@ -26,6 +26,143 @@
       color: #222;
     }
 
+  /* MENUBAR FIX */
+  .menubar {
+    display: flex;
+    width: 100%;
+    background: #f3f3f3;
+    border-bottom: 1px solid #bbb;
+    user-select: none;
+    z-index: 5000; /* sits above sidebars */
+  }
+  .menu { position: relative; }
+  .menu-title {
+    padding: 6px 14px;
+    cursor: default;
+  }
+  .menu-title:hover,
+  .menu.open .menu-title {
+    background: #d0d0d0;
+  }
+  .menu-dropdown, .submenu {
+    background: #fff;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    min-width: 180px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+  }
+  .menu.open > .menu-dropdown { display: flex; }
+  .menu-item {
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .menu-item:hover { background: #e3e3e3; }
+  .menu-sep { border-top: 1px solid #ccc; margin: 4px 0; }
+  .menu-item.has-submenu { position: relative; }
+  .menu-item.has-submenu::after {
+    content: "▸";
+    margin-left: 8px;
+    color: #555;
+    font-size: 12px;
+  }
+  .submenu {
+    top: 0;
+    left: 100%;
+    margin-left: 2px;
+  }
+  .menu-item.has-submenu:hover > .submenu { display: flex; }
+  .shortcut { color: #666; font-size: 12px; margin-left: 20px; }
+
+  /* show focus highlight when keyboard focuses a menu title */
+  .menu-title:focus {
+    outline: none;
+    background: #e0e0e0;
+    color: #000;
+  }
+
+  .menu-item:focus {
+    outline: none;
+    background: #e0e0e0;
+    color: #000;
+  }
+
+  /* dark mode version */
+  body.dark-mode .menu-title:focus {
+    background: #444;
+    color: #fff;
+  }
+
+  body.dark-mode .menu-item:focus {
+    background: #444;
+    color: #fff;
+  }
+
+  /*───────────────────────────────
+  DARK MODE — MENUBAR + MENUS
+───────────────────────────────*/
+body.dark-mode .menubar {
+  background: #2a2a2a;
+  border-bottom: 1px solid #444;
+  color: #eee;
+}
+
+body.dark-mode .menu-title {
+  color: #eee;
+}
+
+body.dark-mode .menu-title:hover,
+body.dark-mode .menu.open .menu-title {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+body.dark-mode .menu-dropdown,
+body.dark-mode .submenu {
+  background: #333;
+  border: 1px solid #555;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+}
+
+body.dark-mode .menu-item {
+  color: #eee;
+  background: none;
+}
+
+body.dark-mode .menu-item:hover {
+  background: #444;
+}
+
+body.dark-mode .menu-sep {
+  border-top: 1px solid #555;
+}
+
+body.dark-mode .shortcut {
+  color: #aaa;
+}
+
+body.dark-mode .menu-item.has-submenu::after {
+  color: #999;
+}
+
+/* optional: darken the dark-mode button */
+body.dark-mode #darkModeBtn {
+  color: #fff;
+}
+body.dark-mode #darkModeBtn:hover {
+  background: #444;
+}
+
+
+  /* Menu bar End */
     .pro-header span {
       font-size: 0.95rem;
       text-transform: uppercase;
@@ -112,9 +249,7 @@
       border: none;
     }
     
-    #playAnimation.playing,
-    #loopAnimation.playing,
-    #bounceAnimation.playing {
+    #playAnimation.playing{
       background-color: #2ecc71;
       color: white;
       border: none;
@@ -130,22 +265,6 @@
       isolation: isolate;
     }
     
-    /* Hint in the corner */
-    #shortcut-hint {
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      z-index: 1000;
-    }
-    #shortcut-hint kbd {
-      background: #444;
-      color: #fff;
-      padding: 2px 4px;
-      border-radius: 3px;
-      font-size: 0.9em;
-      font-family: monospace;
-    }
-
     /* Modal overlay */
     #shortcut-modal {
       display: none; /* hidden by default */
@@ -710,10 +829,11 @@
 }
 
 </style>
-
-
 </head>
 <body>
+
+
+
   <div id="leftSidebar">
 
     <div id="canvasList" class="object-list--pro">
@@ -886,6 +1006,122 @@
   </div>
 
   <div id="mainContent">
+
+<div class="menubar" id="menu">
+  <div class="menu">
+    <div class="menu-title" id="file-menu">File</div>
+    <div class="menu-dropdown">
+      <input type="file" id="importFile" style="display:none;" accept=".json">
+      <div class="menu-item" onclick="importFile.value = '';importFile.click();">Open… </div>
+      <div class="menu-item" onclick="loadDemo();">Load Demo </div>
+
+      <div class="menu-item has-submenu">
+        Save ▸
+        <div class="submenu">
+          <div class="menu-item" onclick="exportProject(false);">Normal <span class="shortcut">Ctrl+S</span></div>
+          <div class="menu-item" onclick="exportProject(true);">Legendary (++ undo/redo history 🕰️)</div>
+        </div>
+      </div>
+
+
+
+      <div class="menu-item has-submenu">
+        Export ▸
+        <div class="submenu">
+          <div class="menu-item" onclick="exportGif();">As GIF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu">
+    <div class="menu-title">Play</div>
+    <div class="menu-dropdown">
+      <div class="menu-item" onclick="playAnimation();">Play <span class="shortcut">Space</span></div>
+      <div class="menu-item" onclick="playAnimation('loop');">Loop </div>
+      <div class="menu-item" onclick="playAnimation('bounce');">Bounce </div>
+
+    </div>
+  </div>
+
+  <div class="menu">
+    <div class="menu-title">Edit</div>
+    <div class="menu-dropdown">
+      <div class="menu-item">Undo <span class="shortcut">Ctrl+Z</span></div>
+      <div class="menu-item">Redo <span class="shortcut">Ctrl+Y</span></div>
+      <div class="menu-sep"></div>
+      <div class="menu-item">Cut <span class="shortcut">Ctrl+X</span></div>
+      <div class="menu-item">Copy <span class="shortcut">Ctrl+C</span></div>
+      <div class="menu-item">Paste <span class="shortcut">Ctrl+V</span></div>
+    </div>
+  </div>
+
+  <div class="menu">
+    <div class="menu-title">View</div>
+    <div class="menu-dropdown">
+      <div class="menu-item" onclick="">Toggle Sidebars ⟷<span class="shortcut">.</span></div>
+      <div class="menu-item" onclick="toggleFullscreen();">Toggle Fullscreen ⛶<span class="shortcut">F</span></div>
+      <div class="menu-item" onclick="toggleOnionSkins();">Toggle Onion Skins 🧅 <span class="shortcut">O</span></div>
+      <div class="menu-item" onclick="toggleMotionPaths();">Toggle Motion Paths 📍<span class="shortcut">P</span></div>
+    </div>
+  </div>
+
+  <div class="menu">
+    <div class="menu-title">Help</div>
+    <div class="menu-dropdown">
+      <div class="menu-item" onclick="runTutorial();">Tutorial </div>
+      <div class="menu-item" onclick="toggleModal(modal.style.display !== 'block');">Keyboard Shortcuts <span class="shortcut">?</span></div>
+      <div class="menu-sep"></div>
+      <div class="menu-item" onclick="window.open('https://github.com/hiburn8/Animatey', '_blank').focus();">About Animatey</div>
+    </div>
+  </div>
+
+  <!-- hack to push light/dark button right --> 
+  <div class="menu-spacer" style="flex-grow: 1;"></div>
+
+</div>
+<progress id="gifProgress" value="0" max="1" style="width:100%; display:none;"></progress>
+<script>
+  const menus = document.querySelectorAll('.menu');
+  let menuOpen = null;
+
+  menus.forEach(menu => {
+    const title = menu.querySelector('.menu-title');
+
+    title.addEventListener('click', e => {
+      const alreadyOpen = menu.classList.contains('open');
+      menus.forEach(m => m.classList.remove('open'));
+      if (!alreadyOpen) {
+        menu.classList.add('open');
+        menuOpen = menu;
+      } else {
+        menuOpen = null;
+      }
+      e.stopPropagation();
+    });
+
+    title.addEventListener('mouseenter', () => {
+      if (menuOpen && menuOpen !== menu) {
+        menus.forEach(m => m.classList.remove('open'));
+        menu.classList.add('open');
+        menuOpen = menu;
+      }
+    });
+  });
+
+  window.addEventListener('click', () => {
+    menus.forEach(m => m.classList.remove('open'));
+    menuOpen = null;
+  });
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      menus.forEach(m => m.classList.remove('open'));
+      menuOpen = null;
+    }
+  });
+</script>
+
+
     <img id="logoImg" src="logo_beta.png" width="140">
     <div id="canvasViewport">
       <canvas id="canvas" width="800" height="600"></canvas>
@@ -912,62 +1148,18 @@
         </button>
         </div>
 
-      <button id="loopAnimation" onmousedown="event.preventDefault();">↻ Loop</button>
-      <button id="bounceAnimation" onmousedown="event.preventDefault();">↔ Bounce</button>
-      <button id="fullscreenBtn" onmousedown="event.preventDefault();">⛶ Fullscreen</button>
-      <button id="onionToggleBtn" onmousedown="event.preventDefault();">🧅 Onion Skin</button>
-      <button id="motionPathToggleBtn" onmousedown="event.preventDefault();">🔵 Motion Paths</button>
-
-
-        <!-- Hint to the user -->
-      <div id="shortcut-hint">
-        Press <kbd>?</kbd> to view keyboard shortcuts
-      </div>
     </div>
     <div id="historyBarContainer" style="margin-top:6px; text-align:center;"></div>
   </div>
 
   <div id="rightSidebar">
 
-    <div id="filesList" class="object-list--pro">
-        <div class="pro-header"><span>Files:</span></div>
-
-        <button id="importBtn" onmousedown="event.preventDefault();">Open Project</button>
-        <input type="file" id="importFile" style="display:none;" accept=".json">
-
-        <!-- Split Save Button -->
-<div id="saveSplit" class="split" style="margin-left:0;">
-  <button type="button" class="btn btn-main" id="exportBtn" onmousedown="event.preventDefault();" title="Save Project (without history)">
-    Save Project
-  </button>
-
-  <div class="dropdown">
-    <button type="button" class="btn btn-caret" aria-label="More save options">
-      <span class="caret"></span>
-    </button>
-    <div class="dropdown-menu">
-      <button type="button" onmousedown="document.getElementById('exportBtn').click();" title="Save project">
-        Normal Save (default)
-      </button>
-
-      <button type="button" id="exportWithHistoryBtn" onmousedown="event.preventDefault();" title="Save project including undo/redo history">
-        <b>Legendary Save</b> (includes undo/redo history) 🕰️
-      </button>
-    </div>
-  </div>
-</div>
-        <button id="demoBtn">Load Demo Project</button><p>
-        <button id="exportGifBtn" onmousedown="event.preventDefault();">Export .GIF</button>
-        <progress id="gifProgress" value="0" max="1" style="width:100%; display:none;"></progress>
-
-
-    </div>
-
-    <p>
-
-    <button id="cloneKeyframe">Clone Keyframe</button>
+        <button id="cloneKeyframe">Clone Keyframe</button>
     <button id="addKeyframe">New Keyframe</button>
+
+
     <div id="timeline"></div>
+
 </div>
 
 <div id="mobile-blocker" aria-modal="true" role="dialog" aria-label="Mobile not supported"
@@ -978,6 +1170,7 @@
     <p style="margin:0 0 8px;">Please open Animatey on a desktop or laptop.</p>
   </div>
 </div>
+
 
 <script>
 (function(){
@@ -1020,6 +1213,22 @@ function showBlocker(){
   let currentQuery = "";
   const perPage = 12;
   let totalPages = 1;
+
+  /**
+   * Debounces a function call, ensuring it only runs after a period of inactivity.
+   * @param {Function} func - The function to debounce.
+   * @param {number} delay - The delay in milliseconds.
+   * @returns {Function} A new function that is debounced.
+   */
+  function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  }
 
   async function searchPixabay(query, page = 1) {
     if (!query) {
@@ -1090,11 +1299,14 @@ function showBlocker(){
     }
   }
 
-  searchBox.addEventListener("input", () => {
+  // Create a debounced image search - 300ms
+  const executePixabaySearch = () => {
     currentQuery = searchBox.value.trim();
     currentPage = 1;
     searchPixabay(currentQuery, currentPage);
-  });
+  };
+  const debouncedPixabaySearch = debounce(executePixabaySearch, 300);
+  searchBox.addEventListener("input", debouncedPixabaySearch);
 
   prevBtn.addEventListener("click", () => {
     if (currentPage > 1 && !prevBtn.classList.contains("disabled")) {
@@ -1232,49 +1444,15 @@ function showBlocker(){
   newPlayBtn.addEventListener('pointerdown', (e) => {
     newPlayBtn.setPointerCapture(e.pointerId);
   });
-  const loopBtn = document.getElementById('loopAnimation');
-  const bounceBtn = document.getElementById('bounceAnimation');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+
   const bgColorInput = document.getElementById('bgColorInput');
   const bgInputBtn = document.getElementById('bgInputBtn');
   const bgInput       = document.getElementById('bgInput');
   const clearBgBtn    = document.getElementById('clearBackground');
 
-  const demoBtn = document.getElementById('demoBtn');
 
-  const exportBtn = document.getElementById('exportBtn');
-
-      // Split "Save Project" dropdown logic
-    const saveSplit = document.getElementById('saveSplit');
-    const saveDropdown = saveSplit.querySelector('.dropdown');
-    const saveCaret = saveSplit.querySelector('.btn-caret');
-    const exportWithHistoryBtn = document.getElementById('exportWithHistoryBtn');
-
-    // Toggle dropdown visibility
-    saveCaret.addEventListener('click', (e) => {
-      e.stopPropagation();
-      saveDropdown.classList.toggle('open');
-    });
-
-    // Close if user clicks elsewhere
-    window.addEventListener('click', () => {
-      saveDropdown.classList.remove('open');
-    });
-
-    // Hook up the two save actions
-    exportBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      exportProject(false); // normal save
-    });
-
-    exportWithHistoryBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      exportProject(true); // save including undo/redo history
-    });
-
-  const importBtn = document.getElementById('importBtn');
   const importFile = document.getElementById('importFile');
-  const exportGifBtn = document.getElementById('exportGifBtn');
 
 
   const timelineDiv = document.getElementById('timeline');
@@ -1684,21 +1862,18 @@ ordered.forEach(s => {
 
 let onionEnabled = false;
 
-const onionBtn = document.getElementById('onionToggleBtn');
-if (onionBtn) {
-  onionBtn.addEventListener('click', () => {
-    onionEnabled = !onionEnabled;
-    onionBtn.classList.toggle('playing', onionEnabled);
-    drawAllShapes();
-  });
+function toggleOnionSkins(){
+  onionEnabled = !onionEnabled;
+  drawAllShapes();
 }
 
-// Keyboard shortcut "O"
+// Keyboard shortcut "O", "P"
 window.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'o' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-    onionEnabled = !onionEnabled;
-    if (onionBtn) onionBtn.classList.toggle('playing', onionEnabled);
-    drawAllShapes();
+    toggleOnionSkins();
+  }
+  if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    toggleMotionPaths();
   }
 });
 
@@ -2136,6 +2311,21 @@ function updateShapeList() {
         e.preventDefault();
         row.classList.remove('drag-over');
 
+        let option = null;
+        // propagate to keyframes (same prompt)
+        if (currentKeyframeIndex != null) {
+          option = prompt(
+            'Apply z-index change to:\n' +
+            '1 = current keyframe only\n' +
+            '2 = all keyframes\n' +
+            '3 = current and all future keyframes',
+            '1'
+          );
+          
+          //cancel button
+          if (option === null) return;
+        }
+
         const draggedId = parseInt(e.dataTransfer.getData('text/plain'), 10) || _draggingId;
         const targetId  = s.id;
         if (!draggedId || draggedId === targetId) { _draggingId = null; return; }
@@ -2156,15 +2346,8 @@ function updateShapeList() {
         });
         normalizeZOrder(shapes);
 
-        // propagate to keyframes (same prompt)
         if (currentKeyframeIndex != null) {
-          const option = prompt(
-            'Apply z-index change to:\n' +
-            '1 = current keyframe only\n' +
-            '2 = all keyframes\n' +
-            '3 = current and all future keyframes',
-            '1'
-          );
+
           const affectedIndices = (() => {
             if (option === '2') return [...animation.keyframes.keys()];
             if (option === '3') return Array.from({length: animation.keyframes.length - currentKeyframeIndex}, (_, i) => i + currentKeyframeIndex);
@@ -2684,14 +2867,8 @@ function playAnimation(mode = 'once') {
   }
   
   isLooping  = (mode === 'loop');
-  isBouncing = (mode === 'bounce');
-
-  loopBtn.classList.remove('playing');
-  bounceBtn.classList.remove('playing');
 
   newPlayBtn.dataset.state = 'stop';
-  if (mode === 'loop')   loopBtn.classList.add('playing');
-  if (mode === 'bounce') bounceBtn.classList.add('playing');
 
   let segments = [];
   if (mode === 'bounce') {
@@ -2881,8 +3058,6 @@ function stopAnimation() {
   isBouncing = false;
 
   newPlayBtn.dataset.state = 'play';
-  loopBtn.classList.remove('playing');
-  bounceBtn.classList.remove('playing');
 
   cancelAnimationFrame(animationFrameId);
   canvas.style.cursor = lastCursor || '';
@@ -2904,25 +3079,23 @@ newPlayBtn.onclick = () => {
   (newPlayBtn.dataset.state === 'play') ? playAnimation('once') : stopAnimation();
   updatePlayTimer(0);
 }
-loopBtn.onclick = () => playAnimation('loop');
-bounceBtn.onclick = () => playAnimation('bounce');
 
-fullscreenBtn.onclick = () => {
-  if (!document.fullscreenElement) {
+function toggleFullscreen(){
+    if (!document.fullscreenElement) {
     canvas.requestFullscreen().catch(err => {
       alert(`Error attempting to enable fullscreen: ${err.message}`);
     });
   } else {
     document.exitFullscreen();
   }
-};
+}
 
-demoBtn.onclick = () => {
+
+function loadDemo(){
   //demo is defined in the default_animation script at the start
   if (typeof demo === 'undefined') { alert('Demo not available.'); return; }
   loadKeyframesFromJSON(JSON.stringify(demo, null, 2));
-};
-
+}
 
 bgInput.onchange = e => {
   const file = e.target.files[0];
@@ -3458,10 +3631,6 @@ bgInputBtn.onclick = () => {
   bgInput.click();
 };
 
-importBtn.onclick = () => {
-  importFile.value = ''; // <-- Reset the file input so same file can be re-imported
-  importFile.click();
-};
 
 importFile.onchange = e => {
   const file = e.target.files[0];
@@ -3490,7 +3659,8 @@ animation.keyframes.push({
   id: makeShortUUID(),
   name: "Keyframe",
   shapes: cloneShapes(shapes),
-  frames: 30
+  frames: 30,
+  easing: 'linear'
 });
 currentKeyframeIndex = 0;
 updateShapeList();
@@ -3704,7 +3874,7 @@ leftSidebar.addEventListener('focusin',   () => { lastInteractionArea = 'leftSid
 rightSidebar.addEventListener('focusin',  () => { lastInteractionArea = 'rightSidebar'; });
 canvas.addEventListener('focusin',        () => { lastInteractionArea = 'canvas'; });
 
-const hint = document.getElementById('shortcut-hint');
+
 const modal = document.getElementById('shortcut-modal');
 const closeBtn = document.getElementById('close-modal');
 
@@ -3745,13 +3915,7 @@ document.addEventListener('keydown', (e) => {
     rightSidebar.style.display = next;
   }
   if (e.key === 'f') {
-    if (!document.fullscreenElement) {
-    canvas.requestFullscreen().catch(err => {
-      alert(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      document.exitFullscreen();
-    }
+    toggleFullscreen();
   }
   if (e.key === 'h') {
     if (isPlaying){return;}
@@ -4121,7 +4285,7 @@ document.addEventListener('keydown', e => {
 };
 **/
 
-exportGifBtn.onclick = async () => {
+async function exportGif(){
   if (animation.keyframes.length < 2) {
     alert("Need at least 2 keyframes to export a GIF.");
     return;
@@ -4210,8 +4374,7 @@ exportGifBtn.onclick = async () => {
   });
 
   gif.render();
-};
-
+}
 
 // Single paste handler: handles both images and shape clipboard
 document.addEventListener("paste", event => {
@@ -4612,11 +4775,7 @@ canvas.addEventListener("drop", e => {
     border-color: #444 !important;
   }
 
-  body.dark-mode #bigPlay button,
-  body.dark-mode #loopAnimation,
-  body.dark-mode #bounceAnimation,
-  body.dark-mode #fullscreenBtn,
-  body.dark-mode #onionToggleBtn {
+  body.dark-mode #bigPlay button{
     background: #333 !important;
     color: #eee !important;
   }
@@ -4690,24 +4849,35 @@ canvas.addEventListener("drop", e => {
 <script>
 (function(){
   // Create button dynamically and append into existing controls cluster
-  const controls = document.getElementById('controls');
+  const controls = document.getElementById('menu');
   if (controls) {
     const btn = document.createElement('button');
     btn.id = 'darkModeBtn';
-    btn.textContent = '🌙 Dark';
+    // remove default styles (flat, minimal, integrated look)
+    btn.style.all = 'unset';
+    btn.style.cursor = 'pointer';
+    btn.style.padding = '4px 8px';
+    btn.style.margin = '4px 10px';
+    btn.style.fontSize = '14px';
+    btn.style.alignSelf = 'center';
+    btn.style.borderRadius = '4px';
+    btn.style.userSelect = 'none';
+    btn.style.transition = 'background 0.2s';
+
+    btn.textContent = '☀️ Light';
     btn.title = 'Toggle Dark Mode';
     controls.appendChild(btn);
 
     const savedMode = localStorage.getItem('animatey-dark-mode');
     if (savedMode === 'true') {
       document.body.classList.add('dark-mode');
-      btn.textContent = '☀️ Light';
+      btn.textContent = '🌙 Dark';
     }
 
     btn.addEventListener('click', () => {
       document.body.classList.toggle('dark-mode');
       const isDark = document.body.classList.contains('dark-mode');
-      btn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
+      btn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
       localStorage.setItem('animatey-dark-mode', isDark);
     });
   }
@@ -4732,24 +4902,7 @@ canvas.addEventListener("drop", e => {
   // Remember the last non-null selected keyframe index so paths persist during playback
   window._mp_lastSelectedKFIndex = (typeof currentKeyframeIndex === 'number') ? currentKeyframeIndex : null;
 
-  const btn = document.getElementById('motionPathToggleBtn');
-  if (btn) {
-    btn.onmousedown = (e)=>e.preventDefault();
-    btn.onclick = ()=>{
-      motionPathsEnabled = !motionPathsEnabled;
-      btn.classList.toggle('playing', motionPathsEnabled);
 
-      // When turning ON, snapshot the currently selected keyframe (for playback persistence)
-      if (motionPathsEnabled) {
-        if (typeof currentKeyframeIndex === 'number') {
-          window._mp_lastSelectedKFIndex = currentKeyframeIndex;
-        }
-      }
-      drawAllShapes();
-    };
-  } else {
-    console.warn('Motion path toggle button not found (#motionPathToggleBtn or #moationPathToggleBtn).');
-  }
 
   // Preserve original drawAllShapes if not wrapped yet
   if (!window._drawAllShapes_original_forMotionPaths) {
@@ -4843,6 +4996,18 @@ canvas.addEventListener("drop", e => {
 
 })();
 
+  function toggleMotionPaths(){
+        motionPathsEnabled = !motionPathsEnabled;
+
+    // When turning ON, snapshot the currently selected keyframe (for playback persistence)
+    if (motionPathsEnabled) {
+      if (typeof currentKeyframeIndex === 'number') {
+        window._mp_lastSelectedKFIndex = currentKeyframeIndex;
+      }
+    }
+    drawAllShapes();
+  }
+
 function framesToTime(frames, fps) {
   fps = fps || (animation.settings?.frameRate || 30);
   const kf = animation.keyframes || [];
@@ -4911,5 +5076,249 @@ setupPlayTimer();
 <!-- ────────────────────────────────────────────────
      END MOTION PATH EDITING
 ──────────────────────────────────────────────── -->
+<script>
+/* ─────────────────────────────────────────────────────────
+   Menubar: keyboard nav (safe & scoped)
+   - Arrow keys/Enter/Escape inside menus + submenus
+   - Alt focuses the first menu title (optional, scoped)
+   - Never intercepts keys outside the menubar focus
+──────────────────────────────────────────────────────────*/
+(function () {
+  const menubar = document.querySelector('.menubar');
+  if (!menubar) return;
+
+  const menus = Array.from(menubar.querySelectorAll('.menu'));
+  if (!menus.length) return;
+
+  // Make titles/items focusable (non-destructive)
+  menus.forEach(menu => {
+    const title = menu.querySelector('.menu-title');
+    if (title && !title.hasAttribute('tabindex')) title.setAttribute('tabindex', '0');
+    const items = menu.querySelectorAll('.menu-dropdown .menu-item, .submenu .menu-item');
+    items.forEach(it => { if (!it.hasAttribute('tabindex')) it.setAttribute('tabindex', '-1'); });
+  });
+
+  let openMenu = null;
+
+  // Utility: scope checks
+  const isInMenubar = el => !!(el && el.closest && el.closest('.menubar'));
+  const isEditable = el => {
+    return el && (
+      el.tagName === 'INPUT' ||
+      el.tagName === 'TEXTAREA' ||
+      el.isContentEditable
+    );
+  };
+
+  // Open/close helpers
+  function openRootMenu(menuEl, focusFirst = true) {
+    closeAll();
+    menuEl.classList.add('open');
+    openMenu = menuEl;
+    if (focusFirst) {
+      const firstItem = menuEl.querySelector('.menu-dropdown .menu-item');
+      if (firstItem) firstItem.focus();
+    }
+  }
+
+  function closeRootMenu(menuEl) {
+    if (!menuEl) return;
+    // hide any inline-opened submenus
+    menuEl.querySelectorAll('.submenu').forEach(sm => { sm.style.display = ''; });
+    menuEl.classList.remove('open');
+    if (openMenu === menuEl) openMenu = null;
+  }
+
+  function closeAll() {
+    menus.forEach(m => closeRootMenu(m));
+    openMenu = null;
+  }
+
+  function focusMenuTitle(index) {
+    if (index < 0) index = menus.length - 1;
+    if (index >= menus.length) index = 0;
+    const t = menus[index].querySelector('.menu-title');
+    if (t) t.focus();
+  }
+
+  // Item navigation helpers
+  function getSiblingItems(container) {
+    const root = container.closest('.menu-dropdown, .submenu');
+    return root ? Array.from(root.querySelectorAll(':scope > .menu-item')) : [];
+  }
+
+  function moveFocus(currentItem, dir) {
+    const items = getSiblingItems(currentItem);
+    const i = items.indexOf(currentItem);
+    if (i === -1) return;
+    let next = i + dir;
+    if (next < 0) next = items.length - 1;
+    if (next >= items.length) next = 0;
+    items[next].focus();
+  }
+
+  function openSubmenu(item, focusFirst = true) {
+    const sm = item.querySelector(':scope > .submenu');
+    if (sm) {
+      sm.style.display = 'flex'; // keyboard-open (hover not required)
+      if (focusFirst) {
+        const first = sm.querySelector('.menu-item');
+        if (first) first.focus();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function closeSubmenuToParent(itemOrSubmenu) {
+    const sm = itemOrSubmenu.classList?.contains('submenu')
+      ? itemOrSubmenu
+      : itemOrSubmenu.closest('.submenu');
+    if (!sm) return;
+    sm.style.display = '';
+    // focus back the parent menu-item
+    const parentItem = sm.parentElement?.closest('.menu-item');
+    if (parentItem) parentItem.focus();
+  }
+
+  // Click outside closes
+  document.addEventListener('mousedown', e => {
+    if (!isInMenubar(e.target)) closeAll();
+  });
+
+  // Title keyboard support (scoped to titles only)
+  menus.forEach((menu, idx) => {
+    const title = menu.querySelector('.menu-title');
+    if (!title) return;
+
+    title.addEventListener('keydown', e => {
+      if (!isInMenubar(e.target)) return;
+      if (isEditable(document.activeElement)) return;
+
+      // Only act on keys that should control the menubar
+      switch (e.key) {
+        case 'Enter':
+        case 'ArrowDown':
+          e.preventDefault();
+          e.stopPropagation();
+          openRootMenu(menu, true);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          e.stopPropagation();
+          openRootMenu(menu, true);
+          // focus last item
+          const items = menu.querySelectorAll('.menu-dropdown .menu-item');
+          if (items.length) items[items.length - 1].focus();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          e.stopPropagation();
+          focusMenuTitle(idx + 1);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          e.stopPropagation();
+          focusMenuTitle(idx - 1);
+          break;
+        case 'Escape':
+          e.preventDefault();
+          e.stopPropagation();
+          closeAll();
+          title.blur();
+          break;
+      }
+    });
+  });
+
+  // OPTIONAL: Alt (alone) focuses first title — doesn’t block other combos
+  window.addEventListener('keydown', e => {
+    // Guard: never interfere if user is typing or focus outside document
+    if (isEditable(document.activeElement)) return;
+    if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.key === 'Alt') {
+      // Only apply if focus is not already inside menubar
+      if (!isInMenubar(document.activeElement)) {
+        // Do not prevent default here to avoid OS/menu interactions; just focus.
+        const firstTitle = menus[0]?.querySelector('.menu-title');
+        if (firstTitle) firstTitle.focus();
+      }
+    }
+  }, { capture: true });
+
+  // Delegate key handling inside dropdowns/submenus (scoped)
+  menubar.addEventListener('keydown', e => {
+    const target = e.target;
+    if (!target || !target.classList) return;
+
+    // Only handle when focus is on a menu-title or menu-item
+    const onTitle = target.classList.contains('menu-title');
+    const onItem  = target.classList.contains('menu-item');
+
+    if (!onTitle && !onItem) return;
+
+    // From this point, we are inside menubar — safe to stop propagation
+    // so canvas/shape arrow keys aren't triggered.
+    const stopAll = () => { e.preventDefault(); e.stopPropagation(); };
+
+    if (onItem) {
+      switch (e.key) {
+        case 'ArrowDown': stopAll(); moveFocus(target, +1); break;
+        case 'ArrowUp':   stopAll(); moveFocus(target, -1); break;
+        case 'Home':      stopAll(); {
+          const items = getSiblingItems(target);
+          if (items[0]) items[0].focus();
+        } break;
+        case 'End':       stopAll(); {
+          const items = getSiblingItems(target);
+          if (items.length) items[items.length - 1].focus();
+        } break;
+        case 'Enter':
+        case ' ':         // Space
+          stopAll();
+          // If has submenu, open it; else "activate" (click)
+          if (!openSubmenu(target, true)) {
+            target.click(); // respect your existing onclick handlers
+            closeAll();
+          }
+          break;
+        case 'ArrowRight':
+          stopAll();
+          // If has submenu, open it; else move to next root menu
+          if (!openSubmenu(target, true)) {
+            // move focus to next menu title
+            const menu = target.closest('.menu');
+            const idx = menus.indexOf(menu);
+            focusMenuTitle(idx + 1);
+          }
+          break;
+        case 'ArrowLeft':
+          stopAll();
+          // If inside a submenu, close it and focus parent item; else previous root menu
+          const sm = target.closest('.submenu');
+          if (sm) {
+            closeSubmenuToParent(sm);
+          } else {
+            const menu = target.closest('.menu');
+            const idx = menus.indexOf(menu);
+            focusMenuTitle(idx - 1);
+          }
+          break;
+        case 'Escape':
+          stopAll();
+          // Close any submenu chain, then the root, then focus title
+          const root = target.closest('.menu');
+          root?.querySelectorAll('.submenu').forEach(sm2 => sm2.style.display = '');
+          root?.classList.remove('open');
+          openMenu = null;
+          const t = root?.querySelector('.menu-title');
+          if (t) t.focus(); else closeAll();
+          break;
+      }
+    }
+  }, { capture: true });
+
+})();
+</script>
 </body>
 </html>
