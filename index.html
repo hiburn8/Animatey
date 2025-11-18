@@ -884,6 +884,10 @@ body.dark-mode #darkModeBtn:hover {
   const canvasHeightInput = document.getElementById('canvasHeight');
   const resolutionPreset = document.getElementById('resolutionPreset');
 
+  const devicePixelRatioSafe = Math.max(1, Math.floor(window.devicePixelRatio || 1))
+  let hiDPIEnabled = devicePixelRatioSafe > 1;  // true only if HiDPI is actually available
+
+
   function updateCanvasSize(w, h) {
     if (!w || !h) return;
     // update animation object
@@ -895,7 +899,7 @@ body.dark-mode #darkModeBtn:hover {
     _baseCssHeight = h;
 
     // update CSS size and underlying resolution (respect HiDPI)
-    const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const ratio = hiDPIEnabled ? devicePixelRatioSafe : 1;
     canvas.style.width  = w + 'px';
     canvas.style.height = h + 'px';
     canvas.width  = w * ratio;
@@ -1029,6 +1033,7 @@ body.dark-mode #darkModeBtn:hover {
         Export ▸
         <div class="submenu">
           <div class="menu-item" onclick="exportGif();">As GIF</div>
+          <div class="menu-item" onclick="exportWebM();">As WebM (video)</div>
         </div>
       </div>
     </div>
@@ -1407,7 +1412,7 @@ function showBlocker(){
   const ctx = canvas.getContext('2d');
 
   (function setupHiDPI(){
-    const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const ratio = devicePixelRatioSafe;
     const cssW = canvas.width, cssH = canvas.height;
     canvas.style.width  = cssW + 'px';
     canvas.style.height = cssH + 'px';
@@ -1415,6 +1420,84 @@ function showBlocker(){
     canvas.height = cssH * ratio;
     ctx.setTransform(ratio,0,0,ratio,0,0);
   })();
+
+
+  function initHiDPITab() {
+  const ratio = devicePixelRatioSafe;
+  if (ratio <= 1) return; // only show on HiDPI-capable screens
+
+
+    const controls = document.getElementById('menu');
+    if (controls) {
+      const btn = document.createElement('button');
+      btn.id = 'hiDPIToggleBtn';
+
+      // match dark-mode button style
+      btn.style.all = 'unset';
+      btn.style.cursor = 'pointer';
+      btn.style.padding = '4px 8px';
+      btn.style.margin = '4px 10px';
+      btn.style.fontSize = '14px';
+      btn.style.alignSelf = 'center';
+      btn.style.borderRadius = '4px';
+      btn.style.userSelect = 'none';
+      btn.style.transition = 'background 0.2s';
+
+      // initial label
+      btn.textContent = hiDPIEnabled ? '🖥️ Retina' : '🖥️ Non-Retina';
+      btn.title = 'Toggle High-DPI Rendering';
+
+      controls.appendChild(btn);
+
+      btn.addEventListener('click', () => {
+        setupHiDPI();  // no argument = toggle
+
+        // update label after toggle
+        btn.textContent = hiDPIEnabled ? '🖥️ Retina' : '🖥️ Non-Retina';
+      });
+    }
+  }
+  // run once after canvas setup
+  initHiDPITab();
+
+  function setupHiDPI(forceValue) {
+    // ────────────────────────────────────────────────
+    // Accept: true, false, or undefined (toggle)
+    // ────────────────────────────────────────────────
+    if (typeof forceValue === "boolean") {
+      hiDPIEnabled = forceValue;
+    } else if (forceValue === undefined) {
+      hiDPIEnabled = !hiDPIEnabled;  // toggle mode
+    }
+
+    // Decide rendering ratio
+    const ratio = hiDPIEnabled ? devicePixelRatioSafe : 1;
+
+    // Get current CSS pixel size
+    const cssW = parseFloat(getComputedStyle(canvas).width)  || canvas.width;
+    const cssH = parseFloat(getComputedStyle(canvas).height) || canvas.height;
+
+    // Keep normalization based on CSS pixels
+    _baseCssWidth  = cssW;
+    _baseCssHeight = cssH;
+
+    // Apply resolution + scaling
+    canvas.style.width  = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width        = cssW * ratio;
+    canvas.height       = cssH * ratio;
+
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    // redraw
+    drawAllShapes();
+
+    // Update HiDPI indicator tab (if present)
+    const tab = document.getElementById('hidpiTab');
+    if (tab) {
+      tab.textContent = hiDPIEnabled ? "🖥️ Retina Enabled" : "🖥️ Retina Off";
+    }
+  }
 
   // Mouse normalization for fullscreen
   // fixme: hardcoded canvas size
@@ -1538,6 +1621,16 @@ function showBlocker(){
     parabola:          easeParabola
 };
 
+function getEffectiveFps() {
+  let raw = animation?.settings?.frameRate;
+  let fps = Number.isFinite(raw) ? raw : 30;
+
+  if (fps < 1)   fps = 1;
+  if (fps > 240) fps = 240;
+
+  // keep it integer so timing math is consistent
+  return Math.floor(fps);
+}
 
 //UNDO/REDO functionality
 // History commits are taken from:
@@ -2888,7 +2981,7 @@ function playAnimation(mode = 'once') {
   renderTimeline(null, null);
 
   //fixed-rate frame timing (user-configurable via animation.settings.frameRate)
-  const targetFps       = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
+  const targetFps       = getEffectiveFps();
   const frameDurationMs = 1000 / targetFps;
   let lastTime          = null;
   let accumulator       = 0;
@@ -4211,7 +4304,7 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  const fps = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
+  const fps = getEffectiveFps();
   const gif = new GIF({
     workers: 2,
     quality: 10,
@@ -4285,7 +4378,7 @@ document.addEventListener('keydown', e => {
 };
 **/
 
-async function exportGif(){
+function exportGif(){
   if (animation.keyframes.length < 2) {
     alert("Need at least 2 keyframes to export a GIF.");
     return;
@@ -4294,7 +4387,7 @@ async function exportGif(){
   const exportW = animation.canvas.width;
   const exportH = animation.canvas.height;
 
-  const fps = Math.max(1, Math.floor((animation.settings && animation.settings.frameRate) || 30));
+  const fps = getEffectiveFps();
   const gif = new GIF({
     workers: 2,
     quality: 10,
@@ -4375,6 +4468,199 @@ async function exportGif(){
 
   gif.render();
 }
+
+function exportWebM() {
+  if (animation.keyframes.length < 2) {
+    alert("Need at least 2 keyframes to export a WebM video.");
+    return;
+  }
+
+  if (typeof MediaRecorder === "undefined" || !HTMLCanvasElement.prototype.captureStream) {
+    alert("Sorry, this browser does not support WebM export (MediaRecorder / canvas.captureStream).");
+    return;
+  }
+
+  const exportW = animation.canvas.width;
+  const exportH = animation.canvas.height;
+  const fps = getEffectiveFps();
+
+  // Build keyframe segments (same as GIF export)
+  const segments = [];
+  for (let i = 0; i < animation.keyframes.length - 1; i++) {
+    segments.push([i, i + 1]);
+  }
+
+  // Count total frames for progress bar (per segment: a.frames)
+  let totalFrames = 0;
+  for (const [fromIdx] of segments) {
+    const a = animation.keyframes[fromIdx];
+    totalFrames += a.frames || 30;
+  }
+  if (totalFrames === 0) totalFrames = 1;
+
+  // Offscreen canvas used ONLY for recording
+  const offCanvas = document.createElement("canvas");
+  offCanvas.width = exportW;
+  offCanvas.height = exportH;
+  const offCtx = offCanvas.getContext("2d");
+  offCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+  const stream = offCanvas.captureStream(fps);
+  const videoTrack = stream.getVideoTracks()[0];
+
+  // Choose best WebM mime
+  let options = {};
+  let mimeType = "video/webm";
+  if (MediaRecorder.isTypeSupported) {
+    const candidates = [
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp8",
+      "video/webm"
+    ];
+    const supported = candidates.find(t => MediaRecorder.isTypeSupported(t));
+    if (supported) {
+      mimeType = supported;
+      options.mimeType = supported;
+    }
+  }
+
+  let recorder;
+  try {
+    recorder = new MediaRecorder(stream, options);
+  } catch (e) {
+    try {
+      recorder = new MediaRecorder(stream);
+    } catch (e2) {
+      alert("This browser cannot create a WebM recorder.");
+      return;
+    }
+  }
+
+  const chunks = [];
+  recorder.ondataavailable = e => {
+    if (e.data && e.data.size > 0) chunks.push(e.data);
+  };
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: mimeType || "video/webm" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "animation.webm";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const progressEl = document.getElementById("gifProgress");
+    if (progressEl) {
+      progressEl.style.display = "none";
+      progressEl.value = 0;
+    }
+  };
+
+  const progressEl = document.getElementById("gifProgress");
+  if (progressEl) {
+    progressEl.value = 0;
+    progressEl.max = 1;
+    progressEl.style.display = "block";
+  }
+
+  recorder.start();
+
+  let frameIndex = 0;
+  let segIndex = 0;
+  let t = 0; // frame counter inside current segment
+  const frameDurationMs = 1000 / fps;
+  let lastTime = null;
+  let acc = 0;
+  let rafId = null;
+
+  function drawInterpolatedFrame(fromIdx, toIdx, tIndex) {
+    const a = animation.keyframes[fromIdx];
+    const b = animation.keyframes[toIdx];
+    const steps = a.frames || 30;
+    const easer = EASERS[a.easing] || (x => x);
+
+    const rawT = tIndex / steps;
+    const easedT = easer(rawT);
+
+    let interp;
+    if (a.easing === "none") {
+      interp = (tIndex >= steps - 1) ? b.shapes : a.shapes;
+    } else if (a.easing === "spiral") {
+      interp = interpolateShapesSpiral(a, b, easedT);
+    } else if (a.easing === "wavy") {
+      interp = interpolateShapesWavy(a, b, easedT);
+    } else {
+      interp = interpolateShapes(a, b, easedT);
+    }
+
+    // Render into offscreen canvas
+    offCtx.clearRect(0, 0, exportW, exportH);
+    offCtx.fillStyle = animation.canvas.background || "#f0f0f0";
+    offCtx.fillRect(0, 0, exportW, exportH);
+    if (backgroundImage) {
+      offCtx.drawImage(backgroundImage, 0, 0, exportW, exportH);
+    }
+
+    const ordered = [...interp].sort((x, y) => (x.z ?? 0) - (y.z ?? 0));
+    ordered.forEach(s => drawShape(offCtx, s));
+
+    // Push frame to stream explicitly if supported
+    if (videoTrack && typeof videoTrack.requestFrame === "function") {
+      videoTrack.requestFrame();
+    }
+
+    frameIndex++;
+    if (progressEl) {
+      progressEl.value = frameIndex / totalFrames;
+    }
+  }
+
+  function step(now) {
+    if (segIndex >= segments.length) {
+      recorder.stop();
+      if (rafId != null) cancelAnimationFrame(rafId);
+      return;
+    }
+
+    if (lastTime == null) lastTime = now;
+    const delta = now - lastTime;
+    lastTime = now;
+    acc += delta;
+
+    // Only advance a logical frame when enough time has passed
+    if (acc < frameDurationMs) {
+      rafId = requestAnimationFrame(step);
+      return;
+    }
+    acc -= frameDurationMs;
+
+    const [fromIdx, toIdx] = segments[segIndex];
+    const a = animation.keyframes[fromIdx];
+    const steps = a.frames || 30;
+
+    drawInterpolatedFrame(fromIdx, toIdx, t);
+
+    t++;
+    if (t >= steps) {
+      t = 0;
+      segIndex++;
+    }
+
+    if (segIndex >= segments.length) {
+      recorder.stop();
+      if (rafId != null) cancelAnimationFrame(rafId);
+    } else {
+      rafId = requestAnimationFrame(step);
+    }
+  }
+
+  // Kick off timing loop (matches player timing model)
+  rafId = requestAnimationFrame(step);
+}
+
 
 // Single paste handler: handles both images and shape clipboard
 document.addEventListener("paste", event => {
@@ -5009,7 +5295,7 @@ canvas.addEventListener("drop", e => {
   }
 
 function framesToTime(frames, fps) {
-  fps = fps || (animation.settings?.frameRate || 30);
+  fps = fps || getEffectiveFps();
   const kf = animation.keyframes || [];
 
   if (typeof frames === 'number') return frames / fps;
