@@ -104,8 +104,17 @@ const demo = {
           "groupId": null
         }
       ],
-      "frames": 10,
-      "easing": "linear"
+      "frames": 186,
+      "easing": "linear",
+      "id": "0053aef5",
+      "audio": [
+        {
+          "id": 3,
+          "name": "Funk Jams.m4a",
+          "src": "https://cdn.freesound.org/previews/415/415656_8210681-hq.mp3",
+          "offsetFrames": 0
+        }
+      ]
     },
     {
       "name": "bonk",
@@ -210,7 +219,9 @@ const demo = {
         }
       ],
       "frames": 1,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "fff59992",
+      "audio": []
     },
     {
       "name": "ouch!",
@@ -315,7 +326,8 @@ const demo = {
         }
       ],
       "frames": 1,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "ac42269b"
     },
     {
       "name": "booting .",
@@ -420,7 +432,8 @@ const demo = {
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "a94e0cca"
     },
     {
       "name": "booting ..",
@@ -525,7 +538,8 @@ const demo = {
         }
       ],
       "frames": 20,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "1b8850fd"
     },
     {
       "name": "booting ...",
@@ -616,7 +630,8 @@ const demo = {
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "ebe6e4d7"
     },
     {
       "name": "groovy",
@@ -657,18 +672,6 @@ const demo = {
           "angle": -26
         },
         {
-          "id": 4,
-          "type": "rectangle",
-          "x": 469,
-          "y": 216,
-          "w": 40,
-          "h": 100,
-          "color": "#e67e22",
-          "mode": 0,
-          "z": 6,
-          "angle": -31
-        },
-        {
           "id": 5,
           "type": "rectangle",
           "x": 324,
@@ -693,21 +696,6 @@ const demo = {
           "angle": -9
         },
         {
-          "id": 22,
-          "type": "text",
-          "x": 521.4362322478133,
-          "y": 109.7048713314548,
-          "w": 68.7744140625,
-          "h": 45,
-          "color": "#c48aff",
-          "angle": 3,
-          "mode": 0,
-          "z": 8,
-          "locked": true,
-          "groupId": null,
-          "text": "🕺"
-        },
-        {
           "id": 23,
           "type": "triangle",
           "x": 449.71570610970224,
@@ -722,6 +710,18 @@ const demo = {
           "groupId": null
         },
         {
+          "id": 4,
+          "type": "rectangle",
+          "x": 469,
+          "y": 216,
+          "w": 40,
+          "h": 100,
+          "color": "#e67e22",
+          "mode": 0,
+          "z": 6,
+          "angle": -31
+        },
+        {
           "id": 24,
           "type": "circle",
           "x": 473.67870495362934,
@@ -734,10 +734,26 @@ const demo = {
           "z": 7,
           "locked": true,
           "groupId": null
+        },
+        {
+          "id": 22,
+          "type": "text",
+          "x": 521.4362322478133,
+          "y": 109.7048713314548,
+          "w": 68.7744140625,
+          "h": 45,
+          "color": "#c48aff",
+          "angle": 3,
+          "mode": 0,
+          "z": 8,
+          "locked": true,
+          "groupId": null,
+          "text": "🕺"
         }
       ],
       "frames": 30,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "9c58e0d5"
     },
     {
       "name": "man wave",
@@ -827,21 +843,6 @@ const demo = {
           "groupId": null
         },
         {
-          "id": 22,
-          "type": "text",
-          "x": 606.4362322478133,
-          "y": -94.2951286685452,
-          "w": 68.7744140625,
-          "h": 45,
-          "color": "#c48aff",
-          "angle": 3,
-          "mode": 0,
-          "z": 8,
-          "locked": true,
-          "groupId": null,
-          "text": "🕺"
-        },
-        {
           "id": 23,
           "type": "triangle",
           "x": 534.7157061097023,
@@ -868,10 +869,26 @@ const demo = {
           "z": 7,
           "locked": true,
           "groupId": null
+        },
+        {
+          "id": 22,
+          "type": "text",
+          "x": 606.4362322478133,
+          "y": -94.2951286685452,
+          "w": 68.7744140625,
+          "h": 45,
+          "color": "#c48aff",
+          "angle": 3,
+          "mode": 0,
+          "z": 8,
+          "locked": true,
+          "groupId": null,
+          "text": "🕺"
         }
       ],
       "frames": 14,
-      "easing": "easeOutBounce"
+      "easing": "easeOutBounce",
+      "id": "d696f7e7"
     },
     {
       "name": "transformer",
@@ -945,7 +962,8 @@ const demo = {
         }
       ],
       "frames": 24,
-      "easing": "smoothstep"
+      "easing": "smoothstep",
+      "id": "164b2f80"
     },
     {
       "name": "load cargo",
@@ -1019,7 +1037,8 @@ const demo = {
         }
       ],
       "frames": 24,
-      "easing": "smoothstep"
+      "easing": "smoothstep",
+      "id": "2db48096"
     },
     {
       "name": "flight 1",
@@ -1097,7 +1116,8 @@ const demo = {
         }
       ],
       "frames": 50,
-      "easing": "smoothstep"
+      "easing": "smoothstep",
+      "id": "d588afad"
     },
     {
       "name": "teleport",
@@ -1112,18 +1132,6 @@ const demo = {
           "color": "#50916c",
           "mode": 0,
           "z": 0
-        },
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 827,
-          "y": 625,
-          "w": 100,
-          "h": 100,
-          "color": "#2ecc71",
-          "mode": 0,
-          "z": 5,
-          "angle": 42
         },
         {
           "id": 3,
@@ -1172,10 +1180,23 @@ const demo = {
           "mode": 0,
           "z": 4,
           "angle": 2000
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 827,
+          "y": 625,
+          "w": 100,
+          "h": 100,
+          "color": "#2ecc71",
+          "mode": 0,
+          "z": 5,
+          "angle": 42
         }
       ],
       "frames": 1,
-      "easing": "smoothstep"
+      "easing": "smoothstep",
+      "id": "b82478ea"
     },
     {
       "name": "pause",
@@ -1191,20 +1212,6 @@ const demo = {
           "angle": 0,
           "mode": 0,
           "z": 0,
-          "locked": true,
-          "groupId": null
-        },
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": -246,
-          "y": 223,
-          "w": 100,
-          "h": 100,
-          "color": "#2ecc71",
-          "angle": 42,
-          "mode": 0,
-          "z": 5,
           "locked": true,
           "groupId": null
         },
@@ -1263,10 +1270,25 @@ const demo = {
           "z": 4,
           "locked": true,
           "groupId": null
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": -246,
+          "y": 223,
+          "w": 100,
+          "h": 100,
+          "color": "#2ecc71",
+          "angle": 42,
+          "mode": 0,
+          "z": 5,
+          "locked": true,
+          "groupId": null
         }
       ],
       "frames": 24,
-      "easing": "smoothstep"
+      "easing": "smoothstep",
+      "id": "a0348ffe"
     },
     {
       "name": "flight 2",
@@ -1356,8 +1378,9 @@ const demo = {
           "groupId": null
         }
       ],
-      "frames": 24,
-      "easing": "smoothstep"
+      "frames": 29,
+      "easing": "smoothstep",
+      "id": "b320b7be"
     },
     {
       "name": "confetti",
@@ -1434,7 +1457,8 @@ const demo = {
         }
       ],
       "frames": 24,
-      "easing": "easeOutBounce"
+      "easing": "easeOutBounce",
+      "id": "4ab3937d"
     },
     {
       "name": "vaccuum",
@@ -1449,17 +1473,6 @@ const demo = {
           "color": "#e74c3c",
           "mode": 0,
           "z": 0
-        },
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 351,
-          "y": 501,
-          "w": 100,
-          "h": 100,
-          "color": "#2ecc71",
-          "mode": 0,
-          "z": 5
         },
         {
           "id": 3,
@@ -1504,10 +1517,22 @@ const demo = {
           "color": "#f1c40f",
           "mode": 0,
           "z": 4
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 351,
+          "y": 501,
+          "w": 100,
+          "h": 100,
+          "color": "#2ecc71",
+          "mode": 0,
+          "z": 5
         }
       ],
       "frames": 40,
-      "easing": "smoothstep"
+      "easing": "smoothstep",
+      "id": "b59eb9b9"
     },
     {
       "name": "reloading",
@@ -1522,17 +1547,6 @@ const demo = {
           "color": "#e74c3c",
           "mode": 0,
           "z": 0
-        },
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 351,
-          "y": 501,
-          "w": 100,
-          "h": 100,
-          "color": "#2ecc71",
-          "mode": 0,
-          "z": 5
         },
         {
           "id": 3,
@@ -1577,10 +1591,22 @@ const demo = {
           "color": "#f1c40f",
           "mode": 0,
           "z": 4
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 351,
+          "y": 501,
+          "w": 100,
+          "h": 100,
+          "color": "#2ecc71",
+          "mode": 0,
+          "z": 5
         }
       ],
       "frames": 15,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "63783915"
     },
     {
       "name": "aim",
@@ -1596,20 +1622,6 @@ const demo = {
           "angle": 0,
           "mode": 0,
           "z": 0,
-          "locked": true,
-          "groupId": null
-        },
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 356,
-          "y": 504,
-          "w": 100,
-          "h": 120,
-          "color": "#2ecc71",
-          "angle": -19,
-          "mode": 0,
-          "z": 5,
           "locked": true,
           "groupId": null
         },
@@ -1668,10 +1680,25 @@ const demo = {
           "z": 4,
           "locked": true,
           "groupId": null
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 356,
+          "y": 504,
+          "w": 100,
+          "h": 120,
+          "color": "#2ecc71",
+          "angle": -19,
+          "mode": 0,
+          "z": 5,
+          "locked": true,
+          "groupId": null
         }
       ],
       "frames": 5,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "39ec293b"
     },
     {
       "name": "fire!",
@@ -1703,23 +1730,12 @@ const demo = {
         }
       ],
       "frames": 15,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "49167ab4"
     },
     {
       "name": "fire again!",
       "shapes": [
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 354,
-          "y": 504,
-          "w": 100,
-          "h": 136,
-          "color": "#2ecc71",
-          "mode": 0,
-          "z": 1,
-          "angle": 31
-        },
         {
           "id": 7,
           "type": "triangle",
@@ -1732,6 +1748,18 @@ const demo = {
           "z": 0,
           "locked": true,
           "angle": 65
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 354,
+          "y": 504,
+          "w": 100,
+          "h": 136,
+          "color": "#2ecc71",
+          "mode": 0,
+          "z": 1,
+          "angle": 31
         },
         {
           "id": 8,
@@ -1748,23 +1776,12 @@ const demo = {
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "d11cea48"
     },
     {
       "name": "pew",
       "shapes": [
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 356,
-          "y": 507,
-          "w": 100,
-          "h": 131,
-          "color": "#2ecc71",
-          "mode": 0,
-          "z": 1,
-          "angle": 29
-        },
         {
           "id": 7,
           "type": "triangle",
@@ -1777,6 +1794,18 @@ const demo = {
           "z": 0,
           "locked": true,
           "angle": 142
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 356,
+          "y": 507,
+          "w": 100,
+          "h": 131,
+          "color": "#2ecc71",
+          "mode": 0,
+          "z": 1,
+          "angle": 29
         },
         {
           "id": 8,
@@ -1793,22 +1822,12 @@ const demo = {
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "e3fa84f6"
     },
     {
       "name": "pew pew",
       "shapes": [
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 351,
-          "y": 527,
-          "w": 100,
-          "h": 100,
-          "color": "#2ecc71",
-          "mode": 0,
-          "z": 1
-        },
         {
           "id": 7,
           "type": "triangle",
@@ -1821,6 +1840,17 @@ const demo = {
           "z": 0,
           "locked": true,
           "angle": 202
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 351,
+          "y": 527,
+          "w": 100,
+          "h": 100,
+          "color": "#2ecc71",
+          "mode": 0,
+          "z": 1
         },
         {
           "id": 8,
@@ -1837,7 +1867,8 @@ const demo = {
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "8fb8fa58"
     },
     {
       "name": "pew pew pew",
@@ -1851,7 +1882,7 @@ const demo = {
           "h": 100,
           "color": "#2ecc71",
           "mode": 0,
-          "z": 1
+          "z": 0
         },
         {
           "id": 8,
@@ -1862,13 +1893,14 @@ const demo = {
           "h": 25,
           "color": "#3498dc",
           "mode": 0,
-          "z": 2,
+          "z": 1,
           "locked": true,
           "angle": -201
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "2aca307d"
     },
     {
       "name": "fin",
@@ -1883,7 +1915,7 @@ const demo = {
           "color": "#2ecc71",
           "angle": 0,
           "mode": 0,
-          "z": 1,
+          "z": 0,
           "locked": true,
           "groupId": null
         },
@@ -1897,13 +1929,14 @@ const demo = {
           "color": "#3498dc",
           "angle": -201,
           "mode": 0,
-          "z": 2,
+          "z": 1,
           "locked": true,
           "groupId": null
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "4a830b18"
     },
     {
       "name": "reset",
@@ -1919,20 +1952,6 @@ const demo = {
           "angle": 0,
           "mode": 0,
           "z": 0,
-          "locked": true,
-          "groupId": null
-        },
-        {
-          "id": 2,
-          "type": "rectangle",
-          "x": 351,
-          "y": 501,
-          "w": 100,
-          "h": 100,
-          "color": "#2ecc71",
-          "angle": 0,
-          "mode": 0,
-          "z": 5,
           "locked": true,
           "groupId": null
         },
@@ -1991,10 +2010,25 @@ const demo = {
           "z": 4,
           "locked": true,
           "groupId": null
+        },
+        {
+          "id": 2,
+          "type": "rectangle",
+          "x": 351,
+          "y": 501,
+          "w": 100,
+          "h": 100,
+          "color": "#2ecc71",
+          "angle": 0,
+          "mode": 0,
+          "z": 5,
+          "locked": true,
+          "groupId": null
         }
       ],
-      "frames": 15,
-      "easing": "easeOutQuad"
+      "frames": 104,
+      "easing": "easeOutQuad",
+      "id": "e1f9af12"
     },
     {
       "name": "man",
@@ -2099,7 +2133,8 @@ const demo = {
         }
       ],
       "frames": 10,
-      "easing": "linear"
+      "easing": "linear",
+      "id": "18637b9b"
     }
   ],
   "version": 1,

@@ -457,6 +457,7 @@ body.dark-mode #darkModeBtn:hover {
 
      /* Containers */
     #shapeList.shape-list--pro,
+    #audioObjectList.shape-list--pro,
     #objectList.object-list--pro,
     #canvasList.object-list--pro,
     #filesList.object-list--pro,
@@ -673,166 +674,298 @@ body.dark-mode #darkModeBtn:hover {
     }
 
 
-  /* Split button (consolidated) */
-.split {
-  display: inline-flex;
-  position: relative;      /* menu anchors to this */
-  align-items: stretch;
-}
-.split .btn {
-  border-radius: 0;
-  margin-left: 0;
-}
-.split .btn-main { border-radius: 6px 0 0 6px; }
-.split .dropdown { position: static; display: flex; }
-.split .btn-caret {
-  border-left: none;
-  border-radius: 0 6px 6px 0;
-  display: grid;
-  place-items: center;
-}
-.split .caret {
-  width: 0; height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 7px solid #666;
-}
-.split .dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  min-width: 220px;
-  background: #fff;
-  border: 1px solid #ccc;
-  display: none;                 /* base hidden state */
-  flex-direction: column;
-  z-index: 1000;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  border-radius: 6px;
-  margin-top: 4px;
-  overflow: hidden;
-}
-.split .dropdown.open .dropdown-menu { display: flex; }  /* single source of truth */
+      /* Split button (consolidated) */
+    .split {
+      display: inline-flex;
+      position: relative;      /* menu anchors to this */
+      align-items: stretch;
+    }
+    .split .btn {
+      border-radius: 0;
+      margin-left: 0;
+    }
+    .split .btn-main { border-radius: 6px 0 0 6px; }
+    .split .dropdown { position: static; display: flex; }
+    .split .btn-caret {
+      border-left: none;
+      border-radius: 0 6px 6px 0;
+      display: grid;
+      place-items: center;
+    }
+    .split .caret {
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 7px solid #666;
+    }
+    .split .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 220px;
+      background: #fff;
+      border: 1px solid #ccc;
+      display: none;                 /* base hidden state */
+      flex-direction: column;
+      z-index: 1000;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      border-radius: 6px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .split .dropdown.open .dropdown-menu { display: flex; }  /* single source of truth */
 
-.split .dropdown-menu button {
-  background: #fff;
-  color: #222;
-  padding: 10px 12px;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-}
-.split .dropdown-menu button + button { border-top: 1px solid #eee; }
+    .split .dropdown-menu button {
+      background: #fff;
+      color: #222;
+      padding: 10px 12px;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+    }
+    .split .dropdown-menu button + button { border-top: 1px solid #eee; }
 
-/* ─────────────────────────────────────────────────────────────
-   SPLIT DELETE — FINAL: clean corners + slim caret + working menu
-   (scoped to the shapes list actions only)
-   ──────────────────────────────────────────────────────────── */
-.shape-row .actions .split{
-  display:inline-flex;
-  position:relative;
-  align-items:stretch;
+    /* ─────────────────────────────────────────────────────────────
+       SPLIT DELETE — FINAL: clean corners + slim caret + working menu
+       (scoped to the shapes list actions only)
+       ──────────────────────────────────────────────────────────── */
+    .shape-row .actions .split{
+      display:inline-flex;
+      position:relative;
+      align-items:stretch;
 
-  /* single rounded outline around both halves */
-  border:1px solid #ccc !important;
-  border-radius:6px !important;
-  background:#fff;
-  background-clip: padding-box;
+      /* single rounded outline around both halves */
+      border:1px solid #ccc !important;
+      border-radius:6px !important;
+      background:#fff;
+      background-clip: padding-box;
 
-  /* allow dropdown to escape the button (harmless if removed) */
-  overflow:visible;
-}
+      /* allow dropdown to escape the button (harmless if removed) */
+      overflow:visible;
+    }
 
-/* fuse halves (kill any inner gaps/borders/radii that fight the outline) */
-.shape-row .actions .split .btn,
-.shape-row .actions .split button{
-  margin:0 !important;
-  border:0 !important;
-}
-/* keep global press animation elsewhere, not inside split */
-.shape-row .actions .split button:active{ transform:none !important; }
+    /* fuse halves (kill any inner gaps/borders/radii that fight the outline) */
+    .shape-row .actions .split .btn,
+    .shape-row .actions .split button{
+      margin:0 !important;
+      border:0 !important;
+    }
+    /* keep global press animation elsewhere, not inside split */
+    .shape-row .actions .split button:active{ transform:none !important; }
 
-/* main half: no old inset divider, draw a shorter divider so corners stay intact */
-.shape-row .actions .split .btn-main{
-  position:relative;
-  box-shadow:none !important;      /* neutralize any earlier full-height divider */
-}
-.shape-row .actions .split .btn-main::after{
-  content:"";
-  position:absolute;
-  right:0;
-  top:3px;                         /* inset so it doesn't collide with rounded corners */
-  bottom:3px;
-  width:1px;
-  background:#ccc;
-}
+    /* main half: no old inset divider, draw a shorter divider so corners stay intact */
+    .shape-row .actions .split .btn-main{
+      position:relative;
+      box-shadow:none !important;      /* neutralize any earlier full-height divider */
+    }
+    .shape-row .actions .split .btn-main::after{
+      content:"";
+      position:absolute;
+      right:0;
+      top:3px;                         /* inset so it doesn't collide with rounded corners */
+      bottom:3px;
+      width:1px;
+      background:#ccc;
+    }
 
-/* ultra-slim caret half (almost hidden) */
-.shape-row .actions .split .btn-caret{
-  width:14px;
-  min-width:14px;
-  padding:0;
-}
-.shape-row .actions .split .caret{
-  width:0; height:0;
-  border-left:5px solid transparent;
-  border-right:5px solid transparent;
-  border-top:6px solid #666;
-  pointer-events:none;             /* clicks go to the button */
-}
+    /* ultra-slim caret half (almost hidden) */
+    .shape-row .actions .split .btn-caret{
+      width:14px;
+      min-width:14px;
+      padding:0;
+    }
+    .shape-row .actions .split .caret{
+      width:0; height:0;
+      border-left:5px solid transparent;
+      border-right:5px solid transparent;
+      border-top:6px solid #666;
+      pointer-events:none;             /* clicks go to the button */
+    }
 
-/* dropdown: opens inward from the right and stays clickable */
-.shape-row .actions .split .dropdown-menu{
-  position:absolute;
-  top:calc(100% + 6px);
-  right:0;                         /* anchor to the right edge */
-  left:auto;
-  min-width:260px;
-  background:#fff;
-  border:1px solid #ccc;
-  border-radius:10px;
-  box-shadow:0 14px 40px rgba(0,0,0,0.12);
-  flex-direction:column;
-  z-index:3000;
-  overflow:hidden;
-}
+    /* dropdown: opens inward from the right and stays clickable */
+    .shape-row .actions .split .dropdown-menu{
+      position:absolute;
+      top:calc(100% + 6px);
+      right:0;                         /* anchor to the right edge */
+      left:auto;
+      min-width:260px;
+      background:#fff;
+      border:1px solid #ccc;
+      border-radius:10px;
+      box-shadow:0 14px 40px rgba(0,0,0,0.12);
+      flex-direction:column;
+      z-index:3000;
+      overflow:hidden;
+    }
 
-.shape-row .actions .split .dropdown-menu button{
-  background:#fff;
-  color:#222;
-  padding:10px 14px;
-  border:none;
-  text-align:left;
-  cursor:pointer;
-  margin:0;
-  font-size:14px;
-}
-.shape-row .actions .split .dropdown-menu button + button{
-  border-top:1px solid #eee;
-}
+    .shape-row .actions .split .dropdown-menu button{
+      background:#fff;
+      color:#222;
+      padding:10px 14px;
+      border:none;
+      text-align:left;
+      cursor:pointer;
+      margin:0;
+      font-size:14px;
+    }
+    .shape-row .actions .split .dropdown-menu button + button{
+      border-top:1px solid #eee;
+    }
 
 
-/* Subtle grey hover for dropdown items (additive, no overrides removed) */
-.split .dropdown-menu button{
-  transition: background-color .12s ease !important; /* smoothen it a bit */
-}
+    /* Subtle grey hover for dropdown items (additive, no overrides removed) */
+    .split .dropdown-menu button{
+      transition: background-color .12s ease !important; /* smoothen it a bit */
+    }
 
-.split .dropdown-menu button:hover{
-  background: #f3f4f6 !important; /* subtle grey hover */
-}
+    .split .dropdown-menu button:hover{
+      background: #f3f4f6 !important; /* subtle grey hover */
+    }
 
-/* Optional: a slightly different tone on keyboard focus for accessibility */
-.split .dropdown-menu button:focus-visible{
-  background: #eef1f4 !important;
-  outline: 2px solid #0a7 !important;   /* matches your existing focus style */
-  outline-offset: -2px !important;       /* keeps outline inside the popover */
-}
+    /* Optional: a slightly different tone on keyboard focus for accessibility */
+    .split .dropdown-menu button:focus-visible{
+      background: #eef1f4 !important;
+      outline: 2px solid #0a7 !important;   /* matches your existing focus style */
+      outline-offset: -2px !important;       /* keeps outline inside the popover */
+    }
+    /*audio*/
+    .audio-result-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 40px 28px;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 12px;
+    }
+
+    .audio-result-row:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .audio-preview-btn,
+    .audio-add-btn {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .audio-result-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.9;
+    }
+    .audio-result-duration {
+      font-size: 11px;
+      opacity: 0.6;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+   /* ─────────────────────────────
+       Dual-thumb range slider
+       ───────────────────────────── */
+
+    .range-slider {
+      position: relative;
+      height: 22px;
+      margin: 6px 0 4px;
+    }
+
+    .range-slider input[type="range"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      pointer-events: none;
+      -webkit-appearance: none;
+      background: none;
+      z-index: 2; /* above track */
+    }
+
+    /* Green thumbs */
+    .range-slider input[type="range"]::-webkit-slider-thumb {
+      pointer-events: all;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #3ddc84;
+      cursor: pointer;
+      -webkit-appearance: none;
+      border: none;
+      z-index: 2; /* above track */
+    }
+
+    .range-slider input[type="range"]::-moz-range-thumb {
+      pointer-events: all;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #3ddc84;
+      cursor: pointer;
+      border: none;
+      z-index: 2; /* above track */
+    }
+
+    /* Hover glow */
+    .range-slider input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 4px rgba(61,220,132,0.25);
+    }
+
+    .range-slider input[type="range"]::-moz-range-thumb:hover {
+      box-shadow: 0 0 0 4px rgba(61,220,132,0.25);
+    }
+
+    .range-slider input[type="range"]:active::-webkit-slider-thumb {
+      z-index: 4;
+    }
+
+    .range-slider input[type="range"]:active::-moz-range-thumb {
+      z-index: 4;
+    }
+
+    /* Track */
+    .range-track {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgb(217 217 217);
+      border-radius: 2px;
+      transform: translateY(-50%);
+      overflow: hidden;
+      z-index: 1; /* lowest */
+    }
+
+    /* Active range */
+    .range-track::before {
+      content: "";
+      position: absolute;
+      height: 100%;
+      background: #3ddc84; /* green */
+      left: var(--range-min, 0%);
+      right: calc(100% - var(--range-max, 100%));
+    }
+
+    /* 2px hack. awful. */
+    .range-slider input[type="range"] {
+      top: 50%;
+      transform: translateY(calc(-50% - 2px));
+    }
+
+    .value {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 2px;
+    }
 
 </style>
 </head>
 <body>
-
-
 
   <div id="leftSidebar">
 
@@ -948,14 +1081,15 @@ body.dark-mode #darkModeBtn:hover {
     </div>
 
     <div id="objectList" class="object-list--pro">
-        <div class="pro-header"><span>Add Object</span></div>
+        <div class="pro-header"><span>Add Object To Keyframe</span></div>
         
         <div id="sidebar">
             <div class="tabs">
-              <div class="tab active" data-target="textTab">Text 🔡</div>
-              <div class="tab" data-target="imageTab">Image 🖼️</div>
-              <div class="tab" data-target="shapesTab">Shape ⬜</div>
-              <div class="tab" data-target="drawTab">Draw 🎨</div>
+              <div class="tab active" data-target="textTab">🔡</div>
+              <div class="tab" data-target="imageTab">🖼️</div>
+              <div class="tab" data-target="audioTab">🔊</div>
+              <div class="tab" data-target="shapesTab">🟦</div>
+              <div class="tab" data-target="drawTab">🎨</div>
             </div>
 
           <!-- Text section -->
@@ -976,7 +1110,7 @@ body.dark-mode #darkModeBtn:hover {
           <button id="addImageBtn">Add Image</button></label>
 
             Image Search
-          <input type="text" id="searchBox" placeholder="Search images..." />
+          <input type="text" id="searchBox" placeholder="e.g. Cats" />
 
           <div id="pagination">
             <span id="prevBtn" class="chevron">«</span>
@@ -986,6 +1120,55 @@ body.dark-mode #darkModeBtn:hover {
           <div id="results"></div>
 
         </div>
+
+        <!-- Audio section -->
+        <div id="audioTab" class="tab-content">
+
+<div id="audioDurationFilter" style="margin:6px 0 8px 0;">
+  <div style="font-size:11px; opacity:0.7; margin-bottom:4px;">
+    Duration (seconds)
+  </div>
+
+  <div class="range-slider">
+    <input
+      type="range"
+      id="audioDurationMin"
+      min="0"
+      max="600"
+      step="1"
+      value="0"
+    />
+    <input
+      type="range"
+      id="audioDurationMax"
+      min="0"
+      max="600"
+      step="1"
+      value="600"
+    />
+    <div class="range-track"></div>
+  </div>
+
+  <div
+    id="audioDurationLabel"
+    style="font-size:11px; opacity:0.6; margin-top:2px;"
+  >
+    0s – 600s
+  </div>
+</div>
+
+        Audio Search
+        <input type="text" id="audioSearchBox" placeholder="e.g. Meow" />
+
+        <div id="audioPagination" style="display:none; justify-content:center; gap:20px; margin-top:10px;">
+          <span id="audioPrevBtn" class="chevron">«</span>
+          <span id="audioPageInfo">Page 1</span>
+          <span id="audioNextBtn" class="chevron">»</span>
+        </div>
+
+        <div id="audioResults"></div>
+
+      </div>
 
         <!-- Shapes section -->
         <div id="shapesTab" class="tab-content">
@@ -1007,6 +1190,11 @@ body.dark-mode #darkModeBtn:hover {
 
     <div id="shapeList"></div>
 
+      <div id="audioObjectList" class="shape-list--pro">
+    <div class="pro-header"><span>Audio Objects</span></div>
+    <div id="audioObjectRows"></div>
+</div>
+
   </div>
 
   <div id="mainContent">
@@ -1026,8 +1214,6 @@ body.dark-mode #darkModeBtn:hover {
           <div class="menu-item" onclick="exportProject(true);">Legendary (++ undo/redo history 🕰️)</div>
         </div>
       </div>
-
-
 
       <div class="menu-item has-submenu">
         Export ▸
@@ -1074,7 +1260,7 @@ body.dark-mode #darkModeBtn:hover {
   <div class="menu">
     <div class="menu-title">Help</div>
     <div class="menu-dropdown">
-      <div class="menu-item" onclick="runTutorial();">Tutorial </div>
+      <div class="menu-item" onclick="startTutorial(true);">Tutorial </div>
       <div class="menu-item" onclick="toggleModal(modal.style.display !== 'block');">Keyboard Shortcuts <span class="shortcut">?</span></div>
       <div class="menu-sep"></div>
       <div class="menu-item" onclick="window.open('https://github.com/hiburn8/Animatey', '_blank').focus();">About Animatey</div>
@@ -1159,8 +1345,8 @@ body.dark-mode #darkModeBtn:hover {
 
   <div id="rightSidebar">
 
-        <button id="cloneKeyframe">Clone Keyframe</button>
-    <button id="addKeyframe">New Keyframe</button>
+        <button id="cloneKeyframe" title="Clone Selected Keyframe"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>
+    <button id="addKeyframe" title="Add Keyframe"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></button>
 
 
     <div id="timeline"></div>
@@ -1207,19 +1393,7 @@ function showBlocker(){
 })();
 </script>
 <script>
-  const API_KEY = "21438573-416fcdaef6b6d40e4e93ab6c6";
-  const searchBox = document.getElementById("searchBox");
-  const resultsDiv = document.getElementById("results");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const pageInfo = document.getElementById("pageInfo");
-
-  let currentPage = 1;
-  let currentQuery = "";
-  const perPage = 12;
-  let totalPages = 1;
-
-  /**
+  /**─────────────────────────────────────────────
    * Debounces a function call, ensuring it only runs after a period of inactivity.
    * @param {Function} func - The function to debounce.
    * @param {number} delay - The delay in milliseconds.
@@ -1234,6 +1408,20 @@ function showBlocker(){
       }, delay);
     };
   }
+</script>
+
+<script>
+  const API_KEY = "21438573-416fcdaef6b6d40e4e93ab6c6";
+  const searchBox = document.getElementById("searchBox");
+  const resultsDiv = document.getElementById("results");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const pageInfo = document.getElementById("pageInfo");
+
+  let currentPage = 1;
+  let currentQuery = "";
+  const perPage = 12;
+  let totalPages = 1;
 
   async function searchPixabay(query, page = 1) {
     if (!query) {
@@ -1444,8 +1632,8 @@ function showBlocker(){
       btn.style.transition = 'background 0.2s';
 
       // initial label
-      btn.textContent = hiDPIEnabled ? '🖥️ Retina' : '🖥️ Non-Retina';
-      btn.title = 'Toggle High-DPI Rendering';
+      btn.textContent = hiDPIEnabled ? '🖥️ Retina' : '🖥️ Standard';
+      btn.title = 'Toggle Retina preview. Canvas is upscaled for smoother display but does not represent export sharpness (exports are 1×/true DPI).';
 
       controls.appendChild(btn);
 
@@ -1453,7 +1641,7 @@ function showBlocker(){
         setupHiDPI();  // no argument = toggle
 
         // update label after toggle
-        btn.textContent = hiDPIEnabled ? '🖥️ Retina' : '🖥️ Non-Retina';
+        btn.textContent = hiDPIEnabled ? '🖥️ Retina' : '🖥️ Standard';
       });
     }
   }
@@ -1581,6 +1769,11 @@ function showBlocker(){
 
   //UI State
   let lastCursor = null;
+
+  // ─────────────────────────────────────────────
+  // AUDIO OBJECT STATE
+  // ─────────────────────────────────────────────
+  let audioIdCounter = 1;
 
   // Shared angle-aim state that persists across updateShapeList() rebuilds
   const angleAim = {
@@ -1962,6 +2155,7 @@ function toggleOnionSkins(){
 
 // Keyboard shortcut "O", "P"
 window.addEventListener('keydown', (e) => {
+  if (_isEditableTarget(e)) return;
   if (e.key.toLowerCase() === 'o' && !e.ctrlKey && !e.metaKey && !e.altKey) {
     toggleOnionSkins();
   }
@@ -2022,7 +2216,7 @@ if (nextKF) drawMuted(nextKF.shapes, 'rgba(100,160,220,0.30)');   // soft cool b
 function updateShapeList() {
   // nicer visuals container class (safe to leave even if CSS not present)
   shapeListDiv.classList.add('shape-list--pro');
-  shapeListDiv.innerHTML = '<div class="pro-header"><span>Current Objects</span></div>';
+  shapeListDiv.innerHTML = '<div class="pro-header"><span>Visual Objects</span></div>';
 
   // ── Angle aiming overlay (same as before) ─────────────────────────────────
   if (!document.getElementById('angleLine')) {
@@ -2520,8 +2714,6 @@ function updateShapeList() {
   }
 }
 
-
-
 function cloneShape(o) {
   return {
     id: o.id,
@@ -2745,7 +2937,7 @@ function renderTimeline(active = null, playing = null) {
       currentKeyframeIndex = i;
       shapes = cloneShapes(animation.keyframes[i].shapes);
       selectedShapeId = null;
-      updateShapeList(); drawAllShapes(); renderTimeline(currentKeyframeIndex, null);
+      updateShapeList(); updateAudioObjectList(); drawAllShapes(); renderTimeline(currentKeyframeIndex, null);
     });
 
     // rename on double-click of title
@@ -2951,6 +3143,7 @@ function playAnimation(mode = 'once') {
   if (animation.keyframes.length < 2 || isPlaying) return;
   lastCursor = canvas.style.cursor;
   isPlaying  = true;
+  stopAllAudio(); // reset audio state for fresh playback
 
   if (!document.fullscreenElement){
     canvas.style.cursor = 'wait';
@@ -3015,6 +3208,7 @@ function playAnimation(mode = 'once') {
     const [fromIdx, toIdx] = segments[segmentIndex];
     const a = animation.keyframes[fromIdx];
     const b = animation.keyframes[toIdx];
+    maybeTriggerAudioForFrame(fromIdx, t);
 
     // ← use per-keyframe frames & easing
     const steps  = a.frames || 30;
@@ -3024,6 +3218,7 @@ function playAnimation(mode = 'once') {
     const easedT = easer(rawT);
 
     renderTimeline(null, fromIdx);
+    updateAudioObjectList(fromIdx)
     let interp;
     
     if (a.easing === 'none') {
@@ -3040,29 +3235,25 @@ function playAnimation(mode = 'once') {
     // Fixme: This keeps shapes + UI in sync during playback but is EXPENSIVE.
     shapes = cloneShapes(interp);
     updateShapeList();
-
     drawAllShapes(interp);
 
-
     //timer overlay start
-// ⬇️ show current playback time (for timer overlay)
-const fps = targetFps;
-let currentFrame = Math.max(1, currentKeyframeIndex||1);
+    // ⬇️ show current playback time (for timer overlay)
+    const fps = targetFps;
+    let currentFrame = Math.max(1, currentKeyframeIndex||1);
 
-// sum completed segments
-for (let i = 0; i < segmentIndex; i++) {
-  const fromKf = animation.keyframes[segments[i][0]];
-  currentFrame += fromKf.frames || 0;
-}
+    // sum completed segments
+    for (let i = 0; i < segmentIndex; i++) {
+      const fromKf = animation.keyframes[segments[i][0]];
+      currentFrame += fromKf.frames || 0;
+    }
 
-// add current frame within the active segment
-currentFrame += t;
+    // add current frame within the active segment
+    currentFrame += t;
 
-// update play button timer
-updatePlayTimer(currentFrame);
-//timer overlay end
-
-
+    // update play button timer
+    updatePlayTimer(currentFrame);
+    //timer overlay end
 
     _renderedOnce = true;
 
@@ -3072,9 +3263,11 @@ updatePlayTimer(currentFrame);
     } else {
       t = 0;
       segmentIndex++;
+      firedAudioKeys.clear(); // allow next segment’s audio to fire
       if (segmentIndex >= segments.length) {
         if (isLooping || isBouncing) {
           segmentIndex = 0;
+          stopAllAudio();
           animationFrameId = requestAnimationFrame(step);
         } else {
 
@@ -3097,7 +3290,6 @@ updatePlayTimer(currentFrame);
   currentKeyframeIndex = null;
   animationFrameId = requestAnimationFrame(step);
 }
-
 
 function enableFreehandMode(){
   drawMode = 'freehand';
@@ -3149,21 +3341,25 @@ function stopAnimation() {
   isPlaying = false;
   isLooping = false;
   isBouncing = false;
+  stopAllAudio();
 
   newPlayBtn.dataset.state = 'play';
 
   cancelAnimationFrame(animationFrameId);
   canvas.style.cursor = lastCursor || '';
 
-  renderTimeline(currentKeyframeIndex, null);
-  
+  // 1. Restore state if we were playing
   if (playbackStartKeyframe != null) {
     currentKeyframeIndex = playbackStartKeyframe;
     shapes = cloneShapes(animation.keyframes[currentKeyframeIndex].shapes);
-    renderTimeline(currentKeyframeIndex, null);
-    updateShapeList();
-    playbackStartKeyframe = null; // Reset for future runs
+    playbackStartKeyframe = null; 
   }
+
+  // 2. Sync all UI elements to the restored (or existing) currentKeyframeIndex
+  renderTimeline(currentKeyframeIndex, null);
+  updateShapeList();
+  updateAudioObjectList();
+  
   document.querySelector('.kf-row.selected')?.scrollIntoView({ block: 'center' });
   drawAllShapes();
 }
@@ -3182,7 +3378,6 @@ function toggleFullscreen(){
     document.exitFullscreen();
   }
 }
-
 
 function loadDemo(){
   //demo is defined in the default_animation script at the start
@@ -3502,8 +3697,6 @@ canvas.addEventListener('mousedown', e => {
   drawAllShapes();
 });
 
-
-
 canvas.addEventListener('mousemove', e => {
   if (isPlaying){return;}
 
@@ -3566,7 +3759,6 @@ canvas.addEventListener('mousemove', e => {
     }
   }
 });
-
 
 canvas.addEventListener('mouseup', e => {
   if (isPlaying){return;}
@@ -3679,6 +3871,15 @@ canvas.addEventListener('mouseup', e => {
   mouseDownOnShapeId = null;      // NEW
 });
 
+function escapeHtml(text) {
+  if (!text) return text;
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function exportProject(includeHistory = false){
 
@@ -3769,6 +3970,7 @@ function loadKeyframesFromJSON(json) {
     if (!parsed || !Array.isArray(parsed.keyframes)) {
       throw new Error("Invalid animation format: missing keyframes.");
     }
+    clearAudioCache();
     animation = parsed;
 
     // Fill in defaults if not present
@@ -3870,6 +4072,8 @@ function loadKeyframesFromJSON(json) {
       drawAllShapes();
       renderTimeline(currentKeyframeIndex, null);
     }
+    updateAudioObjectList();
+    preloadAllAudio();
 
   } catch (e) {
     console.error("Failed to parse animation JSON:", e);
@@ -3935,11 +4139,18 @@ function _isEditableTarget(e){
     '[data-shortcuts="off"]'
   ].join(',');
 
-  // 1) Normal DOM fast path
+  // 0) Focus truth — works even without an event
+  const active = document.activeElement;
+  if (active && active.closest && active.closest(SELECTORS)) return true;
+
+  // Guard: event may be missing
+  if (!e) return false;
+
+  // 1) Event target path
   const t = e.target;
   if (t && typeof t.closest === 'function' && t.closest(SELECTORS)) return true;
 
-  // 2) Shadow DOM aware path check
+  // 2) Shadow DOM path
   if (typeof e.composedPath === 'function') {
     const path = e.composedPath();
     for (let i = 0; i < path.length; i++) {
@@ -3955,6 +4166,7 @@ function _isEditableTarget(e){
 
   return false;
 }
+
 
 
 // whenever the user clicks or focuses in one of these regions, record it:
@@ -4942,10 +5154,10 @@ canvas.addEventListener("drop", e => {
   // initial draw
   render();
 
+
   // keyboard listeners (Ctrl/Cmd + Z)
-  window.addEventListener('keydown', e=>{
-    const typing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable;
-    if (typing) return;
+  window.addEventListener('keydown', e => {
+    if (_isEditableTarget()) return;
     const mod = e.ctrlKey || e.metaKey;
     if (!mod) return;
     if (e.key.toLowerCase()==='z'){
@@ -5021,6 +5233,7 @@ canvas.addEventListener("drop", e => {
   body.dark-mode #shapeList,
   body.dark-mode #shapeList.shape-list--pro,
   body.dark-mode #objectList.object-list--pro,
+  body.dark-mode #audioObjectList.shape-list--pro,
   body.dark-mode #canvasList.object-list--pro,
   body.dark-mode #filesList.object-list--pro,
   body.dark-mode #timeline.kf-list--pro {
@@ -5048,7 +5261,7 @@ canvas.addEventListener("drop", e => {
   }
 
   /* Inputs and selects */
-  body.dark-mode input,
+  body.dark-mode input:not([type="range"]),
   body.dark-mode select {
     background: #444 !important;
     color: #fff !important;
@@ -5174,11 +5387,6 @@ canvas.addEventListener("drop", e => {
 ──────────────────────────────────────────────── -->
 <!-- ────────────────────────────────────────────────
      MOTION PATH EDITING
-──────────────────────────────────────────────── -->
-<!-- ────────────────────────────────────────────────
-     🧭 MOTION PATH EDITING (Pro Feature)
-     Drop this entire block just before </body>
-     It is 100% self-contained and non-destructive.
 ──────────────────────────────────────────────── -->
 <script>
 (function(){
@@ -5605,6 +5813,585 @@ setupPlayTimer();
   }, { capture: true });
 
 })();
+</script>
+<script>
+  function addAudioObject(src, name) {
+  if (currentKeyframeIndex == null) {
+    alert("Select a keyframe first.");
+    return;
+  }
+
+  getCachedAudioBuffer(src);
+
+  const kf = animation.keyframes[currentKeyframeIndex];
+  if (!kf.audio) kf.audio = [];
+
+  kf.audio.push({
+    id: audioIdCounter++,
+    name,
+    src
+    //volume: 1,
+    //trimStart: 0,
+    //trimEnd: null,
+    //loop: false
+  });
+
+  commit("Add Audio");
+  updateAudioObjectList();
+  renderTimeline(currentKeyframeIndex);
+}
+
+  // ─────────────────────────────────────────────
+  // FREESOUND API CONFIG
+  // ─────────────────────────────────────────────
+
+const audioDurationMin = document.getElementById("audioDurationMin");
+const audioDurationMax = document.getElementById("audioDurationMax");
+const audioDurationLabel = document.getElementById("audioDurationLabel");
+const rangeSlider = document.querySelector(".range-slider");
+
+function updateDurationUI() {
+  let min = Number(audioDurationMin.value);
+  let max = Number(audioDurationMax.value);
+
+  if (min > max) {
+    [min, max] = [max, min];
+    audioDurationMin.value = min;
+    audioDurationMax.value = max;
+  }
+
+  const minPct = (min / 600) * 100;
+  const maxPct = (max / 600) * 100;
+
+  rangeSlider.style.setProperty("--range-min", `${minPct}%`);
+  rangeSlider.style.setProperty("--range-max", `${maxPct}%`);
+
+  audioDurationLabel.textContent = `${min}s – ${max}s`;
+}
+
+audioDurationMin.addEventListener("input", () => {
+  updateDurationUI();
+  debouncedFreesoundSearch();
+});
+
+audioDurationMax.addEventListener("input", () => {
+  updateDurationUI();
+  debouncedFreesoundSearch();
+});
+
+updateDurationUI();
+
+
+//
+
+  const FREESOUND_API_KEY = "AUCwThjJ9XeDQ1TJMCR8kCeRxXIxc1tatgHCadxz";
+  let freesoundPage = 1;
+  let freesoundQuery = "";
+
+async function searchFreesound(query, page = 1) {
+  if (!query) {
+    audioResultsDiv.innerHTML = "";
+    return;
+  }
+
+  try {
+
+    const minDur = Number(audioDurationMin.value);
+    const maxDur = Number(audioDurationMax.value);
+
+    const url =
+      `https://freesound.org/apiv2/search/text/?` +
+      `query=${encodeURIComponent(query)}` +
+      `&page=${page}` +
+      `&page_size=10` +
+      `&fields=id,name,previews,duration` +
+      `&filter=duration:[${minDur} TO ${maxDur}]` +
+      `&sort=rating_desc` +
+      `&token=${FREESOUND_API_KEY}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    audioResultsDiv.innerHTML = "";
+
+    if (!data.results || !data.results.length) {
+      audioResultsDiv.innerHTML = "<p>No sounds found.</p>";
+      return;
+    }
+
+data.results.forEach(sound => {
+  const row = document.createElement("div");
+  row.className = "audio-result-row";
+
+  const playBtn = document.createElement("button");
+  playBtn.className = "audio-preview-btn";
+  playBtn.textContent = "▶";
+
+  playBtn.onclick = async () => {
+    // 1. Check the ACTUAL button text to decide the action
+    if (playBtn.textContent === "⏹") {
+      if (_uiPreviewTrack) {
+        _uiPreviewTrack.stop();
+        _uiPreviewTrack = null;
+      }
+      playBtn.textContent = "▶";
+      return;
+    }
+
+    // 2. If we are here, we are starting a play. 
+    // Reset all other preview buttons first
+    document.querySelectorAll('.audio-preview-btn').forEach(b => b.textContent = "▶");
+
+    const src = sound.previews["preview-hq-mp3"] || sound.previews["preview-lq-mp3"];
+    playBtn.textContent = "⏹";
+
+    // 3. Pass the callback to ensure it resets when finished
+    await playPreviewSrc(src, 1, () => {
+      playBtn.textContent = "▶";
+    });
+  };
+
+  const name = document.createElement("div");
+  name.className = "audio-result-name";
+  name.textContent = sound.name;
+
+  const duration = document.createElement("div");
+  duration.className = "audio-result-duration";
+  duration.textContent = `${sound.duration.toFixed(1)}s`;
+
+  const addBtn = document.createElement("button");
+  addBtn.className = "audio-add-btn";
+  addBtn.textContent = "➕";
+  addBtn.onclick = () => {
+    addAudioObject(
+      sound.previews["preview-hq-mp3"] ||
+      sound.previews["preview-lq-mp3"],
+      sound.name
+    );
+  };
+
+  row.append(playBtn, name, duration, addBtn);
+  audioResultsDiv.appendChild(row);
+});
+
+
+  } catch (err) {
+    console.error("Freesound search failed:", err);
+    audioResultsDiv.innerHTML = "<p>Error loading audio.</p>";
+  }
+}
+
+const debouncedFreesoundSearch = debounce(() => {
+  freesoundQuery = audioSearchBox.value.trim();
+  freesoundPage = 1;
+  searchFreesound(freesoundQuery, freesoundPage);
+}, 300);
+
+const audioSearchBox = document.getElementById("audioSearchBox");
+const audioResultsDiv = document.getElementById("audioResults");
+audioSearchBox.addEventListener("input", debouncedFreesoundSearch);
+
+</script>
+<script>
+  function getRelevantAudioObjectIds(keyframeIndex) {
+  if (keyframeIndex == null) return new Set();
+
+  const kf = animation.keyframes[keyframeIndex];
+  if (!kf || !Array.isArray(kf.audio)) return new Set();
+
+  return new Set(kf.audio.map(a => a.id));
+}
+function updateAudioObjectList(indexOverride) {
+  const rows = document.getElementById("audioObjectRows");
+  if (!rows) return;
+  rows.innerHTML = "";
+
+  // If indexOverride is provided (during playback), use it. 
+  // Otherwise, fall back to the globally selected keyframe.
+  const targetIndex = (indexOverride !== undefined) ? indexOverride : currentKeyframeIndex;
+
+  if (targetIndex === null) return;
+
+  const kf = animation.keyframes[targetIndex];
+  if (!kf || !Array.isArray(kf.audio)) return;
+
+  kf.audio.forEach(a => {
+    // ensure offset exists
+    if (a.offsetFrames == null) a.offsetFrames = 0;
+
+    const row = document.createElement("div");
+    row.className = "shape-row";
+    row.dataset.audioId = a.id;
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = "🔊 " + a.name;
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const playBtn = document.createElement("button");
+    playBtn.textContent = "▶";
+    playBtn.onclick = async () => {
+      // Warm cache (fire-and-forget)
+      getCachedAudioBuffer(a.src);
+
+      // Play via Web Audio
+      await playAudioObject(a);
+    };
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "🗑";
+    delBtn.onclick = () => {
+      kf.audio = kf.audio.filter(x => x.id !== a.id);
+      commit("Remove Audio");
+      updateAudioObjectList();
+      renderTimeline(currentKeyframeIndex);
+    };
+
+    actions.append(playBtn, delBtn);
+
+    // ─────────────────────────────
+    // OFFSET UI
+    // ─────────────────────────────
+    const meta = document.createElement("div");
+    meta.className = "meta";
+
+    const offsetLabel = document.createElement("label");
+    offsetLabel.className = "mini";
+
+    const offsetIcon = document.createElement("span");
+    offsetIcon.className = "icon";
+    offsetIcon.textContent = "⏱";
+
+    const offsetInput = document.createElement("input");
+    offsetInput.type = "number";
+    offsetInput.min = "0";
+    offsetInput.step = "1";
+    offsetInput.value = a.offsetFrames;
+    offsetInput.style.width = "64px";
+
+    offsetInput.oninput = () => {
+      a.offsetFrames = Math.max(0, parseInt(offsetInput.value, 10) || 0);
+    };
+
+    offsetLabel.append(offsetIcon, offsetInput);
+    meta.appendChild(offsetLabel);
+
+    row.append(name, actions, meta);
+    rows.appendChild(row);
+  });
+}
+updateAudioObjectList();
+
+// ─────────────────────────────────────────────
+// WEB AUDIO PLAYBACK RUNTIME (replaces HTMLAudioElement usage)
+// ─────────────────────────────────────────────
+
+let activeAudioNodes = [];   // now holds { src, source, gain, stop, startedAtCtxTime }
+let firedAudioKeys = new Set();
+
+// Buffer cache: src -> Promise<AudioBuffer>
+const audioBufferCache = new Map();
+
+// A small “engine” wrapper so edge cases are centralized
+const WebAudioEngine = (() => {
+  let ctx = null;
+  let masterGain = null;
+
+  function getCtx() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(ctx.destination);
+    return ctx;
+  }
+
+  async function ensureRunning() {
+    const c = getCtx();
+    if (!c) return false;
+
+    // Autoplay policies: must resume inside a user gesture at least once
+    if (c.state === "suspended") {
+      try { await c.resume(); } catch {}
+    }
+    return c.state === "running" || c.state === "suspended";
+  }
+
+  function setMasterVolume(v) {
+    const c = getCtx();
+    if (!c || !masterGain) return;
+    masterGain.gain.value = Number.isFinite(v) ? v : 1;
+  }
+
+  async function fetchArrayBuffer(src) {
+    // NOTE: WebAudio decode requires CORS-allowed fetch for remote URLs.
+    // If a URL fails due to CORS, decoding will fail (see edge cases below).
+    const res = await fetch(src, { mode: "cors", credentials: "omit", cache: "force-cache" });
+    if (!res.ok) throw new Error(`Audio fetch failed (${res.status}) for ${src}`);
+    return await res.arrayBuffer();
+  }
+
+  async function decodeToBuffer(arrayBuffer) {
+    const c = getCtx();
+    if (!c) throw new Error("Web Audio API not supported");
+
+    // Safari quirk: decodeAudioData can be picky; copying the buffer helps in some cases
+    const ab = arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer;
+
+    return await new Promise((resolve, reject) => {
+      // Old Safari uses callback form; modern supports promises. We support both.
+      const p = c.decodeAudioData(
+        ab,
+        (buf) => resolve(buf),
+        (err) => reject(err || new Error("decodeAudioData failed"))
+      );
+      if (p && typeof p.then === "function") {
+        p.then(resolve).catch(reject);
+      }
+    });
+  }
+
+  function clamp01(x) {
+    x = +x;
+    if (!Number.isFinite(x)) return 1;
+    if (x < 0) return 0;
+    if (x > 1) return 1;
+    return x;
+  }
+
+  function safeNum(x, fallback = 0) {
+    x = +x;
+    return Number.isFinite(x) ? x : fallback;
+  }
+
+  function stopTrack(track) {
+    if (!track) return;
+    try { track.source?.stop(0); } catch {}
+    try { track.source?.disconnect(); } catch {}
+    try { track.gain?.disconnect(); } catch {}
+  }
+
+  async function playBuffer({ buffer, src, volume = 1, trimStart = 0, trimEnd = null, loop = false, onEnded = null }) {
+    const c = getCtx();
+    if (!c || !masterGain) return null;
+
+    await ensureRunning();
+
+    const gain = c.createGain();
+    gain.gain.value = clamp01(volume);
+    gain.connect(masterGain);
+
+    const source = c.createBufferSource();
+    source.buffer = buffer;
+    source.connect(gain);
+
+    const startSec = Math.max(0, safeNum(trimStart, 0));
+    const endSecRaw = trimEnd == null ? null : safeNum(trimEnd, null);
+    let durationSec = null;
+
+    // If trimEnd is valid and after start, enforce duration
+    if (endSecRaw != null && Number.isFinite(endSecRaw) && endSecRaw > startSec) {
+      durationSec = Math.max(0, endSecRaw - startSec);
+    }
+
+    if (loop) {
+      source.loop = true;
+
+      // If we have a trimmed region, loop inside it (most useful behavior)
+      if (durationSec != null && durationSec > 0) {
+        source.loopStart = startSec;
+        source.loopEnd = startSec + durationSec;
+      }
+    }
+
+    const track = {
+      src,
+      source,
+      gain,
+      startedAtCtxTime: c.currentTime,
+      stop: () => stopTrack(track)
+    };
+
+    source.onended = () => {
+      // 1. Remove from active list when it ends naturally
+      const idx = activeAudioNodes.indexOf(track);
+      if (idx >= 0) activeAudioNodes.splice(idx, 1);
+      stopTrack(track);
+
+      // 2. Trigger the new UI callback
+      if (typeof onEnded === 'function') {
+        onEnded();
+      }
+    };
+
+    try {
+      // When scheduling immediately, 0 is fine; you can also use c.currentTime
+      if (durationSec != null && durationSec > 0) {
+        source.start(0, startSec, durationSec);
+      } else {
+        source.start(0, startSec);
+      }
+    } catch (e) {
+      stopTrack(track);
+      return null;
+    }
+
+    activeAudioNodes.push(track);
+    return track;
+  }
+
+  async function playOneShot({ src, volume = 1, trimStart = 0, trimEnd = null, loop = false, onEnded = null }) {
+    const buffer = await getCachedAudioBuffer(src);
+    if (!buffer) return null;
+    return await playBuffer({ buffer, src, volume, trimStart, trimEnd, loop, onEnded });
+  }
+
+  return {
+    getCtx,
+    ensureRunning,
+    setMasterVolume,
+    fetchArrayBuffer,
+    decodeToBuffer,
+    playOneShot,
+    stopTrack
+  };
+})();
+
+// Unlock audio on first user gesture (important on iOS/Safari + autoplay policies)
+(function setupWebAudioUnlock(){
+  const unlock = async () => {
+    try { await WebAudioEngine.ensureRunning(); } catch {}
+    window.removeEventListener("pointerdown", unlock, true);
+    window.removeEventListener("keydown", unlock, true);
+    window.removeEventListener("touchstart", unlock, true);
+  };
+  window.addEventListener("pointerdown", unlock, true);
+  window.addEventListener("keydown", unlock, true);
+  window.addEventListener("touchstart", unlock, true);
+})();
+
+function stopAllAudio() {
+  // Stop and clear all active WebAudio tracks
+  for (const t of activeAudioNodes) {
+    try { t.stop(); } catch {}
+  }
+  activeAudioNodes.length = 0;
+  firedAudioKeys.clear();
+}
+
+async function getCachedAudioBuffer(src) {
+  if (audioBufferCache.has(src)) return await audioBufferCache.get(src);
+
+  const p = (async () => {
+    const ok = WebAudioEngine.getCtx();
+    if (!ok) throw new Error("Web Audio API not supported in this browser");
+
+    // Try to run the context (may remain suspended until gesture, but caching can still happen)
+    try { await WebAudioEngine.ensureRunning(); } catch {}
+
+    const ab = await WebAudioEngine.fetchArrayBuffer(src);
+    return await WebAudioEngine.decodeToBuffer(ab);
+  })();
+
+  // Store promise immediately to dedupe concurrent loads
+  audioBufferCache.set(src, p);
+
+  try {
+    return await p;
+  } catch (e) {
+    // If it fails, remove from cache so a later retry can happen
+    audioBufferCache.delete(src);
+    console.warn("Audio decode failed:", src, e);
+    return null;
+  }
+}
+
+function clearAudioCache() {
+  // No URL.revokeObjectURL needed anymore. Just drop decoded buffers.
+  audioBufferCache.clear();
+}
+
+async function preloadAllAudio() {
+  const seen = new Set();
+
+  for (const kf of animation.keyframes || []) {
+    for (const a of kf.audio || []) {
+      if (!a?.src) continue;
+      if (seen.has(a.src)) continue;
+      seen.add(a.src);
+
+      try {
+        await getCachedAudioBuffer(a.src);
+      } catch (e) {
+        console.warn("Audio preload failed:", a.src, e);
+      }
+    }
+  }
+}
+
+async function playAudioObject(a) {
+  if (!a || !a.src) return;
+
+  // Warm buffer if needed; this returns null on failure
+  const buffer = await getCachedAudioBuffer(a.src);
+  if (!buffer) return;
+
+  const volume = (a.volume ?? 1);
+  const trimStart = (a.trimStart || 0);
+  const trimEnd = (a.trimEnd ?? null);
+  const loop = !!a.loop;
+
+  await WebAudioEngine.playOneShot({ src: a.src, volume, trimStart, trimEnd, loop });
+}
+
+function maybeTriggerAudioForFrame(keyframeIndex, localFrame) {
+  const kf = animation.keyframes[keyframeIndex];
+  if (!kf || !Array.isArray(kf.audio)) return;
+
+  for (const a of kf.audio) {
+    const offset = a.offsetFrames || 0;
+
+    if (localFrame === offset && !firedAudioKeys.has(a)) {
+      firedAudioKeys.add(a);
+      // Fire-and-forget; timing is still frame-based in your loop
+      playAudioObject(a);
+    }
+  }
+}
+
+// Optional helper for UI preview buttons (so you can stop previous preview cleanly)
+let _uiPreviewTrack = null;
+async function playPreviewSrc(src, volume = 1, onEnded = null) {
+  // Stop any ongoing UI preview
+  if (_uiPreviewTrack) {
+    try { _uiPreviewTrack.stop(); } catch {}
+    _uiPreviewTrack = null;
+  }
+  const buffer = await getCachedAudioBuffer(src);
+  if (!buffer) return null;
+
+  _uiPreviewTrack = await WebAudioEngine.playOneShot({
+    src,
+    volume,
+    trimStart: 0,
+    trimEnd: null,
+    loop: false,
+    onEnded
+  });
+
+  return _uiPreviewTrack;
+}
+
+function stopPreview() {
+  if (_uiPreviewTrack) {
+    try { _uiPreviewTrack.stop(); } catch {}
+    _uiPreviewTrack = null;
+  }
+}
 </script>
 </body>
 </html>

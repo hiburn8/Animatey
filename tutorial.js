@@ -20,48 +20,84 @@
 window.tutorialSteps = [
   {
     element: '#canvas',
-    text: '[1/7] Here’s your canvas area. It holds the objects (shapes, images, text, drawings etc) for your current keyframe. <p>When you select an object, you can move it around with the mouse or use <kbd>WASD</kbd>.<p><kbd>Q</kbd> & <kbd>E</kbd> rotates objects.<p><kbd>H</kbd> toggles highlighting.',
+    text: `[1/7] Here’s your <b>canvas area</b>. It holds the visual objects (shapes, images, text, drawings etc) for your current keyframe. <p>You can move objects around with the mouse or use WASD keys.
+    <ul>
+    <li><kbd>Q</kbd> & <kbd>E</kbd> rotates objects.</li>
+    <li><kbd>H</kbd> toggles object highlighting.</li>
+    <li><kbd>CTRL+C/V</kbd> to copy/paste objects.</li>
+    <li>You can paste images from your clipboard directly into the canvas.</li>
+    </ul>`,
     placement: 'left-bottom'
   },
   {
     element: '#timeline',
-    text: '[2/7] Your animation is based on designing keyframes, and blending between them. You can control the number of frames used to blend between keyframes, and choose a blend style.',
+    text: `[2/7] Your animation is based on designing <b>Keyframes</b>, and blending between them. You can control the number of frames used to blend between keyframes, and choose a blend style.
+    <ul>
+    <li><kbd>TAB</kbd> to cycle Keyframes.</li>
+    <li><kbd>Drag/Drop</kbd> to reorder Keyframes.</li>
+    </ul>`,
     placement: 'left',
     fn: () => {},
   },
   {
-    element: '#cloneKeyframe',
-    text: '[3/7] Click <b>Clone Keyframe</b> (or <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.',
-    placement: 'left'
-  },
-  {
     element: '#shapeList',
-    text: '[4/7] Each keyframe holds objects for that scene. This panel lists all your objects. You can reorder, resize, recolor, rotate, or delete them here. <kbd>Ctrl-Click</kbd> to select multiple objects.',
+    text: `[3/7] This panel lists all the <b>visual objects</b> that exist for the currently selected Keyframe. You can change their size, rotation, draw order, and colour. 
+    <ul>
+    <li><kbd>TAB</kbd> to cycle objects.</li>
+    <li><kbd>Drag/Drop</kbd> to change the draw order of objects (those at the top are closest to the foreground.</li>
+    <li><kbd>CTRL+C/V</kbd> to copy/paste objects.</li>
+    <li><kbd>Ctrl+Click</kbd> to select multiple objects.</li>
+    </ul>`,
     placement: 'right-top'
   },
     {
+    element: '#audioObjectList',
+    text: `[4/7] This panel lists all the <b>audio objects</b> that exist for the currently selected Keyframe. Controls work identically to visual objects, except they don't appear on the canvas.
+    <ul>
+    <li>Audio objects play at the start of their Keyframe by default.</li>
+    </ul>`,
+    placement: 'right-top',
+    fn: () => {document.getElementById("audioObjectList").scrollIntoView();},
+  },
+  {
     element: '#objectList',
-    text: '[5/7] Add new objects to the scene here.',
-    placement: 'right-top'
+    text: '[5/7] Add <b>new objects</b> to a Keyframe here. You can search for new images and audio directly.',
+    placement: 'right-top',
+    fn: () => {document.getElementById("canvasList").scrollIntoView();},
+  },
+  {
+    element: '#cloneKeyframe',
+    text: `[6/7] Click <b>Clone Selected Keyframe</b> (or press <kbd>k</kbd>) to capture the current arrangement of objects in the scene as a new keyframe in your animation.
+    <ul>
+    <li>When you clone a keyframe, objects in the clone are linked to those in the original. This allows you to move objects across the screen from its position in one keyframe, to another.</li>
+    <li>Linked objects can also change size, rotation, draw order, and colour between keyframes.</li>
+    <ul>`,
+    placement: 'left'
   },
   {
     element: '#newPlayBtn',
-    text: '[6/7] ▶ Play (or <kbd>Spacebar</kbd>) runs your animation once from the currently selected keyframe.',
-    placement: 'bottom-right'
-  },
-  {
-    element: '#file-menu',
-    text: '[7/7] Try loading this demo animation and experimenting. Have fun!',
-    placement: 'left'
+    text: `[7/7] <b>▶ Button (or <kbd>Spacebar</kbd>)</b> runs your animation once from the currently selected keyframe.
+    <p>
+    You need at least two Keyframes for an animation - so I've loaded a demo scene for you to try out.
+    <p>
+    <b>Enjoy Animatey!</b>`,
+    placement: 'right',
+    fn: () => {loadDemo();},
   }
 ];
 
-(function(){
+window.startTutorial = function(force = false) {
   const STORAGE_KEY = 'tutorialSeen';
   const steps       = window.tutorialSteps || [];
 
-  if (!steps.length || localStorage.getItem(STORAGE_KEY)) {
-    return; // nothing to do
+  // If already seen and we aren't forcing a restart, stop.
+  if (!steps.length || (localStorage.getItem(STORAGE_KEY) && !force)) {
+    return;
+  }
+
+  // Clear "seen" status if forcing a restart
+  if (force) {
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   // ── 1) inject minimal CSS ───────────────────────────────────────
@@ -209,6 +245,11 @@ window.tutorialSteps = [
     currentEl = el;
     el.classList.add('tutorial-highlight');
 
+    // ── new: run optional fn for step ─────────────────────────────
+    if (typeof fn === 'function') {
+      try { fn(el, i, steps); } catch(e) { console.error(e); }
+    }
+
     // create tooltip
     const isFirst = i === 0;  // only on the very first step
     tooltip = document.createElement('div');
@@ -247,11 +288,6 @@ window.tutorialSteps = [
       console.error(e);
     }
 
-    // ── new: run optional fn for step ─────────────────────────────
-    if (typeof fn === 'function') {
-      try { fn(el, i, steps); } catch(e) { console.error(e); }
-    }
-
     // bind Next/Done button
     tooltip.querySelector('.tutorial-next').onclick = () => showStep(i + 1);
     // bind Skip button if present
@@ -259,7 +295,8 @@ window.tutorialSteps = [
       tooltip.querySelector('.tutorial-skip').onclick = skipTutorial;
     }
   }
+  showStep(0);
 
-  // ── 3) kick it off after DOM ready ─────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => showStep(0));
-})();
+};
+// ── 3) kick it off after DOM ready ─────────────────────────────
+document.addEventListener('DOMContentLoaded', () => window.startTutorial(false));
