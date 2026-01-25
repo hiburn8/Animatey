@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="title" content="Animatey - Browser-Based Animation Tool">
+  <meta name="description" content="Create and export animations directly in your browser. Animatey is a fast, no-install animation editor for the web.">
+
   <meta charset="UTF-8" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma"        content="no-cache">
   <meta http-equiv="Expires"       content="0">
+    <!-- Open Graph -->
+  <meta name="title" property="og:title" content="Animatey — Browser-Based Animation Tool" />
+  <meta name="description" property="og:description" content="Create and export animations directly in your browser." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://animatey.app" />
+  <meta name="image" property="og:image" content="https://animatey.app/logo_beta.png" />
+  <meta property="og:image:width" content="1024" />
+  <meta property="og:image:height" content="1024" />
+  <meta property="og:site_name" content="Animatey" />
+  <meta name="author" content="hiburn8">
+  
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 
   <title>Animatey</title>
@@ -1070,14 +1084,25 @@ body.dark-mode #darkModeBtn:hover {
 </script>
       
       <p>
-      
+
       <div class="group-control">
         <label for="bgColorInput">Background:</label>
         <input type="color" id="bgColorInput" value="#f0f0f0" title="Set background color">
           <button id="bgInputBtn" onmousedown="event.preventDefault();">Load Image</button>
           <input type="file" id="bgInput" style="display:none;" accept="image/*">
           <button id="clearBackground" onmousedown="event.preventDefault();">Clear</button>
-      </div>    
+      </div>
+
+      <p>
+
+      <div class="group-control">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="perfModeToggle"> 
+          <span>Performance Mode</span>
+        </label>
+        <span style="font-size: 11px; opacity: 0.6; margin-left: auto;">(Disables Object UI Refreshes During Play)</span>
+      </div>
+
     </div>
 
     <div id="objectList" class="object-list--pro">
@@ -1230,7 +1255,9 @@ body.dark-mode #darkModeBtn:hover {
     <div class="menu-dropdown">
       <div class="menu-item" onclick="playAnimation();">Play <span class="shortcut">Space</span></div>
       <div class="menu-item" onclick="playAnimation('loop');">Loop </div>
+      <!--
       <div class="menu-item" onclick="playAnimation('bounce');">Bounce </div>
+      !-->
 
     </div>
   </div>
@@ -1238,12 +1265,14 @@ body.dark-mode #darkModeBtn:hover {
   <div class="menu">
     <div class="menu-title">Edit</div>
     <div class="menu-dropdown">
-      <div class="menu-item">Undo <span class="shortcut">Ctrl+Z</span></div>
-      <div class="menu-item">Redo <span class="shortcut">Ctrl+Y</span></div>
+      <div class="menu-item" onclick="undo();">Undo <span class="shortcut">Ctrl+Z</span></div>
+      <div class="menu-item" onclick="redo();">Redo <span class="shortcut">Ctrl+Y</span></div>
+      <!--
       <div class="menu-sep"></div>
       <div class="menu-item">Cut <span class="shortcut">Ctrl+X</span></div>
       <div class="menu-item">Copy <span class="shortcut">Ctrl+C</span></div>
       <div class="menu-item">Paste <span class="shortcut">Ctrl+V</span></div>
+      !-->
     </div>
   </div>
 
@@ -3142,6 +3171,7 @@ function interpolateAngle(a1, a2, t) {
 function playAnimation(mode = 'once') {
   if (animation.keyframes.length < 2 || isPlaying) return;
   lastCursor = canvas.style.cursor;
+  const isPerfMode = document.getElementById('perfModeToggle').checked;
   isPlaying  = true;
   stopAllAudio(); // reset audio state for fresh playback
 
@@ -3218,7 +3248,9 @@ function playAnimation(mode = 'once') {
     const easedT = easer(rawT);
 
     renderTimeline(null, fromIdx);
-    updateAudioObjectList(fromIdx)
+    if (!isPerfMode) {
+      updateAudioObjectList(fromIdx)
+    }
     let interp;
     
     if (a.easing === 'none') {
@@ -3234,8 +3266,11 @@ function playAnimation(mode = 'once') {
     }
     // Fixme: This keeps shapes + UI in sync during playback but is EXPENSIVE.
     shapes = cloneShapes(interp);
-    updateShapeList();
+    if (!isPerfMode) {  
+      updateShapeList();
+    }
     drawAllShapes(interp);
+
 
     //timer overlay start
     // ⬇️ show current playback time (for timer overlay)
